@@ -1,0 +1,29 @@
+{
+  "name": "gravity-ui-vue-markdown-editor",
+  "version": "0.0.0",
+  "private": true,
+  "description": "A Vue 3 port of @gravity-ui/markdown-editor",
+  "license": "MIT",
+  "packageManager": "pnpm@11.16.0",
+  "engines": {
+    "node": ">=20.19.0",
+    "pnpm": ">=10"
+  },
+  "scripts": {
+    "build": "pnpm --recursive run build",
+    "dev": "pnpm --filter @gravity-ui/vue-markdown-editor-playground dev",
+    "test": "pnpm --recursive run test",
+    "typecheck": "pnpm --recursive run typecheck",
+    "lint": "pnpm --recursive run lint"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "eslint": "^9.0.0",
+    "eslint-plugin-vue": "^10.0.0",
+    "typescript": "^5.8.0",
+    "vitest": "^4.0.0"
+  }
+}
+
