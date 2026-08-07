@@ -1,12 +1,21 @@
 <script setup lang="ts">
-import {nextTick, onBeforeUnmount, onMounted, ref, watch} from 'vue';
+import {computed, nextTick, onBeforeUnmount, onMounted, ref, watch} from 'vue';
 
 import {
     createBasicEditorCommands,
     mountBasicMarkupEditor,
     mountBasicWysiwygEditor,
 } from './core';
-import type {BasicMarkupEditor, BasicWysiwygEditor, MarkdownEditorMode} from './index';
+import type {BasicMarkupEditor, BasicWysiwygEditor, BasicWysiwygSelectionState} from './core';
+import type {MarkdownEditorMode} from './public-types';
+
+export interface MarkdownEditorExposed {
+    focus(): void;
+    getMode(): MarkdownEditorMode;
+    getValue(): string;
+    setMode(mode: MarkdownEditorMode): Promise<void>;
+    setValue(value: string): void;
+}
 
 defineOptions({name: 'MarkdownEditor'});
 
@@ -37,7 +46,22 @@ const visualTarget = ref<HTMLElement>();
 const mode = ref<MarkdownEditorMode>(props.mode);
 const linkEditorVisible = ref(false);
 const linkUrl = ref('https://');
+const toolbarState = ref<BasicWysiwygSelectionState>({
+    bold: false,
+    bulletList: false,
+    code: false,
+    codeBlock: false,
+    headingLevel: undefined,
+    italic: false,
+    mark: false,
+    orderedList: false,
+    quote: false,
+    strikethrough: false,
+    underline: false,
+});
+const textStyle = computed(() => toolbarState.value.headingLevel?.toString() ?? 'paragraph');
 let markupEditor: BasicMarkupEditor | undefined;
+let modeChangeId = 0;
 let syncing = false;
 let visualEditor: BasicWysiwygEditor | undefined;
 
@@ -46,6 +70,19 @@ function destroyHosts(): void {
     visualEditor?.destroy();
     markupEditor = undefined;
     visualEditor = undefined;
+    toolbarState.value = {
+        bold: false,
+        bulletList: false,
+        code: false,
+        codeBlock: false,
+        headingLevel: undefined,
+        italic: false,
+        mark: false,
+        orderedList: false,
+        quote: false,
+        strikethrough: false,
+        underline: false,
+    };
 }
 
 function updateValue(nextValue: string, source: 'markup' | 'visual'): void {
@@ -89,17 +126,36 @@ function applyLink(): void {
     linkEditorVisible.value = false;
 }
 
+function applyTextStyle(event: Event): void {
+    const target = event.target;
+    if (!(target instanceof HTMLSelectElement)) {
+        return;
+    }
+
+    if (target.value === 'paragraph') {
+        execute(commands.paragraph);
+        return;
+    }
+
+    execute(commands.heading(Number(target.value)));
+}
+
 function mountHosts(): void {
     if (mode.value !== 'markup' && visualTarget.value !== undefined) {
         visualEditor = mountBasicWysiwygEditor({
+            editable: !props.readonly,
             initialValue: value.value,
             onChange: (nextValue) => updateValue(nextValue, 'visual'),
+            onSelectionChange: (nextSelection) => {
+                toolbarState.value = nextSelection;
+            },
             target: visualTarget.value,
         });
     }
 
     if (mode.value !== 'wysiwyg' && markupTarget.value !== undefined) {
         markupEditor = mountBasicMarkupEditor({
+            editable: !props.readonly,
             initialValue: value.value,
             onChange: (nextValue) => updateValue(nextValue, 'markup'),
             target: markupTarget.value,
@@ -112,12 +168,15 @@ async function setMode(nextMode: MarkdownEditorMode): Promise<void> {
         return;
     }
 
+    const changeId = ++modeChangeId;
     mode.value = nextMode;
     emit('update:mode', nextMode);
     emit('mode-change', nextMode);
     destroyHosts();
     await nextTick();
-    mountHosts();
+    if (changeId === modeChangeId) {
+        mountHosts();
+    }
 }
 
 function execute(command: Parameters<BasicWysiwygEditor['run']>[0]): void {
@@ -148,10 +207,22 @@ watch(
     },
 );
 
+watch(
+    () => props.readonly,
+    async () => {
+        const changeId = ++modeChangeId;
+        destroyHosts();
+        await nextTick();
+        if (changeId === modeChangeId) {
+            mountHosts();
+        }
+    },
+);
+
 onMounted(mountHosts);
 onBeforeUnmount(destroyHosts);
 
-defineExpose({
+defineExpose<MarkdownEditorExposed>({
     focus: () => (mode.value === 'markup' ? markupEditor?.focus() : visualEditor?.focus()),
     getMode: () => mode.value,
     getValue: () => value.value,
@@ -176,24 +247,29 @@ defineExpose({
       <button type="button" title="Повторить" @mousedown.prevent @click="execute(commands.redo)">↷</button>
       <select
         aria-label="Уровень заголовка"
+        :class="{'markdown-editor__select--active': toolbarState.headingLevel !== undefined}"
         title="Уровень заголовка"
-        @change="execute(commands.heading(Number(($event.target as HTMLSelectElement).value)))"
+        :value="textStyle"
+        @change="applyTextStyle"
       >
+        <option value="paragraph">Текст</option>
         <option value="1">H1</option>
         <option value="2">H2</option>
         <option value="3">H3</option>
         <option value="4">H4</option>
+        <option value="5">H5</option>
+        <option value="6">H6</option>
       </select>
-      <button type="button" title="Жирный" @mousedown.prevent @click="execute(commands.bold)"><strong>B</strong></button>
-      <button type="button" title="Курсив" @mousedown.prevent @click="execute(commands.italic)"><em>I</em></button>
-      <button type="button" title="Подчёркивание" @mousedown.prevent @click="execute(commands.underline)"><u>U</u></button>
-      <button type="button" title="Зачёркивание" @mousedown.prevent @click="execute(commands.strikethrough)"><s>S</s></button>
-      <button type="button" title="Выделить" @mousedown.prevent @click="execute(commands.mark)">▣</button>
-      <button type="button" title="Inline code" @mousedown.prevent @click="execute(commands.code)">&lt;/&gt;</button>
-      <button type="button" title="Маркированный список" @mousedown.prevent @click="execute(commands.bulletList)">•≡</button>
-      <button type="button" title="Нумерованный список" @mousedown.prevent @click="execute(commands.orderedList)">1≡</button>
-      <button type="button" title="Цитата" @mousedown.prevent @click="execute(commands.quote)">❝</button>
-      <button type="button" title="Code block" @mousedown.prevent @click="execute(commands.codeBlock)">{ }</button>
+      <button :aria-pressed="toolbarState.bold" type="button" title="Жирный" @mousedown.prevent @click="execute(commands.bold)"><strong>B</strong></button>
+      <button :aria-pressed="toolbarState.italic" type="button" title="Курсив" @mousedown.prevent @click="execute(commands.italic)"><em>I</em></button>
+      <button :aria-pressed="toolbarState.underline" type="button" title="Подчёркивание" @mousedown.prevent @click="execute(commands.underline)"><u>U</u></button>
+      <button :aria-pressed="toolbarState.strikethrough" type="button" title="Зачёркивание" @mousedown.prevent @click="execute(commands.strikethrough)"><s>S</s></button>
+      <button :aria-pressed="toolbarState.mark" type="button" title="Выделить" @mousedown.prevent @click="execute(commands.mark)">▣</button>
+      <button :aria-pressed="toolbarState.code" type="button" title="Inline code" @mousedown.prevent @click="execute(commands.code)">&lt;/&gt;</button>
+      <button :aria-pressed="toolbarState.bulletList" type="button" title="Маркированный список" @mousedown.prevent @click="execute(commands.bulletList)">•≡</button>
+      <button :aria-pressed="toolbarState.orderedList" type="button" title="Нумерованный список" @mousedown.prevent @click="execute(commands.orderedList)">1≡</button>
+      <button :aria-pressed="toolbarState.quote" type="button" title="Цитата" @mousedown.prevent @click="execute(commands.quote)">❝</button>
+      <button :aria-pressed="toolbarState.codeBlock" type="button" title="Code block" @mousedown.prevent @click="execute(commands.codeBlock)">{ }</button>
       <button type="button" title="Ссылка" @mousedown.prevent @click="linkEditorVisible = !linkEditorVisible">⌁</button>
       <button type="button" title="Горизонтальная линия" @mousedown.prevent @click="execute(commands.horizontalRule)">―</button>
       <button type="button" title="Таблица 3×3" @mousedown.prevent @click="execute(commands.insertTable())">▦</button>
@@ -201,7 +277,7 @@ defineExpose({
         <input v-model="linkUrl" aria-label="Адрес ссылки" type="url" />
         <button type="submit">Готово</button>
       </form>
-      <slot name="toolbar" />
+      <slot name="toolbar" :commands="commands" :execute="execute" />
     </div>
 
     <div class="markdown-editor__hosts" :class="{'markdown-editor__hosts--split': mode === 'split'}">
@@ -280,6 +356,7 @@ defineExpose({
 }
 
 .markdown-editor button[aria-selected='true'],
+.markdown-editor button[aria-pressed='true'],
 .markdown-editor button:hover,
 .markdown-editor button:focus-visible {
     outline: none;
@@ -288,6 +365,7 @@ defineExpose({
 }
 
 .markdown-editor select:hover,
+.markdown-editor select.markdown-editor__select--active,
 .markdown-editor select:focus-visible {
     outline: none;
     color: #1d3c93;

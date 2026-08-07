@@ -16,6 +16,7 @@ export interface BasicMarkupEditor {
 }
 
 export interface MountBasicMarkupEditorOptions {
+    editable?: boolean;
     initialValue?: string;
     onChange?(value: string): void;
     target: HTMLElement;
@@ -23,6 +24,7 @@ export interface MountBasicMarkupEditorOptions {
 
 /** CodeMirror 6 Markdown host used by the Vue editor modes in the next milestone. */
 export function mountBasicMarkupEditor({
+    editable = true,
     initialValue = '',
     onChange,
     target,
@@ -34,6 +36,7 @@ export function mountBasicMarkupEditor({
         state: EditorState.create({
             doc: initialValue,
             extensions: [
+                EditorView.editable.of(editable),
                 lineNumbers(),
                 history(),
                 bracketMatching(),

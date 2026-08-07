@@ -159,6 +159,7 @@ export interface BasicEditorCommands {
     link(href: string): Command;
     mark: Command;
     orderedList: Command;
+    paragraph: Command;
     quote: Command;
     redo: Command;
     sinkListItem: Command;
@@ -166,6 +167,20 @@ export interface BasicEditorCommands {
     strikethrough: Command;
     underline: Command;
     undo: Command;
+}
+
+export interface BasicWysiwygSelectionState {
+    bold: boolean;
+    bulletList: boolean;
+    code: boolean;
+    codeBlock: boolean;
+    headingLevel: number | undefined;
+    italic: boolean;
+    mark: boolean;
+    orderedList: boolean;
+    quote: boolean;
+    strikethrough: boolean;
+    underline: boolean;
 }
 
 /** Framework-agnostic commands consumed later by the Vue toolbar and shortcuts. */
@@ -189,6 +204,7 @@ export function createBasicEditorCommands(): BasicEditorCommands {
         link: (href) => toggleMark(getMarkType('link'), {href}),
         mark: toggleMark(getMarkType('mark')),
         orderedList: wrapInList(getNodeType('ordered_list')),
+        paragraph: setBlockType(getNodeType('paragraph')),
         quote: wrapIn(getNodeType('blockquote')),
         redo,
         sinkListItem: sinkListItem(listItem),
@@ -196,6 +212,43 @@ export function createBasicEditorCommands(): BasicEditorCommands {
         strikethrough: toggleMark(getMarkType('strikethrough')),
         underline: toggleMark(getMarkType('underline')),
         undo,
+    };
+}
+
+function hasActiveMark(state: EditorState, markName: string): boolean {
+    const mark = getMarkType(markName);
+    const {empty, from, to, $from} = state.selection;
+
+    return empty
+        ? Boolean(mark.isInSet(state.storedMarks ?? $from.marks()))
+        : state.doc.rangeHasMark(from, to, mark);
+}
+
+function hasAncestor(state: EditorState, nodeName: string): boolean {
+    const {$from} = state.selection;
+    for (let depth = $from.depth; depth > 0; depth -= 1) {
+        if ($from.node(depth).type.name === nodeName) {
+            return true;
+        }
+    }
+    return false;
+}
+
+export function getBasicWysiwygSelectionState(state: EditorState): BasicWysiwygSelectionState {
+    const {$from} = state.selection;
+
+    return {
+        bold: hasActiveMark(state, 'strong'),
+        bulletList: hasAncestor(state, 'bullet_list'),
+        code: hasActiveMark(state, 'code'),
+        codeBlock: hasAncestor(state, 'code_block'),
+        headingLevel: $from.parent.type.name === 'heading' ? Number($from.parent.attrs.level) : undefined,
+        italic: hasActiveMark(state, 'em'),
+        mark: hasActiveMark(state, 'mark'),
+        orderedList: hasAncestor(state, 'ordered_list'),
+        quote: hasAncestor(state, 'blockquote'),
+        strikethrough: hasActiveMark(state, 'strikethrough'),
+        underline: hasActiveMark(state, 'underline'),
     };
 }
 
@@ -208,8 +261,10 @@ export interface BasicWysiwygEditor {
 }
 
 export interface MountBasicWysiwygEditorOptions {
+    editable?: boolean;
     initialValue?: string;
     onChange?(value: string): void;
+    onSelectionChange?(selection: BasicWysiwygSelectionState): void;
     target: HTMLElement;
 }
 
@@ -218,8 +273,10 @@ export interface MountBasicWysiwygEditorOptions {
  * in task 7, after markup/split lifecycle management is available.
  */
 export function mountBasicWysiwygEditor({
+    editable = true,
     initialValue = '',
     onChange,
+    onSelectionChange,
     target,
 }: MountBasicWysiwygEditorOptions): BasicWysiwygEditor {
     const commands = createBasicEditorCommands();
@@ -231,7 +288,9 @@ export function mountBasicWysiwygEditor({
             if (transaction.docChanged) {
                 onChange?.(basicMarkdownCodec.serialize(state.doc));
             }
+            onSelectionChange?.(getBasicWysiwygSelectionState(state));
         },
+        editable: () => editable,
         state: EditorState.create({
             doc: basicMarkdownCodec.parse(initialValue),
             plugins: [
@@ -247,6 +306,7 @@ export function mountBasicWysiwygEditor({
             ],
         }),
     });
+    onSelectionChange?.(getBasicWysiwygSelectionState(view.state));
 
     return {
         destroy: () => view.destroy(),
@@ -278,6 +338,7 @@ export function mountBasicWysiwygEditor({
                     ],
                 }),
             );
+            onSelectionChange?.(getBasicWysiwygSelectionState(view.state));
         },
     };
 }

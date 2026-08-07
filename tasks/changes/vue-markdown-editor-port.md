@@ -2,7 +2,7 @@
 
 ## Статус постановки
 
-Выполнены задачи 1–7 из 16. Задача 8 остаётся в работе до закрытия DOM/integration-проверок публичного Vue-компонента.
+Выполнены задачи 1–8 из 16. Публичный Vue-компонент покрыт DOM/integration-проверками для `v-model`, split-view, переключения режимов, readonly и корректного unmount.
 
 ## Решения и [Уточнить]
 
@@ -40,7 +40,7 @@ React-библиотека Gravity UI Markdown Editor совмещает виз�
 5. **[Готово]** Создать базовый sticky-toolbar для WYSIWYG: история, heading, marks, списки, quote, link, code, горизонтальная линия и таблица; покрыть команды тестами и не допустить регрессии в публичном компоненте.
 6. **[Готово]** Реализовать CodeMirror 6 markup-редактор, history, поиск, подсветку, отступы, preview и синхронизацию Markdown; добавить DOM/integration-проверку mount, изменения, поиска, focus и destroy.
 7. **[Готово]** Создать инстанс редактора и `useMarkdownEditor`: события, жизненный цикл, режимы и синхронизация Markdown; проверить публичные методы, включая focus.
-8. **[В работе]** Создать публичный Vue-компонент `MarkdownEditor`, WYSIWYG-host, markup-host, split-view, SSR-safe mount/unmount, `v-model` и базовый слот-расширяемый тулбар; закрыть синхронизационные регрессии.
+8. **[Готово]** Создать публичный Vue-компонент `MarkdownEditor`, WYSIWYG-host, markup-host, split-view, SSR-safe mount/unmount, `v-model` и базовый слот-расширяемый тулбар; закрыть синхронизационные регрессии.
 9. **[Следующая]** Перенести базовые поведения: autocomplete и command-menu, clipboard, placeholder, selection, upload, cursor и resize; расширить тулбар popup/select/color/image/file-controls и конфигурацией preset.
 10. Реализовать Vue renderer для widget-decorations и ProseMirror node views; портировать контекстные панели.
 11. Перенести расширенные Markdown-функции: HTML, folding headings, definition list, quote link, attributes и directives.

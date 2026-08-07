@@ -6,6 +6,7 @@ export type {
 } from './public-types';
 export * from './core';
 export {default as MarkdownEditor} from './MarkdownEditor.vue';
+export type {MarkdownEditorExposed} from './MarkdownEditor.vue';
 export {useMarkdownEditor} from './use-markdown-editor';
 export type {UseMarkdownEditorResult} from './use-markdown-editor';
 

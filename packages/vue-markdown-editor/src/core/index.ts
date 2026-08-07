@@ -4,10 +4,12 @@ export {
     basicMarkdownCodec,
     basicMarkdownSchema,
     createBasicEditorCommands,
+    getBasicWysiwygSelectionState,
     mountBasicWysiwygEditor,
 } from './basic-editor';
 export type {
     BasicEditorCommands,
+    BasicWysiwygSelectionState,
     BasicWysiwygEditor,
     MountBasicWysiwygEditorOptions,
 } from './basic-editor';
