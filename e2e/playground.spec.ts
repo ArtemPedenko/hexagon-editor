@@ -72,6 +72,28 @@ test.describe('Markdown editor playground', () => {
         await expect(page.locator('.markdown-editor[data-mode="markup"] .cm-content')).toContainText('E = mc^2');
     });
 
+    test('inserts an editable 3 by 3 table from the toolbar', async ({page}) => {
+        await page.goto('/');
+
+        await page.getByTitle('Таблица 3×3').click();
+
+        await expect(page.locator('.ProseMirror table').last()).toBeVisible();
+        await expect(page.locator('.ProseMirror table').last().locator('td')).toHaveCount(9);
+        await page.locator('.ProseMirror table').last().locator('td').first().click();
+        await expect(page.locator('.markdown-editor__table-control--column')).toHaveCount(3);
+        await expect(page.locator('.markdown-editor__table-control--row')).toHaveCount(3);
+        await page.locator('.markdown-editor__table-control--column').first().click();
+        await expect(page.locator('.ProseMirror table').last().locator('td')).toHaveCount(12);
+
+        await page.getByRole('tab', {name: 'Разметка'}).click();
+        await page.getByRole('tab', {name: 'Визуальный'}).click();
+
+        await expect(page.locator('.ProseMirror table').last()).toBeVisible();
+        await expect(page.locator('.ProseMirror table').last().locator('th')).toHaveCount(4);
+        await expect(page.locator('.ProseMirror table').last().locator('td')).toHaveCount(8);
+        await expect(page.locator('.ProseMirror table').last().locator('td').first()).toHaveCSS('border-top-style', 'solid');
+    });
+
     test('folds content from a folding heading through the toolbar', async ({page}) => {
         await page.goto('/');
 

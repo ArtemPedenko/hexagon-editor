@@ -16,7 +16,7 @@ import type {ParseSpec} from 'prosemirror-markdown';
 import {EditorState, Plugin, PluginKey} from 'prosemirror-state';
 import type {Command} from 'prosemirror-state';
 import {liftListItem, sinkListItem, splitListItem, wrapInList} from 'prosemirror-schema-list';
-import {tableEditing, tableNodes} from 'prosemirror-tables';
+import {addColumnAfter, addRowAfter, CellSelection, findTable, tableEditing, TableMap, tableNodes} from 'prosemirror-tables';
 import {Decoration, DecorationSet, EditorView} from 'prosemirror-view';
 
 import 'prosemirror-view/style/prosemirror.css';
@@ -455,6 +455,60 @@ export interface BasicWysiwygSelectionState {
 }
 
 const foldingPluginKey = new PluginKey<DecorationSet>('folding-heading');
+const tableControlsPluginKey = new PluginKey<DecorationSet>('table-controls');
+
+function createTableControl(action: 'column' | 'row', position: number): HTMLElement {
+    const control = document.createElement('button');
+    control.className = `markdown-editor__table-control markdown-editor__table-control--${action}`;
+    control.dataset.tableAction = action;
+    control.dataset.tablePosition = String(position);
+    control.setAttribute('aria-label', action === 'column' ? 'Добавить колонку' : 'Добавить строку');
+    control.type = 'button';
+    control.textContent = '+';
+    control.addEventListener('pointerenter', () => {
+        const table = control.closest('table');
+        if (table === null) return;
+        const bounds = table.getBoundingClientRect();
+        control.style.setProperty('--table-control-line-size', `${action === 'column' ? bounds.height : bounds.width}px`);
+    });
+    return control;
+}
+
+function createTableControlsPlugin(): Plugin<DecorationSet> {
+    return new Plugin({
+        key: tableControlsPluginKey,
+        props: {
+            decorations: (state) => {
+                const table = findTable(state.selection.$from);
+                if (table === null) return DecorationSet.empty;
+                const map = TableMap.get(table.node);
+                const decorations: Decoration[] = [];
+                for (const column of Array.from({length: map.width}, (_value, index) => index)) {
+                    const position = table.start + map.map[column]!;
+                    decorations.push(Decoration.widget(position + 1, () => createTableControl('column', position), {side: -1}));
+                }
+                for (const row of Array.from({length: map.height}, (_value, index) => index)) {
+                    const position = table.start + map.map[row * map.width]!;
+                    decorations.push(Decoration.widget(position + 1, () => createTableControl('row', position), {side: -1}));
+                }
+                return DecorationSet.create(state.doc, decorations);
+            },
+            handleDOMEvents: {
+                mousedown: (view, event) => {
+                    const target = event.target;
+                    if (!(target instanceof HTMLElement)) return false;
+                    const control = target.closest<HTMLElement>('[data-table-action][data-table-position]');
+                    if (control === null) return false;
+                    const position = Number(control.dataset.tablePosition);
+                    event.preventDefault();
+                    view.dispatch(view.state.tr.setSelection(CellSelection.create(view.state.doc, position)));
+                    (control.dataset.tableAction === 'column' ? addColumnAfter : addRowAfter)(view.state, view.dispatch);
+                    return true;
+                },
+            },
+        },
+    });
+}
 
 function createFoldingPlugin(): Plugin<DecorationSet> {
     const createDecorations = (document: ProseMirrorNode): DecorationSet => {
@@ -652,6 +706,7 @@ export function mountBasicWysiwygEditor({
             doc: basicMarkdownCodec.parse(initialValue),
             plugins: [
                 createFoldingPlugin(),
+                createTableControlsPlugin(),
                 history(),
                 keymap({
                     'Mod-Shift-z': commands.redo,
@@ -685,7 +740,8 @@ export function mountBasicWysiwygEditor({
                 EditorState.create({
                     doc: basicMarkdownCodec.parse(value),
                     plugins: [
-                        createFoldingPlugin(),
+                    createFoldingPlugin(),
+                    createTableControlsPlugin(),
                         history(),
                         keymap({
                             'Mod-Shift-z': commands.redo,

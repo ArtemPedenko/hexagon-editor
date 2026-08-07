@@ -602,6 +602,96 @@ defineExpose<MarkdownEditorExposed>({
     cursor: text;
 }
 
+.markdown-editor :deep(.ProseMirror table) {
+    width: calc(100% - 1.5rem);
+    margin: 1.75rem 0 1rem 1.5rem;
+    border-collapse: collapse;
+}
+
+.markdown-editor :deep(.ProseMirror th),
+.markdown-editor :deep(.ProseMirror td) {
+    position: relative;
+    min-width: 5rem;
+    padding: 0.45rem 0.6rem;
+    border: 1px solid var(--markdown-border);
+    text-align: left;
+}
+
+.markdown-editor :deep(.markdown-editor__table-control) {
+    position: absolute;
+    z-index: 2;
+    display: grid;
+    width: 0.5rem;
+    min-width: 0;
+    height: 0.5rem;
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    color: transparent;
+    background: #8b919e;
+    place-items: center;
+    transition: width 120ms ease, height 120ms ease, color 120ms ease, background 120ms ease;
+}
+
+.markdown-editor :deep(.markdown-editor__table-control--column) {
+    top: -1.1rem;
+    left: 100%;
+    transform: translateX(-50%);
+}
+
+.markdown-editor :deep(.markdown-editor__table-control--row) {
+    top: 100%;
+    left: -1.1rem;
+    transform: translateY(-50%);
+}
+
+.markdown-editor :deep(.markdown-editor__table-control:hover),
+.markdown-editor :deep(.markdown-editor__table-control:focus-visible) {
+    width: 1.75rem;
+    height: 1.75rem;
+    outline: none;
+    color: #8dacff;
+    background: #202125;
+    box-shadow: inset 0 0 0 2px #4f7cff;
+    font-size: 1.5rem;
+    line-height: 1;
+}
+
+.markdown-editor :deep(.markdown-editor__table-control--column:hover),
+.markdown-editor :deep(.markdown-editor__table-control--column:focus-visible) {
+    top: -1.75rem;
+}
+
+.markdown-editor :deep(.markdown-editor__table-control--row:hover),
+.markdown-editor :deep(.markdown-editor__table-control--row:focus-visible) {
+    left: -1.75rem;
+}
+
+.markdown-editor :deep(.markdown-editor__table-control--column:hover)::after,
+.markdown-editor :deep(.markdown-editor__table-control--column:focus-visible)::after {
+    position: absolute;
+    top: 1.75rem;
+    height: calc(var(--table-control-line-size, 0px) - 3px);
+    border-left: 3px solid #4f7cff;
+    content: '';
+    pointer-events: none;
+}
+
+.markdown-editor :deep(.markdown-editor__table-control--row:hover)::after,
+.markdown-editor :deep(.markdown-editor__table-control--row:focus-visible)::after {
+    position: absolute;
+    left: 1.75rem;
+    width: calc(var(--table-control-line-size, 0px) - 3px);
+    border-top: 3px solid #4f7cff;
+    content: '';
+    pointer-events: none;
+}
+
+.markdown-editor :deep(.ProseMirror th) {
+    background: color-mix(in srgb, var(--markdown-background) 88%, var(--markdown-text));
+}
+
 .markdown-editor :deep(.markdown-editor__folded-content) {
     display: none;
 }
