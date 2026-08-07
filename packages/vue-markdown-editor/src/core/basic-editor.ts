@@ -336,7 +336,7 @@ function createExtendedMarkdownIt(): MarkdownIt {
       close.tag = `h${level}`;
     }
   });
-  markdown.core.ruler.after("block", "heading_attributes", (state) => {
+  markdown.core.ruler.after("folding_heading", "heading_attributes", (state) => {
     for (const [index, token] of state.tokens.entries()) {
       const inline = state.tokens[index + 1];
       if (token?.type !== "heading_open" || inline?.type !== "inline") continue;

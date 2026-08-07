@@ -53,6 +53,17 @@ describe('basic Markdown extensions', () => {
         });
     });
 
+    it('parses folding heading attributes without rendering them as text', () => {
+        const source = '#+ Vue Markdown editor {#editor-demo .playground-title}';
+        const document = basicMarkdownCodec.parse(source);
+        const reparsed = basicMarkdownCodec.parse(basicMarkdownCodec.serialize(document));
+
+        expect(document.firstChild?.attrs).toMatchObject({class: 'playground-title', folding: false, id: 'editor-demo', level: 1});
+        expect(document.firstChild?.textContent).toBe('Vue Markdown editor');
+        expect(reparsed.firstChild?.attrs).toMatchObject({class: 'playground-title', folding: false, id: 'editor-demo', level: 1});
+        expect(reparsed.firstChild?.textContent).toBe('Vue Markdown editor');
+    });
+
     it('round-trips definition lists, folding headings, and quote links', () => {
         const source = [
             '##+ Collapsible section',

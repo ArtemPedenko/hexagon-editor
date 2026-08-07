@@ -226,4 +226,20 @@ test.describe('Markdown editor playground', () => {
         await expect(page.locator('.ProseMirror p').filter({hasText: 'Этот раздел можно свернуть кнопкой в тулбаре.'}))
             .toHaveClass(/markdown-editor__folded-content/);
     });
+
+    test('preserves folding heading attributes when changing editor modes', async ({page}) => {
+        await page.goto('/');
+
+        const heading = page.locator('.ProseMirror h1#editor-demo.playground-title');
+        await heading.click();
+        await page.getByTitle('Свернуть раздел').click();
+
+        await page.getByRole('tab', {name: 'Разметка'}).click();
+        await expect(page.locator('.markdown-editor[data-mode="markup"] .cm-content'))
+            .toContainText('#+ Vue Markdown editor {#editor-demo .playground-title}');
+        await page.getByRole('tab', {name: 'Визуальный'}).click();
+
+        await expect(page.locator('.ProseMirror h1#editor-demo.playground-title'))
+            .toHaveText('Vue Markdown editor');
+    });
 });
