@@ -15,6 +15,7 @@ describe('basic Markdown extensions', () => {
         expect(getBasicWysiwygSelectionState(state)).toMatchObject({
             bold: false,
             code: false,
+            formula: false,
             italic: false,
             mark: false,
             strikethrough: false,
@@ -139,6 +140,22 @@ describe('basic Markdown extensions', () => {
         expect(executed).toBe(true);
         expect(nextState.doc.firstChild?.attrs.folding).toBe(true);
         expect(basicMarkdownCodec.serialize(nextState.doc)).toContain('##+ Section');
+    });
+
+    it('inserts a math block and opens its local source editor from an empty paragraph', () => {
+        const document = basicMarkdownSchema.node('doc', null, [
+            basicMarkdownSchema.node('paragraph'),
+        ]);
+        const state = EditorState.create({doc: document, selection: TextSelection.create(document, 1)});
+        let nextState = state;
+
+        const inserted = createBasicEditorCommands().insertMathBlock(state, (transaction) => {
+            nextState = state.apply(transaction);
+        });
+
+        expect(inserted).toBe(true);
+        expect(nextState.doc.firstChild?.type.name).toBe('math_block');
+        expect(nextState.doc.firstChild?.attrs.latex).toBe('E = mc^2');
     });
 
     it('toggles bold for the selected text', () => {

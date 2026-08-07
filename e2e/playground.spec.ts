@@ -64,6 +64,7 @@ test.describe('Markdown editor playground', () => {
         await page.goto('/');
         await page.locator('.ProseMirror [data-math-inline]').dblclick();
 
+        await expect(page.getByTitle('Формула')).toHaveAttribute('aria-pressed', 'true');
         const sourceEditor = page.locator('.markdown-editor__atomic-source .cm-content');
         await sourceEditor.click();
         await page.keyboard.press('End');
@@ -73,6 +74,19 @@ test.describe('Markdown editor playground', () => {
 
         await expect(page.locator('.markdown-editor__atomic-source')).toBeHidden();
         await expect(page.locator('.ProseMirror [data-math-inline]')).toContainText('1');
+        await expect(page.getByTitle('Формула')).toHaveAttribute('aria-pressed', 'false');
+    });
+
+    test('does not insert another formula while editing the current formula', async ({page}) => {
+        await page.goto('/');
+        await page.locator('.ProseMirror [data-math-block]').dblclick();
+
+        const sourceEditor = page.locator('.markdown-editor__atomic-source .cm-content');
+        await page.getByTitle('Формула').click();
+
+        await expect(page.locator('.markdown-editor')).toHaveAttribute('data-mode', 'wysiwyg');
+        await expect(sourceEditor).toContainText('sum');
+        await expect(sourceEditor).not.toContainText('E = mc^2');
     });
 
     test('keeps the document available in all editor modes', async ({page}) => {
@@ -127,8 +141,33 @@ test.describe('Markdown editor playground', () => {
         await page.goto('/');
 
         await page.getByTitle('Формула').click();
+        await page.getByRole('menuitem', {name: 'Блок с формулой'}).click();
 
         await expect(page.locator('.markdown-editor[data-mode="markup"] .cm-content')).toContainText('E = mc^2');
+    });
+
+    test('opens local formula editing when inserting into an empty visual paragraph', async ({page}) => {
+        await page.goto('/');
+
+        await page.locator('.ProseMirror p').filter({hasText: 'Этот раздел можно свернуть кнопкой в тулбаре.'}).click();
+        await page.keyboard.press('End');
+        await page.keyboard.press('Enter');
+        await page.getByTitle('Формула').click();
+        await page.getByRole('menuitem', {name: 'Блок с формулой'}).click();
+
+        await expect(page.locator('.markdown-editor')).toHaveAttribute('data-mode', 'wysiwyg');
+        await expect(page.locator('.markdown-editor__atomic-source .cm-content')).toContainText('E = mc^2');
+    });
+
+    test('inserts an inline formula from the formula menu', async ({page}) => {
+        await page.goto('/');
+
+        await page.getByTitle('Формула').click();
+        await expect(page.getByRole('menu', {name: 'Вставить формулу'})).toBeVisible();
+        await page.getByRole('menuitem', {name: 'Формула в тексте'}).click();
+
+        await expect(page.locator('.markdown-editor')).toHaveAttribute('data-mode', 'wysiwyg');
+        await expect(page.locator('.markdown-editor__atomic-source .cm-content')).toContainText('E = mc^2');
     });
 
     test('inserts an editable 3 by 3 table from the toolbar', async ({page}) => {

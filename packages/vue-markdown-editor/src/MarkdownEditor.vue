@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import {autoUpdate, computePosition, flip, offset, shift} from '@floating-ui/dom';
 import {computed, h, nextTick, onBeforeUnmount, onMounted, ref, watch} from 'vue';
 import type {FunctionalComponent} from 'vue';
 import {TextSelection} from 'prosemirror-state';
@@ -97,12 +98,14 @@ const mode = ref<MarkdownEditorMode>(props.mode);
 const linkEditorVisible = ref(false);
 const linkUrl = ref('https://');
 const fileInput = ref<HTMLInputElement>();
+const formulaMenuVisible = ref(false);
 const uploadKind = ref<'file' | 'image'>('image');
 const toolbarState = ref<BasicWysiwygSelectionState>({
     bold: false,
     bulletList: false,
     code: false,
     codeBlock: false,
+    formula: false,
     headingFolded: false,
     headingLevel: undefined,
     italic: false,
@@ -113,8 +116,19 @@ const toolbarState = ref<BasicWysiwygSelectionState>({
     underline: false,
 });
 const textStyle = computed(() => toolbarState.value.headingLevel?.toString() ?? 'paragraph');
+const textStyleLabel = computed(() => textStyle.value === 'paragraph' ? 'Текст' : `H${textStyle.value}`);
 const htmlDirective = '::: html\n\n<div>Add HTML code here</div>\n\n:::';
 const mathBlock = '$$\nE = mc^2\n$$';
+const formulaButton = ref<HTMLElement>();
+const formulaMenu = ref<HTMLElement>();
+const headingButton = ref<HTMLElement>();
+const headingMenu = ref<HTMLElement>();
+const headingMenuVisible = ref(false);
+const linkButton = ref<HTMLElement>();
+const linkForm = ref<HTMLElement>();
+let stopFormulaFloating: (() => void) | undefined;
+let stopHeadingFloating: (() => void) | undefined;
+let stopLinkFloating: (() => void) | undefined;
 let markupEditor: BasicMarkupEditor | undefined;
 let modeChangeId = 0;
 let syncing = false;
@@ -145,6 +159,7 @@ function destroyHosts(): void {
         bulletList: false,
         code: false,
         codeBlock: false,
+        formula: false,
         headingFolded: false,
         headingLevel: undefined,
         italic: false,
@@ -197,18 +212,52 @@ function applyLink(): void {
     linkEditorVisible.value = false;
 }
 
-function applyTextStyle(event: Event): void {
-    const target = event.target;
-    if (!(target instanceof HTMLSelectElement)) {
-        return;
-    }
-
-    if (target.value === 'paragraph') {
+function applyTextStyle(style: string): void {
+    if (style === 'paragraph') {
         execute(commands.paragraph);
-        return;
+    } else {
+        execute(commands.heading(Number(style)));
     }
 
-    execute(commands.heading(Number(target.value)));
+    headingMenuVisible.value = false;
+}
+
+function startFloating(reference: HTMLElement | undefined, floating: HTMLElement | undefined, onCleanup: (cleanup: (() => void) | undefined) => void): void {
+    if (reference === undefined || floating === undefined) return;
+    const editor = reference.closest<HTMLElement>('.markdown-editor');
+    if (editor !== null) {
+        const editorStyles = getComputedStyle(editor);
+        for (const name of ['--markdown-background', '--markdown-border', '--markdown-focus-background', '--markdown-focus-text', '--markdown-text']) {
+            floating.style.setProperty(name, editorStyles.getPropertyValue(name));
+        }
+    }
+    const update = async (): Promise<void> => {
+        const {x, y} = await computePosition(reference, floating, {
+            middleware: [offset(6), flip({padding: 8}), shift({padding: 8})],
+            placement: 'bottom-start',
+            strategy: 'fixed',
+        });
+        Object.assign(floating.style, {left: `${x}px`, position: 'fixed', top: `${y}px`});
+    };
+    onCleanup(autoUpdate(reference, floating, update));
+}
+
+async function showHeadingMenu(): Promise<void> {
+    headingMenuVisible.value = !headingMenuVisible.value;
+    stopHeadingFloating?.();
+    stopHeadingFloating = undefined;
+    if (!headingMenuVisible.value) return;
+    await nextTick();
+    startFloating(headingButton.value, headingMenu.value, (cleanup) => { stopHeadingFloating = cleanup; });
+}
+
+async function toggleLinkEditor(): Promise<void> {
+    linkEditorVisible.value = !linkEditorVisible.value;
+    stopLinkFloating?.();
+    stopLinkFloating = undefined;
+    if (!linkEditorVisible.value) return;
+    await nextTick();
+    startFloating(linkButton.value, linkForm.value, (cleanup) => { stopLinkFloating = cleanup; });
 }
 
 async function insertHtmlDirective(): Promise<void> {
@@ -218,9 +267,68 @@ async function insertHtmlDirective(): Promise<void> {
 }
 
 async function insertMathBlock(): Promise<void> {
+    formulaMenuVisible.value = false;
+    if (toolbarState.value.formula) {
+        return;
+    }
+
+    if (visualEditor?.run(commands.insertMathBlock) === true) {
+        return;
+    }
+
     setValue(value.value.length === 0 ? mathBlock : `${value.value}\n\n${mathBlock}`);
     await setMode('markup');
     markupEditor?.focus();
+}
+
+function insertInlineMath(): void {
+    formulaMenuVisible.value = false;
+    visualEditor?.run(commands.insertInlineMath);
+}
+
+async function toggleFormulaMenu(): Promise<void> {
+    if (!toolbarState.value.formula) {
+        formulaMenuVisible.value = !formulaMenuVisible.value;
+        stopFormulaFloating?.();
+        stopFormulaFloating = undefined;
+        if (formulaMenuVisible.value) {
+            await nextTick();
+            startFloating(formulaButton.value, formulaMenu.value, (cleanup) => { stopFormulaFloating = cleanup; });
+        }
+    }
+}
+
+function closeFloatingPanels(event: PointerEvent): void {
+    const target = event.target;
+    if (!(target instanceof Node)) return;
+    if (!headingButton.value?.contains(target) && !headingMenu.value?.contains(target)) {
+        headingMenuVisible.value = false;
+        stopHeadingFloating?.();
+        stopHeadingFloating = undefined;
+    }
+    if (!formulaButton.value?.contains(target) && !formulaMenu.value?.contains(target)) {
+        formulaMenuVisible.value = false;
+        stopFormulaFloating?.();
+        stopFormulaFloating = undefined;
+    }
+    if (!linkButton.value?.contains(target) && !linkForm.value?.contains(target)) {
+        linkEditorVisible.value = false;
+        stopLinkFloating?.();
+        stopLinkFloating = undefined;
+    }
+}
+
+function closePanelsOnEscape(event: KeyboardEvent): void {
+    if (event.key !== 'Escape') return;
+    headingMenuVisible.value = false;
+    formulaMenuVisible.value = false;
+    linkEditorVisible.value = false;
+    stopHeadingFloating?.();
+    stopFormulaFloating?.();
+    stopLinkFloating?.();
+    stopHeadingFloating = undefined;
+    stopFormulaFloating = undefined;
+    stopLinkFloating = undefined;
 }
 
 function openFilePicker(kind: 'file' | 'image'): void {
@@ -348,8 +456,19 @@ watch(
     },
 );
 
-onMounted(mountHosts);
-onBeforeUnmount(destroyHosts);
+onMounted(() => {
+    mountHosts();
+    document.addEventListener('pointerdown', closeFloatingPanels);
+    document.addEventListener('keydown', closePanelsOnEscape);
+});
+onBeforeUnmount(() => {
+    destroyHosts();
+    document.removeEventListener('pointerdown', closeFloatingPanels);
+    document.removeEventListener('keydown', closePanelsOnEscape);
+    stopHeadingFloating?.();
+    stopFormulaFloating?.();
+    stopLinkFloating?.();
+});
 
 defineExpose<MarkdownEditorExposed>({
     focus: () => (mode.value === 'markup' ? markupEditor?.focus() : visualEditor?.focus()),
@@ -371,24 +490,10 @@ defineExpose<MarkdownEditorExposed>({
       <slot name="header" />
     </header>
 
-    <div v-if="mode !== 'markup' && !readonly" class="markdown-editor__toolbar" role="toolbar" aria-label="Форматирование Markdown">
+    <div v-if="mode !== 'markup' && !readonly" class="markdown-editor__toolbar" data-markdown-editor-toolbar role="toolbar" aria-label="Форматирование Markdown">
       <button type="button" :aria-label="t('undo')" :title="t('undo')" @mousedown.prevent @click="execute(commands.undo)">↶</button>
       <button type="button" :aria-label="t('redo')" :title="t('redo')" @mousedown.prevent @click="execute(commands.redo)">↷</button>
-      <select
-        :aria-label="t('heading')"
-        :class="{'markdown-editor__select--active': toolbarState.headingLevel !== undefined}"
-        :title="t('heading')"
-        :value="textStyle"
-        @change="applyTextStyle"
-      >
-        <option value="paragraph">Текст</option>
-        <option value="1">H1</option>
-        <option value="2">H2</option>
-        <option value="3">H3</option>
-        <option value="4">H4</option>
-        <option value="5">H5</option>
-        <option value="6">H6</option>
-      </select>
+      <button ref="headingButton" :aria-expanded="headingMenuVisible" :aria-label="t('heading')" :aria-pressed="toolbarState.headingLevel !== undefined" :title="t('heading')" type="button" @mousedown.prevent @click="showHeadingMenu">{{ textStyleLabel }}⌄</button>
       <button :aria-label="t('bold')" :aria-pressed="toolbarState.bold" type="button" :title="t('bold')" @mousedown.prevent @click="execute(commands.bold)"><strong>B</strong></button>
       <button :aria-label="t('italic')" :aria-pressed="toolbarState.italic" type="button" :title="t('italic')" @mousedown.prevent @click="execute(commands.italic)"><em>I</em></button>
       <button :aria-pressed="toolbarState.underline" type="button" title="Подчёркивание" @mousedown.prevent @click="execute(commands.underline)"><u>U</u></button>
@@ -409,23 +514,44 @@ defineExpose<MarkdownEditorExposed>({
         ▸
       </button>
       <button v-if="toolbarPreset === 'default'" :aria-pressed="toolbarState.codeBlock" type="button" title="Code block" @mousedown.prevent @click="execute(commands.codeBlock)">{ }</button>
-      <button type="button" :aria-label="t('link')" :title="t('link')" @mousedown.prevent @click="linkEditorVisible = !linkEditorVisible">⌁</button>
+      <button ref="linkButton" :aria-expanded="linkEditorVisible" type="button" :aria-label="t('link')" :title="t('link')" @mousedown.prevent @click="toggleLinkEditor">⌁</button>
       <label v-if="toolbarPreset === 'default'" class="markdown-editor__color" title="Цвет текста">
         <input aria-label="Цвет текста" type="color" value="#202125" @input="execute(commands.setColor(($event.target as HTMLInputElement).value))" />
       </label>
       <button v-if="toolbarPreset === 'default'" type="button" title="Изображение" @mousedown.prevent @click="openFilePicker('image')">▧</button>
       <button v-if="toolbarPreset === 'default'" type="button" title="Файл" @mousedown.prevent @click="openFilePicker('file')">⌕</button>
-      <button v-if="toolbarPreset === 'default'" type="button" :aria-label="t('formula')" :title="t('formula')" @mousedown.prevent @click="insertMathBlock">Σ</button>
+      <div v-if="toolbarPreset === 'default'" class="markdown-editor__formula-control">
+        <button
+          ref="formulaButton"
+          :aria-expanded="formulaMenuVisible"
+          :aria-label="t('formula')"
+          :aria-pressed="toolbarState.formula"
+          :title="t('formula')"
+          type="button"
+          @mousedown.prevent
+          @click="toggleFormulaMenu"
+        >Σ</button>
+      </div>
       <button v-if="toolbarPreset === 'default'" type="button" :aria-label="t('html')" :title="t('html')" @mousedown.prevent @click="insertHtmlDirective">&lt;/&gt;</button>
       <button v-if="toolbarPreset === 'default'" type="button" title="Горизонтальная линия" @mousedown.prevent @click="execute(commands.horizontalRule)">―</button>
       <button v-if="toolbarPreset === 'default'" type="button" title="Таблица 3×3" @mousedown.prevent @click="execute(commands.insertTable())">▦</button>
-      <form v-if="linkEditorVisible" class="markdown-editor__link-form" @submit.prevent="applyLink">
-        <input v-model="linkUrl" aria-label="Адрес ссылки" type="url" />
-        <button type="submit">Готово</button>
-      </form>
       <slot name="toolbar" :commands="commands" :execute="execute" />
       <input ref="fileInput" class="markdown-editor__file-input" multiple type="file" @change="uploadSelectedFiles" />
     </div>
+
+    <Teleport to="body">
+      <div v-if="headingMenuVisible" ref="headingMenu" class="markdown-editor__floating-menu" role="menu" :aria-label="t('heading')">
+        <button v-for="style in ['paragraph', '1', '2', '3', '4', '5', '6']" :key="style" :aria-checked="textStyle === style" role="menuitemradio" type="button" @click="applyTextStyle(style)">{{ style === 'paragraph' ? 'Текст' : `H${style}` }}</button>
+      </div>
+      <div v-if="formulaMenuVisible" ref="formulaMenu" class="markdown-editor__floating-menu" role="menu" aria-label="Вставить формулу">
+        <button role="menuitem" type="button" @click="insertInlineMath">Формула в тексте</button>
+        <button role="menuitem" type="button" @click="insertMathBlock">Блок с формулой</button>
+      </div>
+      <form v-if="linkEditorVisible" ref="linkForm" class="markdown-editor__link-form" @submit.prevent="applyLink">
+        <input v-model="linkUrl" aria-label="Адрес ссылки" type="url" />
+        <button type="submit">Готово</button>
+      </form>
+    </Teleport>
 
     <div class="markdown-editor__hosts" :class="{'markdown-editor__hosts--split': mode === 'split'}">
       <div v-if="mode !== 'markup'" ref="visualTarget" class="markdown-editor__visual" />
@@ -484,10 +610,36 @@ defineExpose<MarkdownEditorExposed>({
     display: none;
 }
 
+.markdown-editor__floating-menu {
+    z-index: 10;
+    display: grid;
+    width: max-content;
+    max-width: calc(100vw - 1rem);
+    min-width: 11rem;
+    padding: 0.25rem;
+    border: 1px solid var(--markdown-border);
+    border-radius: 0.375rem;
+    box-shadow: 0 0.5rem 1.25rem rgb(0 0 0 / 18%);
+    background: var(--markdown-background);
+}
+
+.markdown-editor__floating-menu button {
+    justify-content: flex-start;
+    width: 100%;
+    padding-inline: 0.5rem;
+    white-space: nowrap;
+}
+
 .markdown-editor__link-form {
     display: flex;
-    flex: 1 0 14rem;
     gap: 0.25rem;
+    z-index: 10;
+    width: min(22rem, calc(100vw - 1rem));
+    padding: 0.25rem;
+    border: 1px solid var(--markdown-border);
+    border-radius: 0.375rem;
+    box-shadow: 0 0.5rem 1.25rem rgb(0 0 0 / 18%);
+    background: var(--markdown-background);
 }
 
 .markdown-editor__color {
@@ -523,6 +675,25 @@ defineExpose<MarkdownEditorExposed>({
     font: inherit;
 }
 
+.markdown-editor__link-form button {
+    min-width: 2rem;
+    height: 2rem;
+    padding: 0 0.5rem;
+    border: 0;
+    border-radius: 0.25rem;
+    color: var(--markdown-text);
+    background: transparent;
+    font: inherit;
+    cursor: pointer;
+}
+
+.markdown-editor__link-form button:hover,
+.markdown-editor__link-form button:focus-visible {
+    outline: none;
+    color: var(--markdown-focus-text);
+    background: var(--markdown-focus-background);
+}
+
 .markdown-editor button {
     min-width: 2rem;
     height: 2rem;
@@ -535,29 +706,10 @@ defineExpose<MarkdownEditorExposed>({
     cursor: pointer;
 }
 
-.markdown-editor select {
-    height: 2rem;
-    padding: 0 0.35rem;
-    border: 0;
-    border-radius: 0.25rem;
-    color: inherit;
-    background: transparent;
-    font: inherit;
-    cursor: pointer;
-}
-
 .markdown-editor button[aria-selected='true'],
 .markdown-editor button[aria-pressed='true'],
 .markdown-editor button:hover,
 .markdown-editor button:focus-visible {
-    outline: none;
-    color: var(--markdown-focus-text);
-    background: var(--markdown-focus-background);
-}
-
-.markdown-editor select:hover,
-.markdown-editor select.markdown-editor__select--active,
-.markdown-editor select:focus-visible {
     outline: none;
     color: var(--markdown-focus-text);
     background: var(--markdown-focus-background);
@@ -658,7 +810,7 @@ defineExpose<MarkdownEditorExposed>({
     display: none;
 }
 
-.markdown-editor :deep(.markdown-editor__table-popover) {
+:global(.markdown-editor__table-popover) {
     position: absolute;
     z-index: 4;
     top: calc(100% + 0.4rem);
@@ -673,7 +825,7 @@ defineExpose<MarkdownEditorExposed>({
     box-shadow: 0 0.75rem 1.5rem rgb(0 0 0 / 30%);
 }
 
-.markdown-editor :deep(.markdown-editor__table-popover-action) {
+:global(.markdown-editor__table-popover-action) {
     width: 100%;
     min-height: 2rem;
     min-width: 0;
@@ -688,28 +840,28 @@ defineExpose<MarkdownEditorExposed>({
     text-align: left;
 }
 
-.markdown-editor :deep(.markdown-editor__table-popover-action:hover),
-.markdown-editor :deep(.markdown-editor__table-popover-action:focus-visible) {
+:global(.markdown-editor__table-popover-action:hover),
+:global(.markdown-editor__table-popover-action:focus-visible) {
     outline: none;
     background: color-mix(in srgb, var(--markdown-background) 84%, var(--markdown-text));
 }
 
-.markdown-editor :deep(.markdown-editor__table-popover-action--danger) {
+:global(.markdown-editor__table-popover-action--danger) {
     margin-top: 0.1875rem;
     color: #c95050;
 }
 
-.markdown-editor :deep(.markdown-editor__table-popover-action--danger + .markdown-editor__table-popover-action--danger) {
+:global(.markdown-editor__table-popover-action--danger + .markdown-editor__table-popover-action--danger) {
     margin-top: 0;
 }
 
-.markdown-editor :deep(.markdown-editor__table-popover-action--danger:hover),
-.markdown-editor :deep(.markdown-editor__table-popover-action--danger:focus-visible) {
+:global(.markdown-editor__table-popover-action--danger:hover),
+:global(.markdown-editor__table-popover-action--danger:focus-visible) {
     color: #fff;
     background: #a63232;
 }
 
-.markdown-editor :deep(.markdown-editor__table-popover-action:disabled) {
+:global(.markdown-editor__table-popover-action:disabled) {
     cursor: not-allowed;
     opacity: 0.45;
 }

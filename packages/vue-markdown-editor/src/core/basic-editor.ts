@@ -9,6 +9,7 @@ import { keymap } from "prosemirror-keymap";
 import katex from "katex";
 import MarkdownIt from "markdown-it";
 import deflist from "markdown-it-deflist";
+import { autoUpdate, computePosition, flip, offset, shift } from "@floating-ui/dom";
 import { Schema } from "prosemirror-model";
 import type {
   MarkSpec,
@@ -635,6 +636,8 @@ export interface BasicEditorCommands {
   horizontalRule: Command;
   insertFile(href: string, name: string): Command;
   insertImage(src: string, alt: string): Command;
+  insertMathBlock: Command;
+  insertInlineMath: Command;
   insertTable(rows?: number, columns?: number): Command;
   italic: Command;
   link(href: string): Command;
@@ -657,6 +660,7 @@ export interface BasicWysiwygSelectionState {
   bulletList: boolean;
   code: boolean;
   codeBlock: boolean;
+  formula: boolean;
   headingLevel: number | undefined;
   headingFolded: boolean;
   italic: boolean;
@@ -670,6 +674,7 @@ export interface BasicWysiwygSelectionState {
 const foldingPluginKey = new PluginKey<DecorationSet>("folding-heading");
 const atomicSourcePluginKey = new PluginKey<number | null>("atomic-source-editor");
 const tablePopoverPluginKey = new PluginKey<number | null>("table-popover");
+const tablePopoverCleanups = new WeakMap<HTMLElement, () => void>();
 const TABLE_LONG_PRESS_DELAY = 500;
 const atomicSourceNodeNames = new Set([
   "directive",
@@ -775,7 +780,13 @@ function createAtomicSourceEditorPlugin(): Plugin<number | null> {
           };
           markupEditor = mountBasicMarkupEditor({initialValue: getAtomicSource(found.node), target: dom});
           const handleOutsidePointerDown = (event: PointerEvent): void => {
-            if (!(event.target instanceof Node) || dom.contains(event.target)) return;
+            if (
+              !(event.target instanceof Node) ||
+              dom.contains(event.target) ||
+              (event.target instanceof Element &&
+                event.target.closest("[data-markdown-editor-toolbar]"))
+            )
+              return;
             finish(true);
           };
           document.addEventListener("pointerdown", handleOutsidePointerDown, true);
@@ -878,6 +889,47 @@ function createTablePopover(
   return controls;
 }
 
+function mountTablePopover(
+  view: EditorView,
+  position: number,
+  tableMap: TableMap,
+): HTMLElement {
+  let stopAutoUpdate: (() => void) | undefined;
+  const controls = createTablePopover(position, tableMap, (event, action, cellPosition) => {
+    event.preventDefault();
+    event.stopPropagation();
+    runTableAction(view, action, cellPosition);
+  });
+  document.body.append(controls);
+  const reference = view.nodeDOM(position);
+  if (reference instanceof HTMLElement) {
+    const editor = reference.closest<HTMLElement>(".markdown-editor");
+    if (editor !== null) {
+      const editorStyles = getComputedStyle(editor);
+      for (const name of [
+        "--markdown-background",
+        "--markdown-border",
+        "--markdown-text",
+      ]) controls.style.setProperty(name, editorStyles.getPropertyValue(name));
+    }
+    const update = async (): Promise<void> => {
+      const { x, y } = await computePosition(reference, controls, {
+        middleware: [offset(6), flip({padding: 8}), shift({padding: 8})],
+        placement: "bottom-start",
+        strategy: "fixed",
+      });
+      Object.assign(controls.style, { left: `${x}px`, position: "fixed", top: `${y}px` });
+    };
+    stopAutoUpdate = autoUpdate(reference, controls, update);
+  }
+  const placeholder = document.createElement("span");
+  tablePopoverCleanups.set(placeholder, () => {
+    stopAutoUpdate?.();
+    controls.remove();
+  });
+  return placeholder;
+}
+
 function createTableControlsPlugin(): Plugin<number | null> {
   let editorView: EditorView | undefined;
   let longPressTimer: ReturnType<typeof setTimeout> | undefined;
@@ -959,18 +1011,16 @@ function createTableControlsPlugin(): Plugin<number | null> {
         return DecorationSet.create(state.doc, [
           Decoration.widget(
             $cell.pos + 1,
-            () =>
-              createTablePopover(
-                $cell.pos,
-                map,
-                (event, action, cellPosition) => {
-                  event.preventDefault();
-                  event.stopPropagation();
-                  if (editorView !== undefined)
-                    runTableAction(editorView, action, cellPosition);
-                },
-              ),
-            { side: -1 },
+            () => editorView === undefined
+              ? document.createElement("span")
+              : mountTablePopover(editorView, $cell.pos, map),
+            {
+              destroy: (dom) => {
+                if (dom instanceof HTMLElement)
+                  tablePopoverCleanups.get(dom)?.();
+              },
+              side: -1,
+            },
           ),
         ]);
       },
@@ -1108,6 +1158,37 @@ export function createBasicEditorCommands(): BasicEditorCommands {
     },
     insertFile: insertFileCommand,
     insertImage: insertImageCommand,
+    insertMathBlock: (state, dispatch) => {
+      const {$from, empty} = state.selection;
+      if (!empty || $from.parent.type.name !== "paragraph" || $from.parent.content.size !== 0)
+        return false;
+      if (dispatch !== undefined) {
+        const position = $from.before();
+        const transaction = state.tr.replaceWith(
+          position,
+          $from.after(),
+          getNodeType("math_block").create({latex: "E = mc^2"}),
+        );
+        transaction
+          .setMeta(atomicSourcePluginKey, transaction.mapping.map(position, -1))
+          .scrollIntoView();
+        dispatch(transaction);
+      }
+      return true;
+    },
+    insertInlineMath: (state, dispatch) => {
+      if (dispatch !== undefined) {
+        const position = state.selection.from;
+        const transaction = state.tr.replaceSelectionWith(
+          getNodeType("inline_math").create({latex: "E = mc^2"}),
+        );
+        transaction
+          .setMeta(atomicSourcePluginKey, transaction.mapping.map(position, -1))
+          .scrollIntoView();
+        dispatch(transaction);
+      }
+      return true;
+    },
     insertTable: createTableCommand,
     italic: toggleMark(getMarkType("em")),
     link: (href) => toggleMark(getMarkType("link"), { href }),
@@ -1149,12 +1230,20 @@ export function getBasicWysiwygSelectionState(
   state: EditorState,
 ): BasicWysiwygSelectionState {
   const { $from } = state.selection;
+  const atomicSourcePosition = atomicSourcePluginKey.getState(state);
+  const atomicSourceNode =
+    atomicSourcePosition === null || atomicSourcePosition === undefined
+      ? undefined
+      : findAtomicSourceNode(state.doc, atomicSourcePosition)?.node;
 
   return {
     bold: hasActiveMark(state, "strong"),
     bulletList: hasAncestor(state, "bullet_list"),
     code: hasActiveMark(state, "code"),
     codeBlock: hasAncestor(state, "code_block"),
+    formula:
+      atomicSourceNode?.type.name === "inline_math" ||
+      atomicSourceNode?.type.name === "math_block",
     headingLevel:
       $from.parent.type.name === "heading"
         ? Number($from.parent.attrs.level)

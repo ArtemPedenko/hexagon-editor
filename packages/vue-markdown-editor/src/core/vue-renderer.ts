@@ -1,6 +1,7 @@
 /* eslint-disable vue/one-component-per-file -- Independent ProseMirror mounts each need a Vue render root. */
 import {createApp, h, reactive} from 'vue';
 import type {App, Component} from 'vue';
+import {autoUpdate, computePosition, flip, offset, shift} from '@floating-ui/dom';
 import {Plugin} from 'prosemirror-state';
 import type {EditorState} from 'prosemirror-state';
 import type {Node as ProseMirrorNode} from 'prosemirror-model';
@@ -118,7 +119,7 @@ export function createVueContextPanelPlugin(
         view: (editorView) => {
             const dom = document.createElement('div');
             dom.className = options.className ?? 'markdown-editor-context-panel';
-            dom.style.position = 'absolute';
+            dom.style.position = 'fixed';
             const state = reactive({
                 ...options.props,
                 from: 0,
@@ -128,9 +129,22 @@ export function createVueContextPanelPlugin(
                 visible: false,
             });
             const app = createApp({render: () => h(component, state)});
-            const parent = editorView.dom.parentElement ?? editorView.dom;
-            parent.append(dom);
+            document.body.append(dom);
             app.mount(dom);
+
+            const updatePosition = async (): Promise<void> => {
+                const coords = editorView.coordsAtPos(editorView.state.selection.from);
+                const {x, y} = await computePosition({
+                    getBoundingClientRect: () => new DOMRect(coords.left, coords.bottom, 0, 0),
+                }, dom, {
+                    middleware: [offset(6), flip({padding: 8}), shift({padding: 8})],
+                    placement: 'bottom-start',
+                    strategy: 'fixed',
+                });
+                dom.style.left = `${x}px`;
+                dom.style.top = `${y}px`;
+            };
+            const stopAutoUpdate = autoUpdate(editorView.dom, dom, updatePosition);
 
             const update = () => {
                 const {from, to, empty} = editorView.state.selection;
@@ -141,19 +155,18 @@ export function createVueContextPanelPlugin(
                 }
 
                 const coords = editorView.coordsAtPos(from);
-                const parentRect = parent.getBoundingClientRect();
                 state.from = from;
-                state.left = coords.left - parentRect.left;
+                state.left = coords.left;
                 state.selectedText = editorView.state.doc.textBetween(from, to, ' ');
-                state.top = coords.bottom - parentRect.top;
+                state.top = coords.bottom;
                 dom.style.display = '';
-                dom.style.left = `${state.left}px`;
-                dom.style.top = `${state.top}px`;
+                updatePosition();
             };
 
             update();
             return {
                 destroy: () => {
+                    stopAutoUpdate();
                     app.unmount();
                     dom.remove();
                 },

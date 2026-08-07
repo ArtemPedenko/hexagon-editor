@@ -113,9 +113,10 @@ describe('MarkdownEditor', () => {
         app.mount(target);
         await nextTick();
 
-        const picker = target.querySelector<HTMLSelectElement>('[aria-label="Уровень заголовка"]') as HTMLSelectElement;
-        picker.value = 'paragraph';
-        picker.dispatchEvent(new Event('change', {bubbles: true}));
+        const picker = target.querySelector<HTMLButtonElement>('[aria-label="Уровень заголовка"]') as HTMLButtonElement;
+        picker.click();
+        await nextTick();
+        Array.from(document.body.querySelectorAll<HTMLButtonElement>('[role="menuitemradio"]')).find((button) => button.textContent === 'Текст')?.click();
         await nextTick();
 
         expect(target.querySelector('.ProseMirror h2')).toBeNull();
@@ -132,10 +133,10 @@ describe('MarkdownEditor', () => {
         app.mount(target);
         await nextTick();
 
-        const picker = target.querySelector<HTMLSelectElement>('[aria-label="Уровень заголовка"]') as HTMLSelectElement;
+        const picker = target.querySelector<HTMLButtonElement>('[aria-label="Уровень заголовка"]') as HTMLButtonElement;
         const boldButton = target.querySelector<HTMLButtonElement>('[title="Жирный"]') as HTMLButtonElement;
         const visualElement = target.querySelector<HTMLElement>('.ProseMirror') as HTMLElement;
-        expect(picker.value).toBe('1');
+        expect(picker.textContent).toContain('H1');
         expect(boldButton.getAttribute('aria-pressed')).toBe('false');
 
         const boldText = visualElement.querySelector('strong')?.firstChild;
@@ -150,7 +151,7 @@ describe('MarkdownEditor', () => {
         document.dispatchEvent(new Event('selectionchange'));
         await nextTick();
 
-        expect(picker.value).toBe('paragraph');
+        expect(picker.textContent).toContain('Текст');
         expect(boldButton.getAttribute('aria-pressed')).toBe('true');
 
         app.unmount();
