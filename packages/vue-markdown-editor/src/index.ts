@@ -1,7 +1,9 @@
 export type {
     MarkdownEditorEventMap,
     MarkdownEditorInstance,
+    MarkdownEditorLocale,
     MarkdownEditorMode,
+    MarkdownEditorTheme,
     MarkdownEditorOptions,
     MarkdownEditorToolbarPreset,
     MarkdownEditorUploadResult,

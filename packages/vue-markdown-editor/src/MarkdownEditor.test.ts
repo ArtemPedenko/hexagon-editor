@@ -85,6 +85,26 @@ describe('MarkdownEditor', () => {
         app.unmount();
     });
 
+    it('localizes labels, applies the selected theme, and supports arrow-key mode navigation', async () => {
+        const target = document.createElement('div');
+        const app = createApp(() => h(MarkdownEditor, {locale: 'en', theme: 'dark'}));
+
+        document.body.append(target);
+        app.mount(target);
+        await nextTick();
+
+        const tablist = target.querySelector<HTMLElement>('[role="tablist"]') as HTMLElement;
+        expect(tablist.getAttribute('aria-label')).toBe('Editor mode');
+        expect(target.querySelector('[title="Formula"]')).not.toBeNull();
+        tablist.dispatchEvent(new KeyboardEvent('keydown', {bubbles: true, key: 'ArrowRight'}));
+        await nextTick();
+
+        expect(target.querySelector('.markdown-editor')?.getAttribute('data-theme')).toBe('dark');
+        expect(target.querySelector('.markdown-editor')?.getAttribute('data-mode')).toBe('markup');
+
+        app.unmount();
+    });
+
     it('changes a heading back to ordinary text from the heading picker', async () => {
         const target = document.createElement('div');
         const app = createApp(() => h(MarkdownEditor, {modelValue: '## Heading'}));

@@ -34,6 +34,31 @@ body {
     text-transform: uppercase;
 }
 
+.playground__controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.playground__controls label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: #c9ced8;
+    font-size: 0.8125rem;
+}
+
+.playground__controls select {
+    min-height: 2rem;
+    padding: 0 0.5rem;
+    border: 1px solid #535962;
+    border-radius: 0.25rem;
+    color: #f5f6f7;
+    background: #25272b;
+    font: inherit;
+}
+
 h1 {
     margin: 0.35rem 0;
     font-size: clamp(2rem, 5vw, 3.5rem);

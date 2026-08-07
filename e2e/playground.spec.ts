@@ -30,16 +30,38 @@ test.describe('Markdown editor playground', () => {
     test('keeps the document available in all editor modes', async ({page}) => {
         await page.goto('/');
 
-        await page.getByRole('tab', {name: 'Markup'}).click();
+        await page.getByRole('tab', {name: 'Разметка'}).click();
         await expect(page.locator('.markdown-editor[data-mode="markup"] .cm-editor')).toBeVisible();
         await expect(page.locator('.cm-content')).toContainText('##+ Расширенные возможности');
 
-        await page.getByRole('tab', {name: 'Split'}).click();
+        await page.getByRole('tab', {name: 'Разделить'}).click();
         await expect(page.locator('.markdown-editor[data-mode="split"] .ProseMirror')).toBeVisible();
         await expect(page.locator('.markdown-editor[data-mode="split"] .cm-editor')).toBeVisible();
 
-        await page.getByRole('tab', {name: 'Visual'}).click();
+        await page.getByRole('tab', {name: 'Визуальный'}).click();
         await expect(page.locator('.markdown-editor[data-mode="wysiwyg"] .ProseMirror')).toBeVisible();
+    });
+
+    test('keeps editor controls keyboard accessible on a narrow viewport', async ({page}) => {
+        await page.setViewportSize({height: 844, width: 390});
+        await page.goto('/');
+
+        await page.getByRole('tab', {name: 'Визуальный'}).focus();
+        await expect(page.getByTitle('Формула')).toBeVisible();
+        await page.keyboard.press('ArrowRight');
+
+        await expect(page.locator('.markdown-editor[data-mode="markup"] .cm-editor')).toBeVisible();
+    });
+
+    test('lets users switch the locale and theme in the playground', async ({page}) => {
+        await page.goto('/');
+
+        await page.getByLabel('Язык редактора').selectOption('en');
+        await expect(page.getByRole('tablist', {name: 'Editor mode'})).toBeVisible();
+        await expect(page.getByTitle('Formula')).toBeVisible();
+
+        await page.getByLabel('Тема редактора').selectOption('dark');
+        await expect(page.locator('.markdown-editor')).toHaveAttribute('data-theme', 'dark');
     });
 
     test('inserts a LaTeX formula from the toolbar', async ({page}) => {

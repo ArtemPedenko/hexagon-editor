@@ -2,9 +2,11 @@
 import {computed, ref} from 'vue';
 
 import {MarkdownEditor, renderMarkdownPreview, VERSION} from '@gravity-ui/vue-markdown-editor';
-import type {MarkdownEditorMode} from '@gravity-ui/vue-markdown-editor';
+import type {MarkdownEditorLocale, MarkdownEditorMode, MarkdownEditorTheme} from '@gravity-ui/vue-markdown-editor';
 
 const editorMode = ref<MarkdownEditorMode>('wysiwyg');
+const locale = ref<MarkdownEditorLocale>('ru');
+const theme = ref<MarkdownEditorTheme>('auto');
 const advancedMarkdownDemo = [
     '# Vue Markdown editor {#editor-demo .playground-title}',
     '',
@@ -54,9 +56,26 @@ const previewHtml = computed(() => renderMarkdownPreview(markdown.value));
       <p class="playground__status">
         {{ editorMode }} · расширенные Markdown-функции · {{ VERSION }}
       </p>
+      <div class="playground__controls" aria-label="Настройки playground">
+        <label>
+          Язык
+          <select v-model="locale" aria-label="Язык редактора">
+            <option value="ru">Русский</option>
+            <option value="en">English</option>
+          </select>
+        </label>
+        <label>
+          Тема
+          <select v-model="theme" aria-label="Тема редактора">
+            <option value="auto">Auto</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+        </label>
+      </div>
     </header>
     <section class="playground__workspace" aria-label="Редактор Markdown">
-      <MarkdownEditor v-model="markdown" v-model:mode="editorMode" />
+      <MarkdownEditor v-model="markdown" v-model:locale="locale" v-model:mode="editorMode" v-model:theme="theme" />
       <aside class="playground__source-pane">
         <div class="playground__pane-title">
           Preview

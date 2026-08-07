@@ -11,7 +11,9 @@ import {
 import type {BasicMarkupEditor, BasicWysiwygEditor, BasicWysiwygSelectionState} from './core';
 import type {
     MarkdownEditorMode,
+    MarkdownEditorLocale,
     MarkdownEditorToolbarPreset,
+    MarkdownEditorTheme,
     MarkdownEditorUploadResult,
 } from './public-types';
 
@@ -28,6 +30,12 @@ interface SelectionPanelProps {
     onItalic: () => void;
     visible: boolean;
 }
+
+const messages = {
+    en: {bold: 'Bold', code: 'Inline code', formula: 'Formula', heading: 'Heading level', html: 'HTML', italic: 'Italic', link: 'Link', markup: 'Markup', mode: 'Editor mode', redo: 'Redo', split: 'Split', undo: 'Undo', visual: 'Visual'},
+    ru: {bold: 'Жирный', code: 'Встроенный код', formula: 'Формула', heading: 'Уровень заголовка', html: 'HTML', italic: 'Курсив', link: 'Ссылка', markup: 'Разметка', mode: 'Режим редактора', redo: 'Повторить', split: 'Разделить', undo: 'Отменить', visual: 'Визуальный'},
+} as const;
+type TranslationKey = keyof typeof messages.en;
 
 const selectionPanel: FunctionalComponent<SelectionPanelProps> = (panelProps) => panelProps.visible
     ? h('div', {class: 'markdown-editor__selection-actions'}, [
@@ -52,17 +60,21 @@ const props = withDefaults(
     defineProps<{
         modelValue?: string;
         mode?: MarkdownEditorMode;
+        locale?: MarkdownEditorLocale;
         placeholder?: string;
         readonly?: boolean;
         toolbarPreset?: MarkdownEditorToolbarPreset;
+        theme?: MarkdownEditorTheme;
         uploadFile?: (file: File) => Promise<MarkdownEditorUploadResult>;
     }>(),
     {
         modelValue: '',
         mode: 'wysiwyg',
+        locale: 'ru',
         placeholder: '',
         readonly: false,
         toolbarPreset: 'default',
+        theme: 'auto',
         uploadFile: undefined,
     },
 );
@@ -77,6 +89,7 @@ const emit = defineEmits<{
 
 const commands = createBasicEditorCommands();
 const markupTarget = ref<HTMLElement>();
+const modeTablist = ref<HTMLElement>();
 const value = ref(props.modelValue);
 const visualTarget = ref<HTMLElement>();
 const mode = ref<MarkdownEditorMode>(props.mode);
@@ -105,6 +118,21 @@ let markupEditor: BasicMarkupEditor | undefined;
 let modeChangeId = 0;
 let syncing = false;
 let visualEditor: BasicWysiwygEditor | undefined;
+
+function t(key: TranslationKey): string {
+    return messages[props.locale][key];
+}
+
+async function handleModeNavigation(event: KeyboardEvent): Promise<void> {
+    const modes: MarkdownEditorMode[] = ['wysiwyg', 'markup', 'split'];
+    const currentIndex = modes.indexOf(mode.value);
+    const nextIndex = event.key === 'Home' ? 0 : event.key === 'End' ? modes.length - 1 : event.key === 'ArrowRight' ? (currentIndex + 1) % modes.length : event.key === 'ArrowLeft' ? (currentIndex - 1 + modes.length) % modes.length : -1;
+    if (nextIndex < 0) return;
+    event.preventDefault();
+    const nextMode = modes[nextIndex]!;
+    await setMode(nextMode);
+    modeTablist.value?.querySelector<HTMLElement>(`[data-editor-mode="${nextMode}"]`)?.focus();
+}
 
 function destroyHosts(): void {
     markupEditor?.destroy();
@@ -331,23 +359,23 @@ defineExpose<MarkdownEditorExposed>({
 </script>
 
 <template>
-  <section class="markdown-editor" :data-mode="mode">
+  <section class="markdown-editor" :data-mode="mode" :data-theme="theme">
     <header class="markdown-editor__header">
-      <div class="markdown-editor__modes" role="tablist" aria-label="Режим редактора">
-        <button :aria-selected="mode === 'wysiwyg'" role="tab" type="button" @click="setMode('wysiwyg')">Visual</button>
-        <button :aria-selected="mode === 'markup'" role="tab" type="button" @click="setMode('markup')">Markup</button>
-        <button :aria-selected="mode === 'split'" role="tab" type="button" @click="setMode('split')">Split</button>
+      <div ref="modeTablist" class="markdown-editor__modes" role="tablist" :aria-label="t('mode')" @keydown="handleModeNavigation">
+        <button data-editor-mode="wysiwyg" :aria-selected="mode === 'wysiwyg'" role="tab" type="button" @click="setMode('wysiwyg')">{{ t('visual') }}</button>
+        <button data-editor-mode="markup" :aria-selected="mode === 'markup'" role="tab" type="button" @click="setMode('markup')">{{ t('markup') }}</button>
+        <button data-editor-mode="split" :aria-selected="mode === 'split'" role="tab" type="button" @click="setMode('split')">{{ t('split') }}</button>
       </div>
       <slot name="header" />
     </header>
 
     <div v-if="mode !== 'markup' && !readonly" class="markdown-editor__toolbar" role="toolbar" aria-label="Форматирование Markdown">
-      <button type="button" title="Отменить" @mousedown.prevent @click="execute(commands.undo)">↶</button>
-      <button type="button" title="Повторить" @mousedown.prevent @click="execute(commands.redo)">↷</button>
+      <button type="button" :aria-label="t('undo')" :title="t('undo')" @mousedown.prevent @click="execute(commands.undo)">↶</button>
+      <button type="button" :aria-label="t('redo')" :title="t('redo')" @mousedown.prevent @click="execute(commands.redo)">↷</button>
       <select
-        aria-label="Уровень заголовка"
+        :aria-label="t('heading')"
         :class="{'markdown-editor__select--active': toolbarState.headingLevel !== undefined}"
-        title="Уровень заголовка"
+        :title="t('heading')"
         :value="textStyle"
         @change="applyTextStyle"
       >
@@ -359,12 +387,12 @@ defineExpose<MarkdownEditorExposed>({
         <option value="5">H5</option>
         <option value="6">H6</option>
       </select>
-      <button :aria-pressed="toolbarState.bold" type="button" title="Жирный" @mousedown.prevent @click="execute(commands.bold)"><strong>B</strong></button>
-      <button :aria-pressed="toolbarState.italic" type="button" title="Курсив" @mousedown.prevent @click="execute(commands.italic)"><em>I</em></button>
+      <button :aria-label="t('bold')" :aria-pressed="toolbarState.bold" type="button" :title="t('bold')" @mousedown.prevent @click="execute(commands.bold)"><strong>B</strong></button>
+      <button :aria-label="t('italic')" :aria-pressed="toolbarState.italic" type="button" :title="t('italic')" @mousedown.prevent @click="execute(commands.italic)"><em>I</em></button>
       <button :aria-pressed="toolbarState.underline" type="button" title="Подчёркивание" @mousedown.prevent @click="execute(commands.underline)"><u>U</u></button>
       <button :aria-pressed="toolbarState.strikethrough" type="button" title="Зачёркивание" @mousedown.prevent @click="execute(commands.strikethrough)"><s>S</s></button>
       <button v-if="toolbarPreset === 'default'" :aria-pressed="toolbarState.mark" type="button" title="Выделить" @mousedown.prevent @click="execute(commands.mark)">▣</button>
-      <button v-if="toolbarPreset === 'default'" :aria-pressed="toolbarState.code" type="button" title="Inline code" @mousedown.prevent @click="execute(commands.code)">&lt;/&gt;</button>
+      <button v-if="toolbarPreset === 'default'" :aria-label="t('code')" :aria-pressed="toolbarState.code" type="button" :title="t('code')" @mousedown.prevent @click="execute(commands.code)">&lt;/&gt;</button>
       <button :aria-pressed="toolbarState.bulletList" type="button" title="Маркированный список" @mousedown.prevent @click="execute(commands.bulletList)">•≡</button>
       <button :aria-pressed="toolbarState.orderedList" type="button" title="Нумерованный список" @mousedown.prevent @click="execute(commands.orderedList)">1≡</button>
       <button :aria-pressed="toolbarState.quote" type="button" title="Цитата" @mousedown.prevent @click="execute(commands.quote)">❝</button>
@@ -379,14 +407,14 @@ defineExpose<MarkdownEditorExposed>({
         ▸
       </button>
       <button v-if="toolbarPreset === 'default'" :aria-pressed="toolbarState.codeBlock" type="button" title="Code block" @mousedown.prevent @click="execute(commands.codeBlock)">{ }</button>
-      <button type="button" title="Ссылка" @mousedown.prevent @click="linkEditorVisible = !linkEditorVisible">⌁</button>
+      <button type="button" :aria-label="t('link')" :title="t('link')" @mousedown.prevent @click="linkEditorVisible = !linkEditorVisible">⌁</button>
       <label v-if="toolbarPreset === 'default'" class="markdown-editor__color" title="Цвет текста">
         <input aria-label="Цвет текста" type="color" value="#202125" @input="execute(commands.setColor(($event.target as HTMLInputElement).value))" />
       </label>
       <button v-if="toolbarPreset === 'default'" type="button" title="Изображение" @mousedown.prevent @click="openFilePicker('image')">▧</button>
       <button v-if="toolbarPreset === 'default'" type="button" title="Файл" @mousedown.prevent @click="openFilePicker('file')">⌕</button>
-      <button v-if="toolbarPreset === 'default'" type="button" title="Формула" @mousedown.prevent @click="insertMathBlock">Σ</button>
-      <button v-if="toolbarPreset === 'default'" type="button" title="HTML" @mousedown.prevent @click="insertHtmlDirective">&lt;/&gt;</button>
+      <button v-if="toolbarPreset === 'default'" type="button" :aria-label="t('formula')" :title="t('formula')" @mousedown.prevent @click="insertMathBlock">Σ</button>
+      <button v-if="toolbarPreset === 'default'" type="button" :aria-label="t('html')" :title="t('html')" @mousedown.prevent @click="insertHtmlDirective">&lt;/&gt;</button>
       <button v-if="toolbarPreset === 'default'" type="button" title="Горизонтальная линия" @mousedown.prevent @click="execute(commands.horizontalRule)">―</button>
       <button v-if="toolbarPreset === 'default'" type="button" title="Таблица 3×3" @mousedown.prevent @click="execute(commands.insertTable())">▦</button>
       <form v-if="linkEditorVisible" class="markdown-editor__link-form" @submit.prevent="applyLink">
@@ -406,10 +434,29 @@ defineExpose<MarkdownEditorExposed>({
 
 <style scoped>
 .markdown-editor {
+    --markdown-background: #fff;
+    --markdown-border: #d8dbe0;
+    --markdown-muted-border: #e5e7eb;
+    --markdown-text: #202125;
+    --markdown-focus-background: #e9efff;
+    --markdown-focus-text: #1d3c93;
     overflow: hidden;
-    border: 1px solid #d8dbe0;
-    color: #202125;
-    background: #fff;
+    border: 1px solid var(--markdown-border);
+    color: var(--markdown-text);
+    background: var(--markdown-background);
+}
+
+.markdown-editor[data-theme='dark'] {
+    --markdown-background: #1e2024;
+    --markdown-border: #464b55;
+    --markdown-muted-border: #363a42;
+    --markdown-text: #f1f3f5;
+    --markdown-focus-background: #2d416e;
+    --markdown-focus-text: #d7e2ff;
+}
+
+@media (prefers-color-scheme: dark) {
+    .markdown-editor[data-theme='auto'] { --markdown-background: #1e2024; --markdown-border: #464b55; --markdown-muted-border: #363a42; --markdown-text: #f1f3f5; --markdown-focus-background: #2d416e; --markdown-focus-text: #d7e2ff; }
 }
 
 .markdown-editor__header,
@@ -423,7 +470,7 @@ defineExpose<MarkdownEditorExposed>({
     justify-content: space-between;
     min-height: 2.75rem;
     padding: 0.375rem 0.5rem;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid var(--markdown-muted-border);
 }
 
 .markdown-editor__modes,
@@ -451,7 +498,7 @@ defineExpose<MarkdownEditorExposed>({
 
 .markdown-editor__color:focus-within,
 .markdown-editor__color:hover {
-    background: #e9efff;
+    background: var(--markdown-focus-background);
 }
 
 .markdown-editor__color input {
@@ -467,10 +514,10 @@ defineExpose<MarkdownEditorExposed>({
     min-width: 0;
     height: 2rem;
     padding: 0 0.5rem;
-    border: 1px solid #c5cad4;
+    border: 1px solid var(--markdown-border);
     border-radius: 0.25rem;
     color: inherit;
-    background: #fff;
+    background: var(--markdown-background);
     font: inherit;
 }
 
@@ -502,16 +549,16 @@ defineExpose<MarkdownEditorExposed>({
 .markdown-editor button:hover,
 .markdown-editor button:focus-visible {
     outline: none;
-    color: #1d3c93;
-    background: #e9efff;
+    color: var(--markdown-focus-text);
+    background: var(--markdown-focus-background);
 }
 
 .markdown-editor select:hover,
 .markdown-editor select.markdown-editor__select--active,
 .markdown-editor select:focus-visible {
     outline: none;
-    color: #1d3c93;
-    background: #e9efff;
+    color: var(--markdown-focus-text);
+    background: var(--markdown-focus-background);
 }
 
 .markdown-editor__toolbar {
@@ -519,7 +566,7 @@ defineExpose<MarkdownEditorExposed>({
     z-index: 1;
     top: 0;
     padding: 0.5rem;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid var(--markdown-muted-border);
     flex-wrap: wrap;
 }
 
@@ -536,7 +583,7 @@ defineExpose<MarkdownEditorExposed>({
 }
 
 .markdown-editor__hosts--split > :last-child {
-    border-left: 1px solid #e5e7eb;
+    border-left: 1px solid var(--markdown-muted-border);
 }
 
 .markdown-editor__visual {
@@ -607,5 +654,11 @@ defineExpose<MarkdownEditorExposed>({
         border-top: 1px solid #e5e7eb;
         border-left: 0;
     }
+}
+
+@media (max-width: 480px) {
+    .markdown-editor__header { align-items: flex-start; }
+    .markdown-editor__modes, .markdown-editor__toolbar { overflow-x: auto; flex-wrap: nowrap; }
+    .markdown-editor__toolbar { padding-inline: 0.25rem; }
 }
 </style>

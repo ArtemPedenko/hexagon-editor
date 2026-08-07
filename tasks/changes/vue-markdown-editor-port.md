@@ -2,7 +2,7 @@
 
 ## Статус постановки
 
-Выполнены задачи 1–12 из 15. Публичный Vue-компонент покрыт DOM/integration-проверками для `v-model`, split-view, переключения режимов, readonly и корректного unmount. Playground демонстрирует расширенный Markdown-сценарий, а Chromium Playwright проверяет его рендеринг, консоль, режимы и folding-заголовок.
+Выполнены задачи 1–13 из 15. Публичный Vue-компонент покрыт DOM/integration-проверками для `v-model`, split-view, переключения режимов, readonly и корректного unmount. Playground демонстрирует расширенный Markdown-сценарий, а Chromium Playwright проверяет его рендеринг, консоль, режимы и folding-заголовок.
 
 ## Решения и [Уточнить]
 
@@ -45,7 +45,7 @@ React-библиотека Gravity UI Markdown Editor совмещает виз�
 10. **[Готово]** Реализовать Vue renderer для widget-decorations и ProseMirror node views; портировать контекстные панели.
 11. **[Готово]** Перенести расширенные Markdown-функции: HTML, folding headings (`##+`), definition list, quote link, attributes и directives; покрыть parse/serialize round-trip и проверить сценарий в playground.
 12. **[Готово]** Перенести Math/LaTeX, Mermaid, YFM HTML-block и optional peer-интеграции; сохранить source fallback и предоставить подключение host-owned рендереров.
-13. Завершить i18n (ru/en), accessibility, keyboard navigation, mobile/адаптивные состояния и theming.
+13. **[Готово]** Завершить i18n (ru/en), accessibility, keyboard navigation, mobile/адаптивные состояния и theming.
 14. Подготовить API-документацию, migration guide с React и playground-сценарии всех режимов/расширений.
 15. Сверить экспортируемый API с исходником, добавить unit/integration/e2e/visual-regression тесты и провести release-проверку.
 

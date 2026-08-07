@@ -1,6 +1,8 @@
 /** Modes available to the consuming Vue application. */
 export type MarkdownEditorMode = 'wysiwyg' | 'markup' | 'split';
+export type MarkdownEditorLocale = 'en' | 'ru';
 export type MarkdownEditorToolbarPreset = 'default' | 'minimal';
+export type MarkdownEditorTheme = 'auto' | 'dark' | 'light';
 
 /** A file uploaded by the host application and ready for insertion. */
 export interface MarkdownEditorUploadResult {
@@ -17,6 +19,8 @@ export interface MarkdownEditorOptions {
     initialValue?: string;
     /** Initial presentation mode. Defaults to `wysiwyg`. */
     mode?: MarkdownEditorMode;
+    locale?: MarkdownEditorLocale;
+    theme?: MarkdownEditorTheme;
     /** Enables source Markdown preview when the markup editor supports it. */
     preview?: boolean;
     /** Text displayed in an empty visual editor. */
