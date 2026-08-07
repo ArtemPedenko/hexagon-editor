@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {computed, h, nextTick, onBeforeUnmount, onMounted, ref, watch} from 'vue';
 import type {FunctionalComponent} from 'vue';
+import {TextSelection} from 'prosemirror-state';
 
 import {
     createBasicEditorCommands,
@@ -275,6 +276,7 @@ function mountHosts(): void {
                     onBold: () => execute(commands.bold),
                     onItalic: () => execute(commands.italic),
                 },
+                shouldShow: (state) => state.selection instanceof TextSelection,
             })],
             target: visualTarget.value,
         });
@@ -603,8 +605,8 @@ defineExpose<MarkdownEditorExposed>({
 }
 
 .markdown-editor :deep(.ProseMirror table) {
-    width: calc(100% - 1.5rem);
-    margin: 1.75rem 0 1rem 1.5rem;
+    width: 100%;
+    margin: 1rem 0;
     border-collapse: collapse;
 }
 
@@ -617,75 +619,99 @@ defineExpose<MarkdownEditorExposed>({
     text-align: left;
 }
 
-.markdown-editor :deep(.markdown-editor__table-control) {
-    position: absolute;
-    z-index: 2;
-    display: grid;
-    width: 0.5rem;
+.markdown-editor :deep(.markdown-editor__atomic-source-original) {
+    display: none;
+}
+
+.markdown-editor :deep(.markdown-editor__atomic-source) {
+    display: inline-block;
+    width: fit-content;
     min-width: 0;
-    height: 0.5rem;
+    max-width: 100%;
+    margin: 0;
+    border: 1px solid #6ba9ff;
+    border-radius: 0.25rem;
+    background: var(--markdown-background);
+    box-shadow: 0 0 0 1px rgb(107 169 255 / 20%);
+}
+
+.markdown-editor :deep(.markdown-editor__atomic-source .cm-editor) {
+    height: auto;
     min-height: 0;
-    padding: 0;
+    max-height: 14rem;
+    overflow: auto;
+    background: transparent;
+}
+
+.markdown-editor :deep(.markdown-editor__atomic-source .cm-scroller) {
+    height: auto;
+    min-height: 0;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.markdown-editor :deep(.markdown-editor__atomic-source .cm-content) {
+    min-height: 0;
+    padding: 0.4rem 0.5rem;
+}
+
+.markdown-editor :deep(.markdown-editor__atomic-source .cm-gutters) {
+    display: none;
+}
+
+.markdown-editor :deep(.markdown-editor__table-popover) {
+    position: absolute;
+    z-index: 4;
+    top: calc(100% + 0.4rem);
+    left: 0;
+    display: grid;
+    gap: 0.1875rem;
+    min-width: 11rem;
+    padding: 0.4375rem;
+    border: 1px solid color-mix(in srgb, var(--markdown-border) 82%, var(--markdown-text));
+    border-radius: 0.5rem;
+    background: var(--markdown-background);
+    box-shadow: 0 0.75rem 1.5rem rgb(0 0 0 / 30%);
+}
+
+.markdown-editor :deep(.markdown-editor__table-popover-action) {
+    width: 100%;
+    min-height: 2rem;
+    min-width: 0;
+    padding: 0.4rem 0.55rem;
     border: 0;
-    border-radius: 50%;
-    color: transparent;
-    background: #8b919e;
-    place-items: center;
-    transition: width 120ms ease, height 120ms ease, color 120ms ease, background 120ms ease;
+    border-radius: 0.25rem;
+    color: var(--markdown-text);
+    background: transparent;
+    font: inherit;
+    font-size: 0.75rem;
+    line-height: 1.2;
+    text-align: left;
 }
 
-.markdown-editor :deep(.markdown-editor__table-control--column) {
-    top: -1.1rem;
-    left: 100%;
-    transform: translateX(-50%);
-}
-
-.markdown-editor :deep(.markdown-editor__table-control--row) {
-    top: 100%;
-    left: -1.1rem;
-    transform: translateY(-50%);
-}
-
-.markdown-editor :deep(.markdown-editor__table-control:hover),
-.markdown-editor :deep(.markdown-editor__table-control:focus-visible) {
-    width: 1.75rem;
-    height: 1.75rem;
+.markdown-editor :deep(.markdown-editor__table-popover-action:hover),
+.markdown-editor :deep(.markdown-editor__table-popover-action:focus-visible) {
     outline: none;
-    color: #8dacff;
-    background: #202125;
-    box-shadow: inset 0 0 0 2px #4f7cff;
-    font-size: 1.5rem;
-    line-height: 1;
+    background: color-mix(in srgb, var(--markdown-background) 84%, var(--markdown-text));
 }
 
-.markdown-editor :deep(.markdown-editor__table-control--column:hover),
-.markdown-editor :deep(.markdown-editor__table-control--column:focus-visible) {
-    top: -1.75rem;
+.markdown-editor :deep(.markdown-editor__table-popover-action--danger) {
+    margin-top: 0.1875rem;
+    color: #c95050;
 }
 
-.markdown-editor :deep(.markdown-editor__table-control--row:hover),
-.markdown-editor :deep(.markdown-editor__table-control--row:focus-visible) {
-    left: -1.75rem;
+.markdown-editor :deep(.markdown-editor__table-popover-action--danger + .markdown-editor__table-popover-action--danger) {
+    margin-top: 0;
 }
 
-.markdown-editor :deep(.markdown-editor__table-control--column:hover)::after,
-.markdown-editor :deep(.markdown-editor__table-control--column:focus-visible)::after {
-    position: absolute;
-    top: 1.75rem;
-    height: calc(var(--table-control-line-size, 0px) - 3px);
-    border-left: 3px solid #4f7cff;
-    content: '';
-    pointer-events: none;
+.markdown-editor :deep(.markdown-editor__table-popover-action--danger:hover),
+.markdown-editor :deep(.markdown-editor__table-popover-action--danger:focus-visible) {
+    color: #fff;
+    background: #a63232;
 }
 
-.markdown-editor :deep(.markdown-editor__table-control--row:hover)::after,
-.markdown-editor :deep(.markdown-editor__table-control--row:focus-visible)::after {
-    position: absolute;
-    left: 1.75rem;
-    width: calc(var(--table-control-line-size, 0px) - 3px);
-    border-top: 3px solid #4f7cff;
-    content: '';
-    pointer-events: none;
+.markdown-editor :deep(.markdown-editor__table-popover-action:disabled) {
+    cursor: not-allowed;
+    opacity: 0.45;
 }
 
 .markdown-editor :deep(.ProseMirror th) {

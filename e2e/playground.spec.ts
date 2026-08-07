@@ -27,6 +27,54 @@ test.describe('Markdown editor playground', () => {
         expect(errors).toEqual([]);
     });
 
+    test('does not show text-selection actions for atomic Markdown blocks', async ({page}) => {
+        await page.goto('/');
+
+        const selectionActions = page.locator('.markdown-editor__selection-panel');
+        for (const selector of ['[data-math-block]', '[data-raw-html]', '[data-mermaid]']) {
+            await page.locator(`.ProseMirror ${selector}`).click();
+            await expect(selectionActions).toBeHidden();
+        }
+    });
+
+    test('edits only an atomic block as Markdown after a double click', async ({page}) => {
+        await page.goto('/');
+
+        const sourceEditor = page.locator('.markdown-editor__atomic-source .cm-editor');
+        for (const [selector, expectedSource, maxHeight] of [
+            ['[data-math-inline]', 'E = mc', 60],
+            ['[data-math-block]', 'sum', 150],
+            ['[data-raw-html]', 'Raw HTML block', 60],
+            ['[data-mermaid]', 'graph LR', 150],
+        ]) {
+            const block = page.locator(`.ProseMirror ${selector}`);
+            await block.dblclick();
+            await expect(sourceEditor).toBeVisible();
+            await expect(sourceEditor).toContainText(expectedSource);
+            await expect(block).toBeHidden();
+            await expect(sourceEditor).toHaveCSS('min-height', '0px');
+            await expect(sourceEditor.locator('.cm-gutters')).toBeHidden();
+            expect((await sourceEditor.boundingBox())?.height).toBeLessThan(maxHeight);
+            await page.getByRole('heading', {exact: true, name: 'Markdown editor'}).click();
+            await expect(sourceEditor).toBeHidden();
+        }
+    });
+
+    test('keeps formula source while typing in the local Markdown editor', async ({page}) => {
+        await page.goto('/');
+        await page.locator('.ProseMirror [data-math-inline]').dblclick();
+
+        const sourceEditor = page.locator('.markdown-editor__atomic-source .cm-content');
+        await sourceEditor.click();
+        await page.keyboard.press('End');
+        await page.keyboard.type(' + 1');
+        await expect(sourceEditor).toContainText('+ 1');
+        await page.keyboard.press('Control+Enter');
+
+        await expect(page.locator('.markdown-editor__atomic-source')).toBeHidden();
+        await expect(page.locator('.ProseMirror [data-math-inline]')).toContainText('1');
+    });
+
     test('keeps the document available in all editor modes', async ({page}) => {
         await page.goto('/');
 
@@ -64,6 +112,17 @@ test.describe('Markdown editor playground', () => {
         await expect(page.locator('.markdown-editor')).toHaveAttribute('data-theme', 'dark');
     });
 
+    test('keeps table actions readable in the dark theme', async ({page}) => {
+        await page.goto('/');
+        await page.getByLabel('Тема редактора').selectOption('dark');
+        await page.getByTitle('Таблица 3×3').click();
+        await page.locator('.ProseMirror table').last().locator('td').first().click({button: 'right'});
+
+        await expect(page.getByRole('menu', {name: 'Действия с таблицей'})).toHaveCSS('background-color', 'rgb(30, 32, 36)');
+        await expect(page.getByRole('menuitem', {name: 'Добавить строку'})).toHaveCSS('color', 'rgb(241, 243, 245)');
+        await expect(page.getByRole('menuitem', {name: 'Добавить строку'})).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+    });
+
     test('inserts a LaTeX formula from the toolbar', async ({page}) => {
         await page.goto('/');
 
@@ -80,9 +139,13 @@ test.describe('Markdown editor playground', () => {
         await expect(page.locator('.ProseMirror table').last()).toBeVisible();
         await expect(page.locator('.ProseMirror table').last().locator('td')).toHaveCount(9);
         await page.locator('.ProseMirror table').last().locator('td').first().click();
-        await expect(page.locator('.markdown-editor__table-control--column')).toHaveCount(3);
-        await expect(page.locator('.markdown-editor__table-control--row')).toHaveCount(3);
-        await page.locator('.markdown-editor__table-control--column').first().click();
+        await expect(page.locator('.markdown-editor__table-popover')).toHaveCount(0);
+        await page.locator('.ProseMirror table').last().locator('td').first().click({button: 'right'});
+        await expect(page.getByRole('menu', {name: 'Действия с таблицей'})).toBeVisible();
+        await page.getByRole('heading', {exact: true, name: 'Markdown editor'}).click();
+        await expect(page.getByRole('menu', {name: 'Действия с таблицей'})).toBeHidden();
+        await page.locator('.ProseMirror table').last().locator('td').first().click({button: 'right'});
+        await page.getByRole('menuitem', {name: 'Добавить колонку'}).click();
         await expect(page.locator('.ProseMirror table').last().locator('td')).toHaveCount(12);
 
         await page.getByRole('tab', {name: 'Разметка'}).click();
@@ -92,6 +155,63 @@ test.describe('Markdown editor playground', () => {
         await expect(page.locator('.ProseMirror table').last().locator('th')).toHaveCount(4);
         await expect(page.locator('.ProseMirror table').last().locator('td')).toHaveCount(8);
         await expect(page.locator('.ProseMirror table').last().locator('td').first()).toHaveCSS('border-top-style', 'solid');
+    });
+
+    test('offers safe row and column deletion for a focused table cell', async ({page}) => {
+        await page.goto('/');
+        await page.getByTitle('Таблица 3×3').click();
+
+        const table = page.locator('.ProseMirror table').last();
+        await table.locator('td').nth(1).click({button: 'right'});
+        const deleteRow = page.getByRole('menuitem', {name: 'Удалить строку'});
+        const deleteColumn = page.getByRole('menuitem', {name: 'Удалить колонку'});
+        await expect(deleteRow).toBeVisible();
+        await expect(deleteColumn).toBeVisible();
+
+        await deleteRow.click();
+        await expect(table.locator('td')).toHaveCount(6);
+
+        await table.locator('td').nth(1).click({button: 'right'});
+        await page.getByRole('menuitem', {name: 'Удалить колонку'}).click();
+        await expect(table.locator('td')).toHaveCount(4);
+
+        await table.locator('td').nth(1).click({button: 'right'});
+        await page.getByRole('menuitem', {name: 'Удалить строку'}).click();
+        await expect(table.locator('td')).toHaveCount(2);
+        await table.locator('td').first().click({button: 'right'});
+        await expect(page.getByRole('menuitem', {name: 'Удалить строку'})).toBeDisabled();
+
+        await page.getByRole('menuitem', {name: 'Удалить колонку'}).click();
+        await expect(table.locator('td')).toHaveCount(1);
+        await table.locator('td').first().click({button: 'right'});
+        await expect(page.getByRole('menuitem', {name: 'Удалить колонку'})).toBeDisabled();
+    });
+
+    test('opens table actions after a long press on touch devices', async ({page}) => {
+        await page.setViewportSize({height: 844, width: 390});
+        await page.goto('/');
+        await page.getByTitle('Таблица 3×3').click();
+
+        const cell = page.locator('.ProseMirror table').last().locator('td').first();
+        await cell.evaluate((element) => {
+            const bounds = element.getBoundingClientRect();
+            const touch = new Touch({
+                clientX: bounds.left + bounds.width / 2,
+                clientY: bounds.top + bounds.height / 2,
+                identifier: 1,
+                target: element,
+            });
+            element.dispatchEvent(new TouchEvent('touchstart', {
+                bubbles: true,
+                cancelable: true,
+                changedTouches: [touch],
+                touches: [touch],
+            }));
+        });
+        await page.waitForTimeout(550);
+
+        await expect(page.getByRole('menu', {name: 'Действия с таблицей'})).toBeVisible();
+        await cell.dispatchEvent('touchend');
     });
 
     test('folds content from a folding heading through the toolbar', async ({page}) => {

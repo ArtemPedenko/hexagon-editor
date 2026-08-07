@@ -2,6 +2,7 @@
 import {createApp, h, reactive} from 'vue';
 import type {App, Component} from 'vue';
 import {Plugin} from 'prosemirror-state';
+import type {EditorState} from 'prosemirror-state';
 import type {Node as ProseMirrorNode} from 'prosemirror-model';
 import {Decoration} from 'prosemirror-view';
 import type {NodeView, NodeViewConstructor} from 'prosemirror-view';
@@ -34,6 +35,7 @@ export interface VueContextPanelProps {
 export interface VueContextPanelOptions {
     className?: string;
     props?: Record<string, unknown>;
+    shouldShow?(state: EditorState): boolean;
 }
 
 /** Mounts a Vue component as a ProseMirror node view with an aligned lifecycle. */
@@ -132,8 +134,8 @@ export function createVueContextPanelPlugin(
 
             const update = () => {
                 const {from, to, empty} = editorView.state.selection;
-                state.visible = !empty;
-                if (empty) {
+                state.visible = !empty && (options.shouldShow?.(editorView.state) ?? true);
+                if (!state.visible) {
                     dom.style.display = 'none';
                     return;
                 }
