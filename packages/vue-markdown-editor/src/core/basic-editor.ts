@@ -47,13 +47,58 @@ const markdownTableNodes: Record<string, NodeSpec> = tableNodes({
     tableGroup: 'block',
 });
 
+function renderHtmlBlock(html: string, attribute: string): HTMLElement {
+    const element = document.createElement('div');
+    element.setAttribute(attribute, '');
+    element.innerHTML = html;
+    return element;
+}
+
+const extendedMarkdownNodes: Record<string, NodeSpec> = {
+    definition_description: {content: 'block+', group: 'block', toDOM: () => ['dd', 0]},
+    definition_list: {content: 'definition_term definition_description+', group: 'block', toDOM: () => ['dl', 0]},
+    definition_term: {content: 'inline*', toDOM: () => ['dt', 0]},
+    directive: {
+        atom: true,
+        attrs: {content: {default: ''}, name: {default: 'note'}},
+        group: 'block',
+        toDOM: (node) => node.attrs.name === 'html'
+            ? renderHtmlBlock(node.attrs.content, 'data-directive-html')
+            : ['div', {'data-directive': node.attrs.name}, node.attrs.content],
+    },
+    raw_html: {
+        atom: true,
+        attrs: {html: {default: ''}},
+        group: 'block',
+        toDOM: (node) => renderHtmlBlock(node.attrs.html, 'data-raw-html'),
+    },
+};
+
 /** Schema for the first WYSIWYG milestone. YFM-specific nodes are added later. */
 export const basicMarkdownSchema: Schema = new Schema({
     marks: defaultMarkdownSchema.spec.marks.append(basicMarks),
-    nodes: defaultMarkdownSchema.spec.nodes.append(markdownTableNodes),
+    nodes: defaultMarkdownSchema.spec.nodes
+        .update('heading', {
+            attrs: {class: {default: null}, id: {default: null}, level: {default: 1}},
+            content: 'inline*',
+            group: 'block',
+            defining: true,
+            toDOM: (node) => [`h${node.attrs.level}`, {class: node.attrs.class, id: node.attrs.id}, 0],
+        })
+        .append({...markdownTableNodes, ...extendedMarkdownNodes}),
 });
 
 const tableTokenSpecs: Record<string, ParseSpec> = {
+    definition_description: {block: 'definition_description'},
+    definition_list: {block: 'definition_list'},
+    definition_term: {block: 'definition_term'},
+    directive: {node: 'directive', getAttrs: (token) => ({content: token.content, name: token.info})},
+    heading: {block: 'heading', getAttrs: (token) => ({
+        class: token.attrGet('class'),
+        id: token.attrGet('id'),
+        level: Number(token.tag.slice(1)),
+    })},
+    html_block: {node: 'raw_html', getAttrs: (token) => ({html: token.content})},
     table: {block: 'table'},
     tbody: {ignore: true},
     td: {block: 'table_cell'},
@@ -62,15 +107,60 @@ const tableTokenSpecs: Record<string, ParseSpec> = {
     tr: {block: 'table_row'},
 };
 
+function createExtendedMarkdownIt(): MarkdownIt {
+    const markdown = new MarkdownIt('commonmark', {html: true}).enable('table');
+    markdown.core.ruler.after('block', 'heading_attributes', (state) => {
+        for (const [index, token] of state.tokens.entries()) {
+            const inline = state.tokens[index + 1];
+            if (token?.type !== 'heading_open' || inline?.type !== 'inline') continue;
+            const match = inline.content.match(/\s+\{([^}]+)\}$/);
+            if (match === null) continue;
+            inline.content = inline.content.slice(0, match.index);
+            for (const attribute of match[1]?.split(/\s+/) ?? []) {
+                if (attribute.startsWith('#')) token.attrSet('id', attribute.slice(1));
+                if (attribute.startsWith('.')) token.attrSet('class', attribute.slice(1));
+            }
+        }
+    });
+    markdown.block.ruler.before('fence', 'directive', (state, startLine, endLine, silent) => {
+        const start = state.getLines(startLine, startLine + 1, 0, false).trim();
+        const match = start.match(/^:::\s*(\w+)\s*$/);
+        if (match === null) return false;
+        let line = startLine + 1;
+        while (line < endLine && state.getLines(line, line + 1, 0, false).trim() !== ':::') line += 1;
+        if (line === endLine) return false;
+        if (!silent) {
+            const token = state.push('directive', '', 0);
+            token.content = state.getLines(startLine + 1, line, 0, false).trim();
+            token.info = match[1] ?? 'note';
+        }
+        state.line = line + 1;
+        return true;
+    });
+    return markdown;
+}
+
 const basicMarkdownParser = new MarkdownParser(
     basicMarkdownSchema,
-    new MarkdownIt('commonmark', {html: false}).enable('table'),
+    createExtendedMarkdownIt(),
     {...defaultMarkdownParser.tokens, ...tableTokenSpecs},
 );
 
 const basicMarkdownSerializer = new MarkdownSerializer(
     {
         ...defaultMarkdownSerializer.nodes,
+        definition_description(state, node) { state.renderContent(node); state.closeBlock(node); },
+        definition_list(state, node) { state.renderContent(node); state.closeBlock(node); },
+        definition_term(state, node) { state.renderInline(node); state.write(': '); },
+        directive(state, node) { state.write(`::: ${node.attrs.name}\n${node.attrs.content}\n:::`); state.closeBlock(node); },
+        heading(state, node) {
+            state.write(`${'#'.repeat(node.attrs.level)} `);
+            state.renderInline(node);
+            const attributes = [node.attrs.id === null ? '' : `#${node.attrs.id}`, node.attrs.class === null ? '' : `.${node.attrs.class}`].filter(Boolean).join(' ');
+            if (attributes) state.write(` {${attributes}}`);
+            state.closeBlock(node);
+        },
+        raw_html(state, node) { state.write(node.attrs.html); state.closeBlock(node); },
         table(state, node) {
             const rows = Array.from(node.content.content, (row) =>
                 Array.from(row.content.content, (cell) => escapeTableCell(cell.textContent)),
@@ -160,7 +250,7 @@ function insertFileCommand(href: string, name: string): Command {
     return (state, dispatch) => {
         if (dispatch !== undefined) {
             const link = getMarkType('link').create({href});
-            dispatch(state.tr.replaceSelectionWith(state.schema.text(name, [link])).scrollIntoView());
+            dispatch(state.tr.replaceSelectionWith(state.schema.text(name, [link]), false).scrollIntoView());
         }
         return true;
     };

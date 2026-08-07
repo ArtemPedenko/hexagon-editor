@@ -63,6 +63,7 @@ const props = withDefaults(
         placeholder: '',
         readonly: false,
         toolbarPreset: 'default',
+        uploadFile: undefined,
     },
 );
 
@@ -97,6 +98,7 @@ const toolbarState = ref<BasicWysiwygSelectionState>({
     underline: false,
 });
 const textStyle = computed(() => toolbarState.value.headingLevel?.toString() ?? 'paragraph');
+const htmlDirective = '::: html\n\n<div>Add HTML code here</div>\n\n:::';
 let markupEditor: BasicMarkupEditor | undefined;
 let modeChangeId = 0;
 let syncing = false;
@@ -175,6 +177,12 @@ function applyTextStyle(event: Event): void {
     }
 
     execute(commands.heading(Number(target.value)));
+}
+
+async function insertHtmlDirective(): Promise<void> {
+    setValue(value.value.length === 0 ? htmlDirective : `${value.value}\n\n${htmlDirective}`);
+    await setMode('markup');
+    markupEditor?.focus();
 }
 
 function openFilePicker(kind: 'file' | 'image'): void {
@@ -358,6 +366,7 @@ defineExpose<MarkdownEditorExposed>({
       </label>
       <button v-if="toolbarPreset === 'default'" type="button" title="Изображение" @mousedown.prevent @click="openFilePicker('image')">▧</button>
       <button v-if="toolbarPreset === 'default'" type="button" title="Файл" @mousedown.prevent @click="openFilePicker('file')">⌕</button>
+      <button v-if="toolbarPreset === 'default'" type="button" title="HTML" @mousedown.prevent @click="insertHtmlDirective">&lt;/&gt;</button>
       <button v-if="toolbarPreset === 'default'" type="button" title="Горизонтальная линия" @mousedown.prevent @click="execute(commands.horizontalRule)">―</button>
       <button v-if="toolbarPreset === 'default'" type="button" title="Таблица 3×3" @mousedown.prevent @click="execute(commands.insertTable())">▦</button>
       <form v-if="linkEditorVisible" class="markdown-editor__link-form" @submit.prevent="applyLink">

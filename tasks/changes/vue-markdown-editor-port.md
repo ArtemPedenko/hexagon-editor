@@ -43,7 +43,7 @@ React-библиотека Gravity UI Markdown Editor совмещает виз�
 8. **[Готово]** Создать публичный Vue-компонент `MarkdownEditor`, WYSIWYG-host, markup-host, split-view, SSR-safe mount/unmount, `v-model` и базовый слот-расширяемый тулбар; закрыть синхронизационные регрессии.
 9. **[Готово]** Перенести базовые поведения: clipboard, placeholder, selection, upload, cursor и resize; расширить тулбар popup/select/color/image/file-controls и конфигурацией preset.
 10. **[Готово]** Реализовать Vue renderer для widget-decorations и ProseMirror node views; портировать контекстные панели.
-11. Перенести расширенные Markdown-функции: HTML, folding headings, definition list, quote link, attributes и directives.
+11. **[В работе]** Перенести расширенные Markdown-функции: HTML, folding headings, definition list, quote link, attributes и directives.
 12. Перенести Math/LaTeX, Mermaid, YFM HTML-block и optional peer-интеграции.
 13. Завершить i18n (ru/en), accessibility, keyboard navigation, mobile/адаптивные состояния и theming.
 14. Подготовить API-документацию, migration guide с React и playground-сценарии всех режимов/расширений.

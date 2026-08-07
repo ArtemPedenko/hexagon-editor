@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
+/* eslint-disable vue/one-component-per-file -- Tests define isolated inline components for each renderer case. */
 
-import {h} from 'vue';
+import {defineComponent, h, nextTick} from 'vue';
+import type {PropType} from 'vue';
 import {EditorState, Plugin, TextSelection} from 'prosemirror-state';
 import {DecorationSet, EditorView} from 'prosemirror-view';
 import {afterEach, describe, expect, it, vi} from 'vitest';
@@ -15,10 +17,15 @@ describe('Vue ProseMirror renderer', () => {
 
     it('mounts and destroys a Vue node view', () => {
         const target = document.createElement('div');
-        const component = {
-            props: {node: {required: true}},
-            setup: (props: {node: {attrs: {alt: string}}}) => () => h('button', {class: 'vue-node-view'}, props.node.attrs.alt),
-        };
+        const component = defineComponent({
+            props: {
+                node: {
+                    required: true,
+                    type: Object as PropType<{attrs: {alt: string}}>,
+                },
+            },
+            setup: (props) => () => h('button', {class: 'vue-node-view'}, props.node.attrs.alt),
+        });
         const view = new EditorView(target, {
             nodeViews: {image: createVueNodeView(component)},
             state: EditorState.create({doc: basicMarkdownCodec.parse('![Image](https://example.com/image.png)')}),
@@ -51,19 +58,22 @@ describe('Vue ProseMirror renderer', () => {
         expect(target.querySelector('.vue-widget')).toBeNull();
     });
 
-    it('shows a Vue context panel for a text selection', () => {
+    it('shows a Vue context panel for a text selection', async () => {
         const target = document.createElement('div');
         const documentNode = basicMarkdownSchema.node('doc', null, [
             basicMarkdownSchema.node('paragraph', null, basicMarkdownSchema.text('Text')),
         ]);
-        const panel = {
-            props: {selectedText: {required: true}, visible: {required: true}},
-            setup: (props: {selectedText: string; visible: boolean}) => () => h(
+        const panel = defineComponent({
+            props: {
+                selectedText: {required: true, type: String},
+                visible: {required: true, type: Boolean},
+            },
+            setup: (props) => () => h(
                 'div',
                 {class: 'vue-context-panel', 'data-visible': String(props.visible)},
                 props.selectedText,
             ),
-        };
+        });
         const view = new EditorView(target, {
             state: EditorState.create({
                 doc: documentNode,
@@ -73,6 +83,7 @@ describe('Vue ProseMirror renderer', () => {
         vi.spyOn(view, 'coordsAtPos').mockReturnValue({bottom: 20, left: 10, right: 10, top: 10});
 
         view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, 1, 5)));
+        await nextTick();
 
         expect(target.querySelector('.vue-context-panel')?.getAttribute('data-visible')).toBe('true');
         expect(target.querySelector('.vue-context-panel')?.textContent).toBe('Text');

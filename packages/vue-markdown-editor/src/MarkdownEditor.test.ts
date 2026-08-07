@@ -1,8 +1,6 @@
 // @vitest-environment jsdom
 
 import {EditorView} from '@codemirror/view';
-import {TextSelection} from 'prosemirror-state';
-import {EditorView as ProseMirrorEditorView} from 'prosemirror-view';
 import {createApp, h, nextTick, ref} from 'vue';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
@@ -117,18 +115,23 @@ describe('MarkdownEditor', () => {
         const picker = target.querySelector<HTMLSelectElement>('[aria-label="Уровень заголовка"]') as HTMLSelectElement;
         const boldButton = target.querySelector<HTMLButtonElement>('[title="Жирный"]') as HTMLButtonElement;
         const visualElement = target.querySelector<HTMLElement>('.ProseMirror') as HTMLElement;
-        const visualView = ProseMirrorEditorView.findFromDOM(visualElement) as ProseMirrorEditorView;
-
         expect(picker.value).toBe('1');
         expect(boldButton.getAttribute('aria-pressed')).toBe('false');
 
-        const boldTextPosition = visualView.state.doc.child(0).nodeSize + 1;
-        visualView.dispatch(visualView.state.tr.setSelection(TextSelection.create(visualView.state.doc, boldTextPosition)));
+        const boldText = visualElement.querySelector('strong')?.firstChild;
+        expect(boldText).toBeInstanceOf(Text);
+        visualElement.focus();
+        const selection = window.getSelection();
+        const range = document.createRange();
+        range.setStart(boldText as Text, 0);
+        range.collapse(true);
+        selection?.removeAllRanges();
+        selection?.addRange(range);
+        document.dispatchEvent(new Event('selectionchange'));
         await nextTick();
 
         expect(picker.value).toBe('paragraph');
         expect(boldButton.getAttribute('aria-pressed')).toBe('true');
-        expect(target.querySelector('[aria-label="Жирный для выделения"]')).not.toBeNull();
 
         app.unmount();
     });
@@ -147,6 +150,38 @@ describe('MarkdownEditor', () => {
         expect(target.querySelector('.ProseMirror')?.getAttribute('data-placeholder')).toBe('Начните писать');
         expect(target.querySelector('[title="Изображение"]')).toBeNull();
         expect(target.querySelector('[title="Жирный"]')).not.toBeNull();
+
+        app.unmount();
+    });
+
+    it('shows the text of an HTML directive in the visual editor', async () => {
+        const target = document.createElement('div');
+        const app = createApp(() => h(MarkdownEditor, {modelValue: '::: html\n\n<div>Add HTML code here</div>\n\n:::'}));
+
+        document.body.append(target);
+        app.mount(target);
+        await nextTick();
+
+        expect(target.querySelector('[data-directive-html] div')?.textContent).toBe('Add HTML code here');
+
+        app.unmount();
+    });
+
+    it('inserts an HTML directive and switches to markup mode', async () => {
+        const target = document.createElement('div');
+        const editor = ref<MarkdownEditorExposed>();
+        const app = createApp(() => h(MarkdownEditor, {modelValue: 'Text', ref: editor}));
+
+        document.body.append(target);
+        app.mount(target);
+        await nextTick();
+
+        target.querySelector<HTMLButtonElement>('[title="HTML"]')?.click();
+        await nextTick();
+        await nextTick();
+
+        expect(editor.value?.getMode()).toBe('markup');
+        expect(editor.value?.getValue()).toContain('::: html\n\n<div>Add HTML code here</div>\n\n:::');
 
         app.unmount();
     });

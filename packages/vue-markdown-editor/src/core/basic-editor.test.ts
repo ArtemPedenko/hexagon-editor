@@ -29,6 +29,21 @@ describe('basic Markdown extensions', () => {
         expect(basicMarkdownCodec.serialize(document)).toContain('| Name | Value |');
     });
 
+    it('preserves raw HTML blocks, directives, and heading attributes', () => {
+        const source = '# Heading {#intro .lead}\n\n<div>HTML</div>\n\n::: html\n<div>Add HTML code here</div>\n:::';
+        const document = basicMarkdownCodec.parse(source);
+        const serialized = basicMarkdownCodec.serialize(document);
+
+        expect(document.child(0).attrs.id).toBe('intro');
+        expect(document.child(0).textContent).toBe('Heading');
+        expect(document.child(1).type.name).toBe('raw_html');
+        expect(document.child(2).type.name).toBe('directive');
+        expect(document.child(2).textContent).toBe('');
+        expect(serialized).toContain('# Heading {#intro .lead}');
+        expect(serialized).toContain('<div>HTML</div>');
+        expect(serialized).toContain('::: html\n<div>Add HTML code here</div>\n:::');
+    });
+
     it('toggles bold for the selected text', () => {
         const text = basicMarkdownSchema.text('Text');
         const document = basicMarkdownSchema.node('doc', null, [
@@ -151,8 +166,16 @@ describe('basic Markdown extensions', () => {
             fileState = state.apply(transaction);
         });
 
+        let fileUrl: string | undefined;
+        fileState.doc.descendants((node) => {
+            const href = node.marks.find((mark) => mark.type.name === 'link')?.attrs.href;
+            if (typeof href === 'string') {
+                fileUrl = href;
+            }
+        });
+
         expect(fileState.doc.textContent).toBe('File');
-        expect(fileState.doc.firstChild?.firstChild?.marks[0]?.attrs.href).toBe('https://example.com/file.pdf');
+        expect(fileUrl).toBe('https://example.com/file.pdf');
     });
 
 });

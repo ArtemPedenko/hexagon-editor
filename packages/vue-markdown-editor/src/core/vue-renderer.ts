@@ -1,3 +1,4 @@
+/* eslint-disable vue/one-component-per-file -- Independent ProseMirror mounts each need a Vue render root. */
 import {createApp, h, reactive} from 'vue';
 import type {App, Component} from 'vue';
 import {Plugin} from 'prosemirror-state';
