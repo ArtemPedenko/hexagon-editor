@@ -27,6 +27,8 @@ export function mountBasicMarkupEditor({
     onChange,
     target,
 }: MountBasicMarkupEditorOptions): BasicMarkupEditor {
+    let destroyed = false;
+    let syncingExternalValue = false;
     const view = new EditorView({
         parent: target,
         state: EditorState.create({
@@ -45,7 +47,7 @@ export function mountBasicMarkupEditor({
                     ...searchKeymap,
                 ]),
                 EditorView.updateListener.of((update) => {
-                    if (update.docChanged) {
+                    if (update.docChanged && !syncingExternalValue) {
                         onChange?.(update.state.doc.toString());
                     }
                 }),
@@ -54,20 +56,41 @@ export function mountBasicMarkupEditor({
     });
 
     return {
-        destroy: () => view.destroy(),
-        focus: () => view.focus(),
+        destroy: () => {
+            if (destroyed) {
+                return;
+            }
+
+            destroyed = true;
+            view.destroy();
+        },
+        focus: () => {
+            if (!destroyed) {
+                view.focus();
+            }
+        },
         getValue: () => view.state.doc.toString(),
-        openSearch: () => openSearchPanel(view),
+        openSearch: () => {
+            if (!destroyed) {
+                openSearchPanel(view);
+            }
+        },
         redo: () => {
-            redo(view);
+            if (!destroyed) {
+                redo(view);
+            }
         },
         setValue: (value) => {
-            if (value !== view.state.doc.toString()) {
+            if (!destroyed && value !== view.state.doc.toString()) {
+                syncingExternalValue = true;
                 view.dispatch({changes: {from: 0, to: view.state.doc.length, insert: value}});
+                syncingExternalValue = false;
             }
         },
         undo: () => {
-            undo(view);
+            if (!destroyed) {
+                undo(view);
+            }
         },
     };
 }

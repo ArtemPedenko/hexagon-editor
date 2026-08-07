@@ -11,7 +11,8 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    }
+    },
+    "./style.css": "./dist/index.css"
   },
   "files": [
     "dist"
@@ -49,8 +50,10 @@
   "devDependencies": {
     "@types/markdown-it": "^14.1.2",
     "@vitejs/plugin-vue": "^6.0.0",
+    "jsdom": "^30.0.1",
     "vite": "^7.0.0",
     "vite-plugin-dts": "^4.5.0",
+    "vite-plugin-lib-inject-css": "^2.2.2",
     "vue": "^3.5.0",
     "vue-tsc": "^3.0.0"
   }

@@ -17,6 +17,8 @@ import {liftListItem, sinkListItem, splitListItem, wrapInList} from 'prosemirror
 import {tableEditing, tableNodes} from 'prosemirror-tables';
 import {EditorView} from 'prosemirror-view';
 
+import 'prosemirror-view/style/prosemirror.css';
+
 import {defaultMarkdownSchema, MarkdownCodec} from './markdown';
 
 const basicMarks: Record<string, MarkSpec> = {
@@ -202,6 +204,7 @@ export interface BasicWysiwygEditor {
     focus(): void;
     getValue(): string;
     run(command: Command): boolean;
+    setValue(value: string): void;
 }
 
 export interface MountBasicWysiwygEditorOptions {
@@ -253,6 +256,28 @@ export function mountBasicWysiwygEditor({
             const result = command(view.state, view.dispatch, view);
             view.focus();
             return result;
+        },
+        setValue: (value) => {
+            if (value === basicMarkdownCodec.serialize(view.state.doc)) {
+                return;
+            }
+
+            view.updateState(
+                EditorState.create({
+                    doc: basicMarkdownCodec.parse(value),
+                    plugins: [
+                        history(),
+                        keymap({
+                            'Mod-Shift-z': commands.redo,
+                            'Mod-b': commands.bold,
+                            'Mod-i': commands.italic,
+                            'Mod-z': commands.undo,
+                        }),
+                        keymap(baseKeymap),
+                        tableEditing(),
+                    ],
+                }),
+            );
         },
     };
 }

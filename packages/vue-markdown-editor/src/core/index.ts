@@ -11,6 +11,7 @@ export type {
     BasicWysiwygEditor,
     MountBasicWysiwygEditorOptions,
 } from './basic-editor';
+export {createMarkdownEditor, MarkdownEditor} from './editor-instance';
 export {EventEmitter, SafeEventEmitter} from './events';
 export type {EventListener, SafeEventEmitterOptions} from './events';
 export {Logger, Logger2} from './logger';
