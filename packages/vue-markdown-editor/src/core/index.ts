@@ -24,3 +24,15 @@ export {mountBasicMarkupEditor} from './markup-editor';
 export type {BasicMarkupEditor, MountBasicMarkupEditorOptions} from './markup-editor';
 export {ParserTokenRegistry, SchemaSpecRegistry, SerializerTokenRegistry} from './registries';
 export type {SchemaSpecModifier} from './registries';
+export {
+    createVueContextPanelPlugin,
+    createVueNodeView,
+    createVueWidgetDecoration,
+} from './vue-renderer';
+export type {
+    VueContextPanelOptions,
+    VueContextPanelProps,
+    VueNodeViewOptions,
+    VueNodeViewProps,
+    VueWidgetDecorationOptions,
+} from './vue-renderer';

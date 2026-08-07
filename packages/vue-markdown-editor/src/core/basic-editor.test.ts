@@ -134,4 +134,25 @@ describe('basic Markdown extensions', () => {
         expect(nextState.doc.firstChild?.type.name).toBe('table');
         expect(nextState.doc.firstChild?.childCount).toBe(2);
     });
+
+    it('inserts an image and a linked file', () => {
+        const state = EditorState.create({schema: basicMarkdownSchema});
+        let imageState = state;
+
+        createBasicEditorCommands().insertImage('https://example.com/image.png', 'Image')(state, (transaction) => {
+            imageState = state.apply(transaction);
+        });
+
+        expect(imageState.doc.firstChild?.firstChild?.type.name).toBe('image');
+        expect(imageState.doc.firstChild?.firstChild?.attrs.src).toBe('https://example.com/image.png');
+
+        let fileState = state;
+        createBasicEditorCommands().insertFile('https://example.com/file.pdf', 'File')(state, (transaction) => {
+            fileState = state.apply(transaction);
+        });
+
+        expect(fileState.doc.textContent).toBe('File');
+        expect(fileState.doc.firstChild?.firstChild?.marks[0]?.attrs.href).toBe('https://example.com/file.pdf');
+    });
+
 });

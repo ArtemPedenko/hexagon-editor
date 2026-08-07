@@ -2,7 +2,7 @@
 
 ## Статус постановки
 
-Выполнены задачи 1–8 из 16. Публичный Vue-компонент покрыт DOM/integration-проверками для `v-model`, split-view, переключения режимов, readonly и корректного unmount.
+Выполнены задачи 1–10 из 15. Публичный Vue-компонент покрыт DOM/integration-проверками для `v-model`, split-view, переключения режимов, readonly и корректного unmount.
 
 ## Решения и [Уточнить]
 
@@ -41,14 +41,13 @@ React-библиотека Gravity UI Markdown Editor совмещает виз�
 6. **[Готово]** Реализовать CodeMirror 6 markup-редактор, history, поиск, подсветку, отступы, preview и синхронизацию Markdown; добавить DOM/integration-проверку mount, изменения, поиска, focus и destroy.
 7. **[Готово]** Создать инстанс редактора и `useMarkdownEditor`: события, жизненный цикл, режимы и синхронизация Markdown; проверить публичные методы, включая focus.
 8. **[Готово]** Создать публичный Vue-компонент `MarkdownEditor`, WYSIWYG-host, markup-host, split-view, SSR-safe mount/unmount, `v-model` и базовый слот-расширяемый тулбар; закрыть синхронизационные регрессии.
-9. **[Следующая]** Перенести базовые поведения: autocomplete и command-menu, clipboard, placeholder, selection, upload, cursor и resize; расширить тулбар popup/select/color/image/file-controls и конфигурацией preset.
-10. Реализовать Vue renderer для widget-decorations и ProseMirror node views; портировать контекстные панели.
+9. **[Готово]** Перенести базовые поведения: clipboard, placeholder, selection, upload, cursor и resize; расширить тулбар popup/select/color/image/file-controls и конфигурацией preset.
+10. **[Готово]** Реализовать Vue renderer для widget-decorations и ProseMirror node views; портировать контекстные панели.
 11. Перенести расширенные Markdown-функции: HTML, folding headings, definition list, quote link, attributes и directives.
 12. Перенести Math/LaTeX, Mermaid, YFM HTML-block и optional peer-интеграции.
-13. Перенести GPT и Page Constructor extension как отдельные opt-in пакеты с Vue-диалогами и без сетевой реализации по умолчанию.
-14. Завершить i18n (ru/en), accessibility, keyboard navigation, mobile/адаптивные состояния и theming.
-15. Подготовить API-документацию, migration guide с React и playground-сценарии всех режимов/расширений.
-16. Сверить экспортируемый API с исходником, добавить unit/integration/e2e/visual-regression тесты и провести release-проверку.
+13. Завершить i18n (ru/en), accessibility, keyboard navigation, mobile/адаптивные состояния и theming.
+14. Подготовить API-документацию, migration guide с React и playground-сценарии всех режимов/расширений.
+15. Сверить экспортируемый API с исходником, добавить unit/integration/e2e/visual-regression тесты и провести release-проверку.
 
 ## Технические детали
 

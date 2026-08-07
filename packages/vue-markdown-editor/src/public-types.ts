@@ -1,5 +1,12 @@
 /** Modes available to the consuming Vue application. */
 export type MarkdownEditorMode = 'wysiwyg' | 'markup' | 'split';
+export type MarkdownEditorToolbarPreset = 'default' | 'minimal';
+
+/** A file uploaded by the host application and ready for insertion. */
+export interface MarkdownEditorUploadResult {
+    alt?: string;
+    url: string;
+}
 
 /**
  * Stable options shared by the planned composable and component API.
@@ -12,6 +19,10 @@ export interface MarkdownEditorOptions {
     mode?: MarkdownEditorMode;
     /** Enables source Markdown preview when the markup editor supports it. */
     preview?: boolean;
+    /** Text displayed in an empty visual editor. */
+    placeholder?: string;
+    /** Host-owned upload integration. The editor itself does not make network calls. */
+    uploadFile?(file: File): Promise<MarkdownEditorUploadResult>;
     /** Called after a value change from either editor surface or the public API. */
     onChange?(value: string): void;
     /** Called after the presentation mode changes. */

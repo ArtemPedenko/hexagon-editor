@@ -128,6 +128,25 @@ describe('MarkdownEditor', () => {
 
         expect(picker.value).toBe('paragraph');
         expect(boldButton.getAttribute('aria-pressed')).toBe('true');
+        expect(target.querySelector('[aria-label="Жирный для выделения"]')).not.toBeNull();
+
+        app.unmount();
+    });
+
+    it('supports a minimal toolbar preset and an empty-editor placeholder', async () => {
+        const target = document.createElement('div');
+        const app = createApp(() => h(MarkdownEditor, {
+            placeholder: 'Начните писать',
+            toolbarPreset: 'minimal',
+        }));
+
+        document.body.append(target);
+        app.mount(target);
+        await nextTick();
+
+        expect(target.querySelector('.ProseMirror')?.getAttribute('data-placeholder')).toBe('Начните писать');
+        expect(target.querySelector('[title="Изображение"]')).toBeNull();
+        expect(target.querySelector('[title="Жирный"]')).not.toBeNull();
 
         app.unmount();
     });

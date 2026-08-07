@@ -12,7 +12,7 @@ import {
 } from 'prosemirror-markdown';
 import type {ParseSpec} from 'prosemirror-markdown';
 import {EditorState} from 'prosemirror-state';
-import type {Command} from 'prosemirror-state';
+import type {Command, Plugin} from 'prosemirror-state';
 import {liftListItem, sinkListItem, splitListItem, wrapInList} from 'prosemirror-schema-list';
 import {tableEditing, tableNodes} from 'prosemirror-tables';
 import {EditorView} from 'prosemirror-view';
@@ -22,6 +22,11 @@ import 'prosemirror-view/style/prosemirror.css';
 import {defaultMarkdownSchema, MarkdownCodec} from './markdown';
 
 const basicMarks: Record<string, MarkSpec> = {
+    color: {
+        attrs: {color: {}},
+        parseDOM: [{style: 'color', getAttrs: (color) => ({color})}],
+        toDOM: (mark) => ['span', {style: `color: ${mark.attrs.color}`}, 0],
+    },
     mark: {
         parseDOM: [{tag: 'mark'}, {tag: 'span[data-mark]'}],
         toDOM: () => ['mark', 0],
@@ -81,6 +86,10 @@ const basicMarkdownSerializer = new MarkdownSerializer(
     },
     {
         ...defaultMarkdownSerializer.marks,
+        color: {
+            close: '</span>',
+            open: (_state, mark) => `<span style="color: ${mark.attrs.color}">`,
+        },
         mark: {close: '==', open: '=='},
         strikethrough: {close: '~~', open: '~~'},
         underline: {close: '</u>', open: '<u>'},
@@ -147,6 +156,40 @@ function createTableCommand(rows = 3, columns = 3): Command {
     };
 }
 
+function insertFileCommand(href: string, name: string): Command {
+    return (state, dispatch) => {
+        if (dispatch !== undefined) {
+            const link = getMarkType('link').create({href});
+            dispatch(state.tr.replaceSelectionWith(state.schema.text(name, [link])).scrollIntoView());
+        }
+        return true;
+    };
+}
+
+function insertImageCommand(src: string, alt: string): Command {
+    return (state, dispatch) => {
+        if (dispatch !== undefined) {
+            const image = getNodeType('image').create({alt, src, title: null});
+            dispatch(state.tr.replaceSelectionWith(image).scrollIntoView());
+        }
+        return true;
+    };
+}
+
+function setColorCommand(color: string): Command {
+    return (state, dispatch) => {
+        const mark = getMarkType('color');
+        if (dispatch !== undefined) {
+            const {empty, from, to} = state.selection;
+            const transaction = empty
+                ? state.tr.removeStoredMark(mark).addStoredMark(mark.create({color}))
+                : state.tr.removeMark(from, to, mark).addMark(from, to, mark.create({color}));
+            dispatch(transaction.scrollIntoView());
+        }
+        return true;
+    };
+}
+
 export interface BasicEditorCommands {
     bold: Command;
     bulletList: Command;
@@ -154,6 +197,8 @@ export interface BasicEditorCommands {
     codeBlock: Command;
     heading(level: number): Command;
     horizontalRule: Command;
+    insertFile(href: string, name: string): Command;
+    insertImage(src: string, alt: string): Command;
     insertTable(rows?: number, columns?: number): Command;
     italic: Command;
     link(href: string): Command;
@@ -162,6 +207,7 @@ export interface BasicEditorCommands {
     paragraph: Command;
     quote: Command;
     redo: Command;
+    setColor(color: string): Command;
     sinkListItem: Command;
     splitListItem: Command;
     strikethrough: Command;
@@ -199,6 +245,8 @@ export function createBasicEditorCommands(): BasicEditorCommands {
             }
             return true;
         },
+        insertFile: insertFileCommand,
+        insertImage: insertImageCommand,
         insertTable: createTableCommand,
         italic: toggleMark(getMarkType('em')),
         link: (href) => toggleMark(getMarkType('link'), {href}),
@@ -207,6 +255,7 @@ export function createBasicEditorCommands(): BasicEditorCommands {
         paragraph: setBlockType(getNodeType('paragraph')),
         quote: wrapIn(getNodeType('blockquote')),
         redo,
+        setColor: setColorCommand,
         sinkListItem: sinkListItem(listItem),
         splitListItem: splitListItem(listItem),
         strikethrough: toggleMark(getMarkType('strikethrough')),
@@ -264,7 +313,10 @@ export interface MountBasicWysiwygEditorOptions {
     editable?: boolean;
     initialValue?: string;
     onChange?(value: string): void;
+    onFiles?(files: readonly File[]): void;
     onSelectionChange?(selection: BasicWysiwygSelectionState): void;
+    placeholder?: string;
+    plugins?: readonly Plugin[];
     target: HTMLElement;
 }
 
@@ -276,12 +328,36 @@ export function mountBasicWysiwygEditor({
     editable = true,
     initialValue = '',
     onChange,
+    onFiles,
     onSelectionChange,
+    placeholder = '',
+    plugins = [],
     target,
 }: MountBasicWysiwygEditorOptions): BasicWysiwygEditor {
     const commands = createBasicEditorCommands();
     let view: EditorView;
     view = new EditorView(target, {
+        attributes: {'data-placeholder': placeholder},
+        handleDOMEvents: {
+            drop: (_view, event) => {
+                const files = Array.from(event.dataTransfer?.files ?? []);
+                if (files.length === 0 || onFiles === undefined) {
+                    return false;
+                }
+                event.preventDefault();
+                onFiles(files);
+                return true;
+            },
+            paste: (_view, event) => {
+                const files = Array.from(event.clipboardData?.files ?? []);
+                if (files.length === 0 || onFiles === undefined) {
+                    return false;
+                }
+                event.preventDefault();
+                onFiles(files);
+                return true;
+            },
+        },
         dispatchTransaction(transaction) {
             const state = view.state.apply(transaction);
             view.updateState(state);
@@ -303,6 +379,7 @@ export function mountBasicWysiwygEditor({
                 }),
                 keymap(baseKeymap),
                 tableEditing(),
+                ...plugins,
             ],
         }),
     });
@@ -335,6 +412,7 @@ export function mountBasicWysiwygEditor({
                         }),
                         keymap(baseKeymap),
                         tableEditing(),
+                        ...plugins,
                     ],
                 }),
             );
