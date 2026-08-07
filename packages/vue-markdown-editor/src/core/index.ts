@@ -22,6 +22,8 @@ export {defaultMarkdownSchema, MarkdownCodec, renderMarkdownPreview} from './mar
 export type {MarkdownCodecOptions} from './markdown';
 export {mountBasicMarkupEditor} from './markup-editor';
 export type {BasicMarkupEditor, MountBasicMarkupEditorOptions} from './markup-editor';
+export {configureAdvancedMarkdownRenderers, getAdvancedMarkdownRenderers} from './optional-renderers';
+export type {AdvancedMarkdownRenderers} from './optional-renderers';
 export {ParserTokenRegistry, SchemaSpecRegistry, SerializerTokenRegistry} from './registries';
 export type {SchemaSpecModifier} from './registries';
 export {

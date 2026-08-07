@@ -13,10 +13,13 @@
     "build": "pnpm --recursive run build",
     "dev": "pnpm --filter @gravity-ui/vue-markdown-editor-playground dev",
     "test": "pnpm --recursive run test",
+    "test:e2e": "playwright test",
+    "test:all": "pnpm test && pnpm test:e2e",
     "typecheck": "pnpm --recursive run typecheck",
     "lint": "pnpm --recursive run lint"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@types/node": "^24.0.0",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
@@ -26,4 +29,3 @@
     "vitest": "^4.0.0"
   }
 }
-

@@ -29,7 +29,7 @@ describe('basic Markdown extensions', () => {
         expect(basicMarkdownCodec.serialize(document)).toContain('| Name | Value |');
     });
 
-    it('preserves raw HTML blocks, directives, and heading attributes', () => {
+    it('round-trips raw HTML blocks, directives, and heading attributes', () => {
         const source = '# Heading {#intro .lead}\n\n<div>HTML</div>\n\n::: html\n<div>Add HTML code here</div>\n:::';
         const document = basicMarkdownCodec.parse(source);
         const serialized = basicMarkdownCodec.serialize(document);
@@ -42,6 +42,92 @@ describe('basic Markdown extensions', () => {
         expect(serialized).toContain('# Heading {#intro .lead}');
         expect(serialized).toContain('<div>HTML</div>');
         expect(serialized).toContain('::: html\n<div>Add HTML code here</div>\n:::');
+
+        const reparsed = basicMarkdownCodec.parse(serialized);
+        expect(reparsed.child(0).attrs).toMatchObject({class: 'lead', id: 'intro'});
+        expect(reparsed.child(1).type.name).toBe('raw_html');
+        expect(reparsed.child(2).type.name).toBe('directive');
+        expect(reparsed.child(2).attrs).toMatchObject({
+            content: '<div>Add HTML code here</div>',
+            name: 'html',
+        });
+    });
+
+    it('round-trips definition lists, folding headings, and quote links', () => {
+        const source = [
+            '##+ Collapsible section',
+            '',
+            'Term',
+            ': Definition',
+            '',
+            '> [Quoted source](https://example.com/source){data-quotelink=true}',
+            '>',
+            '> Quoted content',
+        ].join('\n');
+        const document = basicMarkdownCodec.parse(source);
+        const serialized = basicMarkdownCodec.serialize(document);
+
+        expect(document.child(0).attrs.folding).toBe(false);
+        expect(document.child(1).type.name).toBe('definition_list');
+        expect(document.child(2).type.name).toBe('quote_link');
+        expect(document.child(2).attrs).toMatchObject({cite: 'https://example.com/source', content: 'Quoted source'});
+        expect(serialized).toContain('##+ Collapsible section');
+        expect(serialized).toContain('[Quoted source](https://example.com/source){data-quotelink=true}');
+        const reparsed = basicMarkdownCodec.parse(serialized);
+        expect(reparsed.child(0).attrs.folding).toBe(false);
+        expect(reparsed.child(1).type.name).toBe('definition_list');
+        expect(reparsed.child(2).type.name).toBe('quote_link');
+    });
+
+    it('round-trips Math, Mermaid, and YFM HTML blocks with source fallbacks', () => {
+        const source = [
+            'Formula $E = mc^2$',
+            '',
+            '$$',
+            'x^2 + y^2 = z^2',
+            '$$',
+            '',
+            '```mermaid',
+            'graph LR',
+            '  A --> B',
+            '```',
+            '',
+            ':::html',
+            '<section>YFM HTML</section>',
+            ':::',
+        ].join('\n');
+        const document = basicMarkdownCodec.parse(source);
+        const serialized = basicMarkdownCodec.serialize(document);
+
+        expect(document.firstChild?.lastChild?.type.name).toBe('inline_math');
+        expect(document.child(1).type.name).toBe('math_block');
+        expect(document.child(2).type.name).toBe('mermaid');
+        expect(document.child(3).type.name).toBe('yfm_html_block');
+        expect(serialized).toContain('$E = mc^2$');
+        expect(serialized).toContain('```mermaid\ngraph LR');
+        expect(serialized).toContain(':::html\n<section>YFM HTML</section>');
+        const reparsed = basicMarkdownCodec.parse(serialized);
+        expect(reparsed.firstChild?.lastChild?.type.name).toBe('inline_math');
+        expect(reparsed.child(1).type.name).toBe('math_block');
+        expect(reparsed.child(2).type.name).toBe('mermaid');
+        expect(reparsed.child(3).type.name).toBe('yfm_html_block');
+    });
+
+    it('toggles the folded state of a folding heading', () => {
+        const document = basicMarkdownSchema.node('doc', null, [
+            basicMarkdownSchema.node('heading', {folding: false, level: 2}, basicMarkdownSchema.text('Section')),
+            basicMarkdownSchema.node('paragraph', null, basicMarkdownSchema.text('Content')),
+        ]);
+        const state = EditorState.create({doc: document, selection: TextSelection.create(document, 1)});
+        let nextState = state;
+
+        const executed = createBasicEditorCommands().toggleHeadingFolding(state, (transaction) => {
+            nextState = state.apply(transaction);
+        });
+
+        expect(executed).toBe(true);
+        expect(nextState.doc.firstChild?.attrs.folding).toBe(true);
+        expect(basicMarkdownCodec.serialize(nextState.doc)).toContain('##+ Section');
     });
 
     it('toggles bold for the selected text', () => {

@@ -167,6 +167,38 @@ describe('MarkdownEditor', () => {
         app.unmount();
     });
 
+    it('folds the content under a folding heading from the toolbar', async () => {
+        const target = document.createElement('div');
+        const app = createApp(() => h(MarkdownEditor, {modelValue: '##+ Section\n\nHidden content'}));
+
+        document.body.append(target);
+        app.mount(target);
+        await nextTick();
+
+        const headingText = target.querySelector('.ProseMirror h2')?.firstChild;
+        const visualElement = target.querySelector<HTMLElement>('.ProseMirror') as HTMLElement;
+        expect(headingText).toBeInstanceOf(Text);
+        visualElement.focus();
+        const selection = window.getSelection();
+        const range = document.createRange();
+        range.setStart(headingText as Text, 0);
+        range.collapse(true);
+        selection?.removeAllRanges();
+        selection?.addRange(range);
+        document.dispatchEvent(new Event('selectionchange'));
+        await nextTick();
+
+        const foldingButton = target.querySelector<HTMLButtonElement>('[title="Свернуть раздел"]');
+        expect(foldingButton).not.toBeNull();
+        foldingButton?.click();
+        await nextTick();
+
+        expect(target.querySelector('.markdown-editor__folded-content')?.textContent).toBe('Hidden content');
+        expect(foldingButton?.getAttribute('aria-pressed')).toBe('true');
+
+        app.unmount();
+    });
+
     it('inserts an HTML directive and switches to markup mode', async () => {
         const target = document.createElement('div');
         const editor = ref<MarkdownEditorExposed>();
@@ -182,6 +214,25 @@ describe('MarkdownEditor', () => {
 
         expect(editor.value?.getMode()).toBe('markup');
         expect(editor.value?.getValue()).toContain('::: html\n\n<div>Add HTML code here</div>\n\n:::');
+
+        app.unmount();
+    });
+
+    it('inserts a LaTeX block and switches to markup mode', async () => {
+        const target = document.createElement('div');
+        const editor = ref<MarkdownEditorExposed>();
+        const app = createApp(() => h(MarkdownEditor, {modelValue: 'Text', ref: editor}));
+
+        document.body.append(target);
+        app.mount(target);
+        await nextTick();
+
+        target.querySelector<HTMLButtonElement>('[title="Формула"]')?.click();
+        await nextTick();
+        await nextTick();
+
+        expect(editor.value?.getMode()).toBe('markup');
+        expect(editor.value?.getValue()).toContain('$$\nE = mc^2\n$$');
 
         app.unmount();
     });

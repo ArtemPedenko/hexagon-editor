@@ -5,7 +5,42 @@ import {MarkdownEditor, renderMarkdownPreview, VERSION} from '@gravity-ui/vue-ma
 import type {MarkdownEditorMode} from '@gravity-ui/vue-markdown-editor';
 
 const editorMode = ref<MarkdownEditorMode>('wysiwyg');
-const markdown = ref('# Начните писать\n\nЭто интерактивный Vue-порт Markdown-редактора.');
+const advancedMarkdownDemo = [
+    '# Vue Markdown editor {#editor-demo .playground-title}',
+    '',
+    '##+ Расширенные возможности',
+    '',
+    'Этот раздел можно свернуть кнопкой в тулбаре.',
+    '',
+    'Термин',
+    ': Определение из definition list',
+    '',
+    '> [Документация Gravity UI](https://gravity-ui.com){data-quotelink=true}',
+    '>',
+    '> Цитата со ссылкой на источник.',
+    '',
+    '<div data-demo-html>Raw HTML block</div>',
+    '',
+    '::: html',
+    '<div>HTML directive</div>',
+    ':::',
+    '',
+    'Формула: $E = mc^2$',
+    '',
+    '$$',
+    '\\sum_{i=1}^{n} i = \\frac{n(n + 1)}{2}',
+    '$$',
+    '',
+    '```mermaid',
+    'graph LR',
+    '  Markdown --> Editor',
+    '```',
+    '',
+    ':::html',
+    '<section>YFM HTML block</section>',
+    ':::',
+].join('\n');
+const markdown = ref(advancedMarkdownDemo);
 const previewHtml = computed(() => renderMarkdownPreview(markdown.value));
 </script>
 
@@ -17,7 +52,7 @@ const previewHtml = computed(() => renderMarkdownPreview(markdown.value));
       </p>
       <h1>Markdown editor</h1>
       <p class="playground__status">
-        {{ editorMode }} · базовые расширения · {{ VERSION }}
+        {{ editorMode }} · расширенные Markdown-функции · {{ VERSION }}
       </p>
     </header>
     <section class="playground__workspace" aria-label="Редактор Markdown">

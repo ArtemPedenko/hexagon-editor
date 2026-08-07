@@ -89,6 +89,7 @@ const toolbarState = ref<BasicWysiwygSelectionState>({
     bulletList: false,
     code: false,
     codeBlock: false,
+    headingFolded: false,
     headingLevel: undefined,
     italic: false,
     mark: false,
@@ -99,6 +100,7 @@ const toolbarState = ref<BasicWysiwygSelectionState>({
 });
 const textStyle = computed(() => toolbarState.value.headingLevel?.toString() ?? 'paragraph');
 const htmlDirective = '::: html\n\n<div>Add HTML code here</div>\n\n:::';
+const mathBlock = '$$\nE = mc^2\n$$';
 let markupEditor: BasicMarkupEditor | undefined;
 let modeChangeId = 0;
 let syncing = false;
@@ -114,6 +116,7 @@ function destroyHosts(): void {
         bulletList: false,
         code: false,
         codeBlock: false,
+        headingFolded: false,
         headingLevel: undefined,
         italic: false,
         mark: false,
@@ -181,6 +184,12 @@ function applyTextStyle(event: Event): void {
 
 async function insertHtmlDirective(): Promise<void> {
     setValue(value.value.length === 0 ? htmlDirective : `${value.value}\n\n${htmlDirective}`);
+    await setMode('markup');
+    markupEditor?.focus();
+}
+
+async function insertMathBlock(): Promise<void> {
+    setValue(value.value.length === 0 ? mathBlock : `${value.value}\n\n${mathBlock}`);
     await setMode('markup');
     markupEditor?.focus();
 }
@@ -359,6 +368,16 @@ defineExpose<MarkdownEditorExposed>({
       <button :aria-pressed="toolbarState.bulletList" type="button" title="Маркированный список" @mousedown.prevent @click="execute(commands.bulletList)">•≡</button>
       <button :aria-pressed="toolbarState.orderedList" type="button" title="Нумерованный список" @mousedown.prevent @click="execute(commands.orderedList)">1≡</button>
       <button :aria-pressed="toolbarState.quote" type="button" title="Цитата" @mousedown.prevent @click="execute(commands.quote)">❝</button>
+      <button
+        v-if="toolbarState.headingLevel !== undefined"
+        :aria-pressed="toolbarState.headingFolded"
+        type="button"
+        title="Свернуть раздел"
+        @mousedown.prevent
+        @click="execute(commands.toggleHeadingFolding)"
+      >
+        ▸
+      </button>
       <button v-if="toolbarPreset === 'default'" :aria-pressed="toolbarState.codeBlock" type="button" title="Code block" @mousedown.prevent @click="execute(commands.codeBlock)">{ }</button>
       <button type="button" title="Ссылка" @mousedown.prevent @click="linkEditorVisible = !linkEditorVisible">⌁</button>
       <label v-if="toolbarPreset === 'default'" class="markdown-editor__color" title="Цвет текста">
@@ -366,6 +385,7 @@ defineExpose<MarkdownEditorExposed>({
       </label>
       <button v-if="toolbarPreset === 'default'" type="button" title="Изображение" @mousedown.prevent @click="openFilePicker('image')">▧</button>
       <button v-if="toolbarPreset === 'default'" type="button" title="Файл" @mousedown.prevent @click="openFilePicker('file')">⌕</button>
+      <button v-if="toolbarPreset === 'default'" type="button" title="Формула" @mousedown.prevent @click="insertMathBlock">Σ</button>
       <button v-if="toolbarPreset === 'default'" type="button" title="HTML" @mousedown.prevent @click="insertHtmlDirective">&lt;/&gt;</button>
       <button v-if="toolbarPreset === 'default'" type="button" title="Горизонтальная линия" @mousedown.prevent @click="execute(commands.horizontalRule)">―</button>
       <button v-if="toolbarPreset === 'default'" type="button" title="Таблица 3×3" @mousedown.prevent @click="execute(commands.insertTable())">▦</button>
@@ -533,6 +553,10 @@ defineExpose<MarkdownEditorExposed>({
     outline: none;
     line-height: 1.6;
     cursor: text;
+}
+
+.markdown-editor :deep(.markdown-editor__folded-content) {
+    display: none;
 }
 
 .markdown-editor :deep(.ProseMirror[data-placeholder]:has(> p:only-child > .ProseMirror-trailingBreak))::before {

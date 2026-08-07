@@ -1,7 +1,9 @@
 import {baseKeymap, setBlockType, toggleMark, wrapIn} from 'prosemirror-commands';
 import {history, redo, undo} from 'prosemirror-history';
 import {keymap} from 'prosemirror-keymap';
+import katex from 'katex';
 import MarkdownIt from 'markdown-it';
+import deflist from 'markdown-it-deflist';
 import {Schema} from 'prosemirror-model';
 import type {MarkSpec, Node as ProseMirrorNode, NodeSpec} from 'prosemirror-model';
 import {
@@ -11,15 +13,17 @@ import {
     MarkdownSerializer,
 } from 'prosemirror-markdown';
 import type {ParseSpec} from 'prosemirror-markdown';
-import {EditorState} from 'prosemirror-state';
-import type {Command, Plugin} from 'prosemirror-state';
+import {EditorState, Plugin, PluginKey} from 'prosemirror-state';
+import type {Command} from 'prosemirror-state';
 import {liftListItem, sinkListItem, splitListItem, wrapInList} from 'prosemirror-schema-list';
 import {tableEditing, tableNodes} from 'prosemirror-tables';
-import {EditorView} from 'prosemirror-view';
+import {Decoration, DecorationSet, EditorView} from 'prosemirror-view';
 
 import 'prosemirror-view/style/prosemirror.css';
+import 'katex/dist/katex.min.css';
 
 import {defaultMarkdownSchema, MarkdownCodec} from './markdown';
+import {getAdvancedMarkdownRenderers} from './optional-renderers';
 
 const basicMarks: Record<string, MarkSpec> = {
     color: {
@@ -54,10 +58,43 @@ function renderHtmlBlock(html: string, attribute: string): HTMLElement {
     return element;
 }
 
+function renderOptionalBlock(kind: 'math' | 'mermaid', source: string, display = true): HTMLElement {
+    const renderers = getAdvancedMarkdownRenderers();
+    if (kind === 'math' && renderers.math !== undefined) return renderers.math(source, display);
+    if (kind === 'mermaid' && renderers.mermaid !== undefined) return renderers.mermaid(source);
+    const element = document.createElement(kind === 'math' && !display ? 'span' : 'pre');
+    element.setAttribute(`data-${kind}${kind === 'math' ? display ? '-block' : '-inline' : ''}`, '');
+    if (kind === 'math') {
+        element.innerHTML = katex.renderToString(source, {displayMode: display, throwOnError: false});
+    } else {
+        element.textContent = source;
+    }
+    return element;
+}
+
+function renderYfmHtml(source: string): HTMLElement {
+    const renderer = getAdvancedMarkdownRenderers().html;
+    if (renderer !== undefined) return renderer(source);
+    const element = document.createElement('pre');
+    element.setAttribute('data-yfm-html', '');
+    element.textContent = source;
+    return element;
+}
+
 const extendedMarkdownNodes: Record<string, NodeSpec> = {
+    inline_math: {atom: true, attrs: {latex: {default: ''}}, group: 'inline', inline: true, toDOM: (node) => renderOptionalBlock('math', node.attrs.latex, false)},
+    math_block: {atom: true, attrs: {latex: {default: ''}}, group: 'block', toDOM: (node) => renderOptionalBlock('math', node.attrs.latex)},
+    mermaid: {atom: true, attrs: {source: {default: ''}}, group: 'block', toDOM: (node) => renderOptionalBlock('mermaid', node.attrs.source)},
     definition_description: {content: 'block+', group: 'block', toDOM: () => ['dd', 0]},
     definition_list: {content: 'definition_term definition_description+', group: 'block', toDOM: () => ['dl', 0]},
     definition_term: {content: 'inline*', toDOM: () => ['dt', 0]},
+    quote_link: {
+        attrs: {cite: {default: ''}, content: {default: ''}},
+        content: 'block+',
+        defining: true,
+        group: 'block',
+        toDOM: (node) => ['blockquote', {cite: node.attrs.cite, 'data-content': node.attrs.content, 'data-quote-link': ''}, 0],
+    },
     directive: {
         atom: true,
         attrs: {content: {default: ''}, name: {default: 'note'}},
@@ -72,6 +109,7 @@ const extendedMarkdownNodes: Record<string, NodeSpec> = {
         group: 'block',
         toDOM: (node) => renderHtmlBlock(node.attrs.html, 'data-raw-html'),
     },
+    yfm_html_block: {atom: true, attrs: {html: {default: ''}}, group: 'block', toDOM: (node) => renderYfmHtml(node.attrs.html)},
 };
 
 /** Schema for the first WYSIWYG milestone. YFM-specific nodes are added later. */
@@ -79,7 +117,7 @@ export const basicMarkdownSchema: Schema = new Schema({
     marks: defaultMarkdownSchema.spec.marks.append(basicMarks),
     nodes: defaultMarkdownSchema.spec.nodes
         .update('heading', {
-            attrs: {class: {default: null}, id: {default: null}, level: {default: 1}},
+            attrs: {class: {default: null}, folding: {default: null}, id: {default: null}, level: {default: 1}},
             content: 'inline*',
             group: 'block',
             defining: true,
@@ -89,30 +127,84 @@ export const basicMarkdownSchema: Schema = new Schema({
 });
 
 const tableTokenSpecs: Record<string, ParseSpec> = {
-    definition_description: {block: 'definition_description'},
-    definition_list: {block: 'definition_list'},
-    definition_term: {block: 'definition_term'},
+    dd: {block: 'definition_description'},
+    dl: {block: 'definition_list'},
+    dt: {block: 'definition_term'},
     directive: {node: 'directive', getAttrs: (token) => ({content: token.content, name: token.info})},
     heading: {block: 'heading', getAttrs: (token) => ({
         class: token.attrGet('class'),
+        folding: token.attrGet('folding') === null ? null : token.attrGet('folding') === 'true',
         id: token.attrGet('id'),
         level: Number(token.tag.slice(1)),
     })},
     html_block: {node: 'raw_html', getAttrs: (token) => ({html: token.content})},
+    inline_math: {node: 'inline_math', getAttrs: (token) => ({latex: token.content})},
+    math_block: {node: 'math_block', getAttrs: (token) => ({latex: token.content})},
+    mermaid: {node: 'mermaid', getAttrs: (token) => ({source: token.content})},
+    quote_link: {block: 'quote_link', getAttrs: (token) => ({cite: token.attrGet('cite'), content: token.attrGet('data-content')})},
     table: {block: 'table'},
     tbody: {ignore: true},
     td: {block: 'table_cell'},
     th: {block: 'table_header'},
     thead: {ignore: true},
     tr: {block: 'table_row'},
+    yfm_html_block: {node: 'yfm_html_block', getAttrs: (token) => ({html: token.content})},
 };
 
 function createExtendedMarkdownIt(): MarkdownIt {
-    const markdown = new MarkdownIt('commonmark', {html: true}).enable('table');
+    const markdown = new MarkdownIt('commonmark', {html: true}).enable('table').use(deflist);
+    markdown.inline.ruler.after('escape', 'inline_math', (state, silent) => {
+        if (state.src.charCodeAt(state.pos) !== 0x24) return false;
+        const close = state.src.indexOf('$', state.pos + 1);
+        if (close <= state.pos + 1 || state.src.charCodeAt(state.pos + 1) === 0x24) return false;
+        if (!silent) {
+            const token = state.push('inline_math', '', 0);
+            token.content = state.src.slice(state.pos + 1, close);
+        }
+        state.pos = close + 1;
+        return true;
+    });
+    markdown.block.ruler.before('fence', 'math_block', (state, startLine, endLine, silent) => {
+        if (state.getLines(startLine, startLine + 1, 0, false).trim() !== '$$') return false;
+        let line = startLine + 1;
+        while (line < endLine && state.getLines(line, line + 1, 0, false).trim() !== '$$') line += 1;
+        if (line === endLine) return false;
+        if (!silent) {
+            const token = state.push('math_block', '', 0);
+            token.content = state.getLines(startLine + 1, line, 0, false).trim();
+        }
+        state.line = line + 1;
+        return true;
+    });
+    markdown.core.ruler.after('block', 'advanced_fences', (state) => {
+        for (const token of state.tokens) {
+            if (token.type === 'fence' && token.info.trim() === 'mermaid') token.type = 'mermaid';
+        }
+    });
+    markdown.core.ruler.after('block', 'folding_heading', (state) => {
+        for (const [index, token] of state.tokens.entries()) {
+            const inline = state.tokens[index + 1];
+            const close = state.tokens[index + 2];
+            if (token?.type !== 'paragraph_open' || inline?.type !== 'inline' || close?.type !== 'paragraph_close') continue;
+            const match = inline.content.match(/^(#{1,6})\+\s+(.+)$/);
+            if (match === null) continue;
+            const level = match[1]?.length ?? 1;
+            token.type = 'heading_open';
+            token.tag = `h${level}`;
+            token.attrSet('folding', 'false');
+            inline.content = match[2] ?? '';
+            close.type = 'heading_close';
+            close.tag = `h${level}`;
+        }
+    });
     markdown.core.ruler.after('block', 'heading_attributes', (state) => {
         for (const [index, token] of state.tokens.entries()) {
             const inline = state.tokens[index + 1];
             if (token?.type !== 'heading_open' || inline?.type !== 'inline') continue;
+            if (inline.content.startsWith('+ ')) {
+                inline.content = inline.content.slice(2);
+                token.attrSet('folding', 'false');
+            }
             const match = inline.content.match(/\s+\{([^}]+)\}$/);
             if (match === null) continue;
             inline.content = inline.content.slice(0, match.index);
@@ -122,15 +214,45 @@ function createExtendedMarkdownIt(): MarkdownIt {
             }
         }
     });
+    markdown.core.ruler.after('inline', 'quote_link', (state) => {
+        let index = 0;
+        while (index < state.tokens.length) {
+            const token = state.tokens[index];
+            const paragraph = state.tokens[index + 1];
+            const inline = state.tokens[index + 2];
+            const paragraphClose = state.tokens[index + 3];
+            if (token?.type !== 'blockquote_open' || paragraph?.type !== 'paragraph_open' || inline?.type !== 'inline' || paragraphClose?.type !== 'paragraph_close') {
+                index += 1;
+                continue;
+            }
+            const match = inline.content.match(/^\[([^\]]+)\]\(([^)]+)\)\{data-quotelink=true\}$/);
+            if (match === null) {
+                index += 1;
+                continue;
+            }
+            const closeIndex = state.tokens.findIndex((candidate, candidateIndex) => candidateIndex > index && candidate.type === 'blockquote_close');
+            if (closeIndex === -1) {
+                index += 1;
+                continue;
+            }
+            token.type = 'quote_link_open';
+            token.attrSet('cite', match[2] ?? '');
+            token.attrSet('data-content', match[1] ?? '');
+            state.tokens[closeIndex]!.type = 'quote_link_close';
+            state.tokens.splice(index + 1, 3);
+            index += 1;
+        }
+    });
     markdown.block.ruler.before('fence', 'directive', (state, startLine, endLine, silent) => {
         const start = state.getLines(startLine, startLine + 1, 0, false).trim();
+        const yfmHtml = start === ':::html';
         const match = start.match(/^:::\s*(\w+)\s*$/);
         if (match === null) return false;
         let line = startLine + 1;
         while (line < endLine && state.getLines(line, line + 1, 0, false).trim() !== ':::') line += 1;
         if (line === endLine) return false;
         if (!silent) {
-            const token = state.push('directive', '', 0);
+            const token = state.push(yfmHtml ? 'yfm_html_block' : 'directive', '', 0);
             token.content = state.getLines(startLine + 1, line, 0, false).trim();
             token.info = match[1] ?? 'note';
         }
@@ -151,16 +273,27 @@ const basicMarkdownSerializer = new MarkdownSerializer(
         ...defaultMarkdownSerializer.nodes,
         definition_description(state, node) { state.renderContent(node); state.closeBlock(node); },
         definition_list(state, node) { state.renderContent(node); state.closeBlock(node); },
-        definition_term(state, node) { state.renderInline(node); state.write(': '); },
+        definition_term(state, node) { state.renderInline(node); state.write('\n: '); },
         directive(state, node) { state.write(`::: ${node.attrs.name}\n${node.attrs.content}\n:::`); state.closeBlock(node); },
+        inline_math(state, node) { state.write(`$${node.attrs.latex}$`); },
+        math_block(state, node) { state.write(`$$\n${node.attrs.latex}\n$$`); state.closeBlock(node); },
+        mermaid(state, node) { state.write(`\`\`\`mermaid\n${node.attrs.source}\n\`\`\``); state.closeBlock(node); },
         heading(state, node) {
-            state.write(`${'#'.repeat(node.attrs.level)} `);
+            state.write(`${'#'.repeat(node.attrs.level)}${node.attrs.folding === null ? '' : '+'} `);
             state.renderInline(node);
             const attributes = [node.attrs.id === null ? '' : `#${node.attrs.id}`, node.attrs.class === null ? '' : `.${node.attrs.class}`].filter(Boolean).join(' ');
             if (attributes) state.write(` {${attributes}}`);
             state.closeBlock(node);
         },
         raw_html(state, node) { state.write(node.attrs.html); state.closeBlock(node); },
+        yfm_html_block(state, node) { state.write(`:::html\n${node.attrs.html}\n:::`); state.closeBlock(node); },
+        quote_link(state, node) {
+            state.wrapBlock('> ', null, node, () => {
+                state.write(`[${node.attrs.content}](${node.attrs.cite}){data-quotelink=true}`);
+                state.write('\n\n');
+                state.renderContent(node);
+            });
+        },
         table(state, node) {
             const rows = Array.from(node.content.content, (row) =>
                 Array.from(row.content.content, (cell) => escapeTableCell(cell.textContent)),
@@ -301,6 +434,7 @@ export interface BasicEditorCommands {
     sinkListItem: Command;
     splitListItem: Command;
     strikethrough: Command;
+    toggleHeadingFolding: Command;
     underline: Command;
     undo: Command;
 }
@@ -311,6 +445,7 @@ export interface BasicWysiwygSelectionState {
     code: boolean;
     codeBlock: boolean;
     headingLevel: number | undefined;
+    headingFolded: boolean;
     italic: boolean;
     mark: boolean;
     orderedList: boolean;
@@ -318,6 +453,60 @@ export interface BasicWysiwygSelectionState {
     strikethrough: boolean;
     underline: boolean;
 }
+
+const foldingPluginKey = new PluginKey<DecorationSet>('folding-heading');
+
+function createFoldingPlugin(): Plugin<DecorationSet> {
+    const createDecorations = (document: ProseMirrorNode): DecorationSet => {
+        const decorations: Decoration[] = [];
+        let foldedLevel: number | undefined;
+
+        document.forEach((node, offset) => {
+            if (node.type.name === 'heading') {
+                const level = Number(node.attrs.level);
+                if (foldedLevel !== undefined && level <= foldedLevel) {
+                    foldedLevel = undefined;
+                }
+                if (node.attrs.folding === true) {
+                    foldedLevel = level;
+                }
+            } else if (foldedLevel !== undefined) {
+                decorations.push(Decoration.node(offset, offset + node.nodeSize, {
+                    class: 'markdown-editor__folded-content',
+                }));
+            }
+        });
+
+        return DecorationSet.create(document, decorations);
+    };
+
+    return new Plugin({
+        key: foldingPluginKey,
+        props: {
+            decorations: (state) => foldingPluginKey.getState(state),
+        },
+        state: {
+            apply: (transaction, previous) => transaction.docChanged
+                ? createDecorations(transaction.doc)
+                : previous.map(transaction.mapping, transaction.doc),
+            init: (_config, state) => createDecorations(state.doc),
+        },
+    });
+}
+
+const toggleHeadingFolding: Command = (state, dispatch) => {
+    const {$from} = state.selection;
+    if ($from.parent.type.name !== 'heading') {
+        return false;
+    }
+    if (dispatch !== undefined) {
+        dispatch(state.tr.setNodeMarkup($from.before(), undefined, {
+            ...$from.parent.attrs,
+            folding: !$from.parent.attrs.folding,
+        }));
+    }
+    return true;
+};
 
 /** Framework-agnostic commands consumed later by the Vue toolbar and shortcuts. */
 export function createBasicEditorCommands(): BasicEditorCommands {
@@ -349,6 +538,7 @@ export function createBasicEditorCommands(): BasicEditorCommands {
         sinkListItem: sinkListItem(listItem),
         splitListItem: splitListItem(listItem),
         strikethrough: toggleMark(getMarkType('strikethrough')),
+        toggleHeadingFolding,
         underline: toggleMark(getMarkType('underline')),
         undo,
     };
@@ -382,6 +572,7 @@ export function getBasicWysiwygSelectionState(state: EditorState): BasicWysiwygS
         code: hasActiveMark(state, 'code'),
         codeBlock: hasAncestor(state, 'code_block'),
         headingLevel: $from.parent.type.name === 'heading' ? Number($from.parent.attrs.level) : undefined,
+        headingFolded: $from.parent.type.name === 'heading' && $from.parent.attrs.folding === true,
         italic: hasActiveMark(state, 'em'),
         mark: hasActiveMark(state, 'mark'),
         orderedList: hasAncestor(state, 'ordered_list'),
@@ -460,6 +651,7 @@ export function mountBasicWysiwygEditor({
         state: EditorState.create({
             doc: basicMarkdownCodec.parse(initialValue),
             plugins: [
+                createFoldingPlugin(),
                 history(),
                 keymap({
                     'Mod-Shift-z': commands.redo,
@@ -493,6 +685,7 @@ export function mountBasicWysiwygEditor({
                 EditorState.create({
                     doc: basicMarkdownCodec.parse(value),
                     plugins: [
+                        createFoldingPlugin(),
                         history(),
                         keymap({
                             'Mod-Shift-z': commands.redo,
