@@ -22,6 +22,8 @@ import {Code} from '../extensions/markdown/code';
 import type {CodeOptions} from '../extensions/markdown/code';
 import {CodeBlock} from '../extensions/markdown/code-block';
 import type {CodeBlockOptions} from '../extensions/markdown/code-block';
+import {Heading} from '../extensions/markdown/heading';
+import type {HeadingOptions} from '../extensions/markdown/heading';
 
 import {ZeroPreset} from './zero';
 
@@ -31,6 +33,7 @@ export interface DefaultPresetOptions {
     bold?: BoldOptions;
     code?: CodeOptions;
     codeBlock?: CodeBlockOptions;
+    heading?: HeadingOptions;
     italic?: ItalicOptions;
     filePaste?: FilePasteOptions;
     history?: HistoryOptions;
@@ -48,6 +51,7 @@ export const DefaultPreset: ExtensionAuto<DefaultPresetOptions> = (builder, opti
         .use(Italic, options?.italic ?? {})
         .use(Code, options?.code ?? {})
         .use(CodeBlock, options?.codeBlock ?? {})
+        .use(Heading, options?.heading ?? {})
         .use(Lists, options?.lists ?? {})
         .use(History, options?.history ?? {})
         .use(Placeholder, options?.placeholder ?? {})

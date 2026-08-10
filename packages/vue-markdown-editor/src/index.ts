@@ -61,6 +61,16 @@ export {
     setCodeBlock,
 } from './extensions/markdown/code-block';
 export type {CodeBlockOptions} from './extensions/markdown/code-block';
+export {
+    Heading,
+    HeadingSpecs,
+    getHeadingType,
+    headingLevelAttr,
+    headingNodeName,
+    resetHeading,
+    toHeading,
+} from './extensions/markdown/heading';
+export type {HeadingLevel, HeadingOptions} from './extensions/markdown/heading';
 export {BaseInputRules, BaseKeymap, BaseSchema} from './extensions/base';
 export type {BaseSchemaOptions} from './extensions/base';
 export {ZeroPreset} from './presets/zero';

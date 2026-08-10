@@ -83,6 +83,7 @@ import {
   serializeCodeBlock,
   setCodeBlock,
 } from "../extensions/markdown/code-block";
+import { toHeading } from "../extensions/markdown/heading";
 import {
   listNodeSpecs,
   listSerializerNodes,
@@ -1241,7 +1242,7 @@ export function createBasicEditorCommands(): BasicEditorCommands {
     bulletList: toList(getNodeType("bullet_list")),
     code: toggleCode,
     codeBlock: setCodeBlock,
-    heading: (level) => setBlockType(getNodeType("heading"), { level }),
+    heading: toHeading,
     horizontalRule: (state, dispatch) => {
       if (dispatch !== undefined) {
         dispatch(
