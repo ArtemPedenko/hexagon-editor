@@ -85,6 +85,12 @@ import {
 } from "../extensions/markdown/code-block";
 import { toHeading } from "../extensions/markdown/heading";
 import {
+  addHorizontalRule,
+  horizontalRuleNodeSpec,
+  horizontalRuleTokenSpec,
+  serializeHorizontalRule,
+} from "../extensions/markdown/horizontal-rule";
+import {
   listNodeSpecs,
   listSerializerNodes,
   listTokenSpecs,
@@ -243,6 +249,7 @@ export const basicMarkdownSchema: Schema = new Schema({
   nodes: defaultMarkdownSchema.spec.nodes
     .update("blockquote", blockquoteNodeSpec)
     .update("code_block", codeBlockNodeSpec)
+    .update("horizontal_rule", horizontalRuleNodeSpec)
     .update("list_item", listNodeSpecs.list_item)
     .update("bullet_list", listNodeSpecs.bullet_list)
     .update("ordered_list", listNodeSpecs.ordered_list)
@@ -270,6 +277,7 @@ const tableTokenSpecs: Record<string, ParseSpec> = {
   code_inline: codeTokenSpec,
   ...codeBlockTokenSpecs,
   em: italicTokenSpec,
+  hr: horizontalRuleTokenSpec,
   strong: boldTokenSpec,
   ...listTokenSpecs,
   dd: { block: "definition_description" },
@@ -513,6 +521,7 @@ function createBasicDefaultPresetPlugins(
 const basicMarkdownSerializerNodes = {
   blockquote: serializeBlockquote,
   code_block: serializeCodeBlock,
+  horizontal_rule: serializeHorizontalRule,
   ...listSerializerNodes,
   definition_description(state, node) {
     state.renderContent(node);
@@ -1243,16 +1252,7 @@ export function createBasicEditorCommands(): BasicEditorCommands {
     code: toggleCode,
     codeBlock: setCodeBlock,
     heading: toHeading,
-    horizontalRule: (state, dispatch) => {
-      if (dispatch !== undefined) {
-        dispatch(
-          state.tr
-            .replaceSelectionWith(getNodeType("horizontal_rule").create())
-            .scrollIntoView(),
-        );
-      }
-      return true;
-    },
+    horizontalRule: addHorizontalRule(getNodeType("horizontal_rule")),
     insertFile: insertFileCommand,
     insertImage: insertImageCommand,
     insertMathBlock: (state, dispatch) => {

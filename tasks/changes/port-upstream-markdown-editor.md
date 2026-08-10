@@ -2,7 +2,7 @@
 
 ## Статус постановки
 
-В работе — parity-инвентаризация зафиксирована в `tasks/changes/upstream-parity-matrix.md`; перенесены foundation `ExtensionBuilder`/`ExtensionsManager`, Markdown serializer registration, `Lists`, `Blockquote`, `Bold`, `Italic`, inline `Code`, базовый runtime `CodeBlock`, `Heading`, `WysiwygContentHandler`, `History`, `Clipboard`, `FilePaste`, `Placeholder`, `Selection` и Vue-адаптация `SelectionContext`. Все подключаемые behavior/markdown-расширения включены в visual editor через `DefaultPreset`. Следующий срез — `HorizontalRule`.
+В работе — parity-инвентаризация зафиксирована в `tasks/changes/upstream-parity-matrix.md`; перенесены foundation `ExtensionBuilder`/`ExtensionsManager`, Markdown serializer registration, `Lists`, `Blockquote`, `Bold`, `Italic`, inline `Code`, базовый runtime `CodeBlock`, `Heading`, `HorizontalRule`, `WysiwygContentHandler`, `History`, `Clipboard`, `FilePaste`, `Placeholder`, `Selection` и Vue-адаптация `SelectionContext`. Все подключаемые behavior/markdown-расширения включены в visual editor через `DefaultPreset`. Следующий срез — `Link`.
 
 ## Решения и [Уточнить]
 

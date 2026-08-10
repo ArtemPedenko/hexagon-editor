@@ -71,6 +71,14 @@ export {
     toHeading,
 } from './extensions/markdown/heading';
 export type {HeadingLevel, HeadingOptions} from './extensions/markdown/heading';
+export {
+    addHorizontalRule,
+    HorizontalRule,
+    HorizontalRuleSpecs,
+    getHorizontalRuleType,
+    horizontalRuleMarkupAttr,
+    horizontalRuleNodeName,
+} from './extensions/markdown/horizontal-rule';
 export {BaseInputRules, BaseKeymap, BaseSchema} from './extensions/base';
 export type {BaseSchemaOptions} from './extensions/base';
 export {ZeroPreset} from './presets/zero';

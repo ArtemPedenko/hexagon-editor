@@ -24,6 +24,7 @@ import {CodeBlock} from '../extensions/markdown/code-block';
 import type {CodeBlockOptions} from '../extensions/markdown/code-block';
 import {Heading} from '../extensions/markdown/heading';
 import type {HeadingOptions} from '../extensions/markdown/heading';
+import {HorizontalRule} from '../extensions/markdown/horizontal-rule';
 
 import {ZeroPreset} from './zero';
 
@@ -52,6 +53,7 @@ export const DefaultPreset: ExtensionAuto<DefaultPresetOptions> = (builder, opti
         .use(Code, options?.code ?? {})
         .use(CodeBlock, options?.codeBlock ?? {})
         .use(Heading, options?.heading ?? {})
+        .use(HorizontalRule)
         .use(Lists, options?.lists ?? {})
         .use(History, options?.history ?? {})
         .use(Placeholder, options?.placeholder ?? {})

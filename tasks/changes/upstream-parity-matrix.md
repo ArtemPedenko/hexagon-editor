@@ -44,7 +44,8 @@
 | `Code` | `extensions/markdown/{code,code-specs}.ts`, `core/basic-editor.ts` | done | Mark/schema/parser/serializer specs, codemark input/cursor behavior, shortcut option и toggle command подключены к DefaultPreset/visual editor. |
 | `CodeBlock` | `extensions/markdown/{code-block,code-block-specs}.ts`, `core/basic-editor.ts` | partial | Schema/parser/serializer specs, безопасный fence, Tab, shortcut option и команды подключены к DefaultPreset/visual editor; IDE-paste, Vue node-view, line numbers и highlight pending. |
 | `Heading` | `extensions/markdown/{heading,heading-specs}.ts`, `core/basic-editor.ts` | done | Schema/parser/serializer specs, input rule, shortcut options и toggle/reset commands подключены к DefaultPreset/visual editor; добавочные attrs existing codec сохранены до переноса FoldingHeading. |
-| `Breaks`, `HorizontalRule`, `Link` | `src/extensions/markdown/*` | pending | Функции частично присутствуют в `basic-editor`, но extension API не перенесён. |
+| `HorizontalRule` | `extensions/markdown/{horizontal-rule,horizontal-rule-specs}.ts`, `core/basic-editor.ts` | done | Schema/parser/serializer specs, markup-preserving input rule и вставка rule с последующим paragraph подключены к DefaultPreset/visual editor. |
+| `Breaks`, `Link` | `src/extensions/markdown/*` | pending | Функции частично присутствуют в `basic-editor`, но extension API не перенесён. |
 | `Deflist`, `Html`, `Image`, `Mark`, `Strike`, `Subscript`, `Superscript`, `Table`, `Underline` | `src/extensions/markdown/*` | pending | То же: runtime-фрагменты не считаются ported extension. |
 | `additional/FoldingHeading`, `Math`, `Mermaid`, `QuoteLink`, `YfmHtmlBlock` | `src/extensions/additional/*` | pending | В `basic-editor` есть часть рендера/Markdown, но отсутствуют upstream extensions/actions/views. |
 | `additional/GPT/*`, `icons/GPT*.tsx`, GPT i18n/tests | — | excluded | Явное исключение. |
@@ -83,6 +84,6 @@
 
 ## Следующий реализуемый срез
 
-1. Перенести `extensions/markdown/HorizontalRule` как самостоятельный extension: schema/parser/serializer, command/keymap и tests.
-2. Затем аналогично перенести базовые extensions (`Link`, `Breaks`).
+1. Перенести `extensions/markdown/Link` как самостоятельный extension: mark/parser/serializer, command/keymap и tests.
+2. Затем перенести базовое extension `Breaks`.
 3. Для каждого последующего расширения сначала переносить non-React код и tests, затем Vue node/widget/form view и Chromium scenario.
