@@ -110,6 +110,8 @@ export {Html, HtmlAttr, HtmlNode} from './extensions/markdown/html';
 export {addImage, getImageType, Image, ImageAttr, imageNodeName} from './extensions/markdown/image';
 export type {AddImageAttrs} from './extensions/markdown/image';
 export {getMarkType, Mark, markMarkName, toggleHighlight} from './extensions/markdown/mark';
+export {getStrikeType, Strike, strikeMarkName, toggleStrike} from './extensions/markdown/strike';
+export {getUnderlineType, Underline, underlineMarkName, toggleUnderline} from './extensions/markdown/underline';
 export {BaseInputRules, BaseKeymap, BaseSchema} from './extensions/base';
 export type {BaseSchemaOptions} from './extensions/base';
 export {ZeroPreset} from './presets/zero';

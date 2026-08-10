@@ -33,6 +33,9 @@ import {Deflist} from '../extensions/markdown/deflist';
 import {Html} from '../extensions/markdown/html';
 import {Image} from '../extensions/markdown/image';
 import {Mark} from '../extensions/markdown/mark';
+import {Strike} from '../extensions/markdown/strike';
+import {Subscript} from '../extensions/markdown/subscript';
+import {Underline} from '../extensions/markdown/underline';
 
 import {ZeroPreset} from './zero';
 
@@ -70,6 +73,9 @@ export const DefaultPreset: ExtensionAuto<DefaultPresetOptions> = (builder, opti
         .use(Html)
         .use(Image)
         .use(Mark)
+        .use(Strike)
+        .use(Subscript)
+        .use(Underline)
         .use(Lists, options?.lists ?? {})
         .use(History, options?.history ?? {})
         .use(Placeholder, options?.placeholder ?? {})

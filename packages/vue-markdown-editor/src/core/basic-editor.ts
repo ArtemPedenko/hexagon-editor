@@ -8,6 +8,8 @@ import katex from "katex";
 import MarkdownIt from "markdown-it";
 import deflist from "markdown-it-deflist";
 import markPlugin from "markdown-it-mark";
+import subPlugin from "markdown-it-sub";
+import insPlugin from "markdown-it-ins";
 import { autoUpdate, computePosition, flip, offset, shift } from "@floating-ui/dom";
 import { Schema } from "prosemirror-model";
 import type {
@@ -120,6 +122,9 @@ import {
   serializeImage,
 } from "../extensions/markdown/image";
 import { markTokenSpec } from "../extensions/markdown/mark";
+import {serializeStrike, strikeMarkSpec, strikeTokenSpec} from "../extensions/markdown/strike";
+import {serializeSubscript, subscriptMarkSpec, subscriptTokenSpec} from "../extensions/markdown/subscript";
+import {serializeUnderline, underlineMarkSpec, underlineTokenSpec} from "../extensions/markdown/underline";
 import {
   listNodeSpecs,
   listSerializerNodes,
@@ -127,6 +132,9 @@ import {
 } from "../extensions/markdown/list-specs";
 
 const basicMarks: Record<string, MarkSpec> = {
+  ins: underlineMarkSpec,
+  sub: subscriptMarkSpec,
+  strike: strikeMarkSpec,
   color: {
     attrs: { color: {} },
     parseDOM: [{ style: "color", getAttrs: (color) => ({ color }) }],
@@ -320,6 +328,9 @@ const tableTokenSpecs: Record<string, ParseSpec> = {
   link: linkTokenSpec,
   image: imageTokenSpec,
   mark: markTokenSpec,
+  s: strikeTokenSpec,
+  sub: subscriptTokenSpec,
+  ins: underlineTokenSpec,
   ...breakTokenSpecs,
   strong: boldTokenSpec,
   ...listTokenSpecs,
@@ -376,7 +387,10 @@ function createExtendedMarkdownIt(markdown = new MarkdownIt("commonmark", { html
   markdown
     .enable("table")
     .use(deflist)
-    .use(markPlugin);
+    .use(markPlugin)
+    .enable("strikethrough")
+    .use(subPlugin)
+    .use(insPlugin);
   markdown.inline.ruler.after("escape", "inline_math", (state, silent) => {
     if (state.src.charCodeAt(state.pos) !== 0x24) return false;
     const close = state.src.indexOf("$", state.pos + 1);
@@ -646,6 +660,9 @@ const basicMarkdownSerializerNodes = {
 };
 
 const basicMarkdownSerializerMarks = {
+  ins: serializeUnderline,
+  sub: serializeSubscript,
+  strike: serializeStrike,
   code: serializeCode,
   em: serializeItalic,
   link: serializeLink,

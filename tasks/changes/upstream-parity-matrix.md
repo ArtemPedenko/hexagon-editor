@@ -51,7 +51,8 @@
 | `Html` | `extensions/markdown/html.ts`, `core/basic-editor.ts` | partial | upstream html_block/html_inline schema/parser/serializer подключены к DefaultPreset/visual codec; block renderer пока сохраняет текущий raw HTML без upstream sanitizer. |
 | `Image` | `extensions/markdown/image.ts`, `core/basic-editor.ts` | partial | Schema/parser/serializer и insertion command подключены к DefaultPreset/visual editor; URL-paste enhancement и upstream actions/forms pending. |
 | `Mark` | `extensions/markdown/mark.ts`, `core/basic-editor.ts` | done | mark schema/parser/serializer, `==` input rule и toggle command подключены к DefaultPreset/visual editor. |
-| `Strike`, `Subscript`, `Superscript`, `Table`, `Underline` | `src/extensions/markdown/*` | pending | То же: runtime-фрагменты не считаются ported extension. |
+| `Strike` | `extensions/markdown/strike.ts`, `core/basic-editor.ts` | partial | Upstream `strike` mark, `~~` parser/serializer/input rule and toggle command подключены к DefaultPreset/visual codec; текущий toolbar пока использует legacy `strikethrough` mark. |
+| `Subscript`, `Superscript`, `Table`, `Underline` | `src/extensions/markdown/*` | pending | То же: runtime-фрагменты не считаются ported extension. |
 | `additional/FoldingHeading`, `Math`, `Mermaid`, `QuoteLink`, `YfmHtmlBlock` | `src/extensions/additional/*` | pending | В `basic-editor` есть часть рендера/Markdown, но отсутствуют upstream extensions/actions/views. |
 | `additional/GPT/*`, `icons/GPT*.tsx`, GPT i18n/tests | — | excluded | Явное исключение. |
 
@@ -89,6 +90,6 @@
 
 ## Следующий реализуемый срез
 
-1. Перенести `extensions/markdown/Strike` как самостоятельный extension.
-2. Затем продолжить extensions `Subscript`, `Superscript`, `Table`, `Underline`.
+1. Перенести `extensions/markdown/Subscript` как самостоятельный extension.
+2. Затем продолжить extensions `Superscript`, `Table`, `Underline`.
 3. Для каждого последующего расширения сначала переносить non-React код и tests, затем Vue node/widget/form view и Chromium scenario.
