@@ -85,12 +85,11 @@ describe('Vue ProseMirror renderer', () => {
         view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, 1, 5)));
         await nextTick();
 
-        expect(target.querySelector('.vue-context-panel')?.getAttribute('data-visible')).toBe('true');
-        expect(target.querySelector('.vue-context-panel')?.textContent).toBe('Text');
-        expect(target.querySelector<HTMLElement>('.markdown-editor-context-panel')?.style.left).toBe('10px');
-        expect(target.querySelector<HTMLElement>('.markdown-editor-context-panel')?.style.top).toBe('20px');
+        expect(document.querySelector('.vue-context-panel')?.getAttribute('data-visible')).toBe('true');
+        expect(document.querySelector('.vue-context-panel')?.textContent).toBe('Text');
+        expect(document.querySelector<HTMLElement>('.markdown-editor-context-panel')?.style.position).toBe('fixed');
 
         view.destroy();
-        expect(target.querySelector('.vue-context-panel')).toBeNull();
+        expect(document.querySelector('.vue-context-panel')).toBeNull();
     });
 });

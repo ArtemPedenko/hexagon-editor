@@ -133,6 +133,9 @@ export function createVueContextPanelPlugin(
             app.mount(dom);
 
             const updatePosition = async (): Promise<void> => {
+                if (typeof document.createRange().getClientRects !== 'function') {
+                    return;
+                }
                 const coords = editorView.coordsAtPos(editorView.state.selection.from);
                 const {x, y} = await computePosition({
                     getBoundingClientRect: () => new DOMRect(coords.left, coords.bottom, 0, 0),

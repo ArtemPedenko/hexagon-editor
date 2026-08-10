@@ -18,6 +18,16 @@ export {EventEmitter, SafeEventEmitter} from './events';
 export type {EventListener, SafeEventEmitterOptions} from './events';
 export {Logger, Logger2} from './logger';
 export type {EditorLogEventMap, EditorLogger, LogContext} from './logger';
+export {
+    collapseListsPlugin,
+    createListsInputRules,
+    createListsKeymap,
+    liftEmptyListItem,
+    joinPrevList,
+    mergeListsPlugin,
+    sinkOnlySelectedListItem,
+    toList,
+} from './lists';
 export {defaultMarkdownSchema, MarkdownCodec, renderMarkdownPreview} from './markdown';
 export type {MarkdownCodecOptions} from './markdown';
 export {mountBasicMarkupEditor} from './markup-editor';

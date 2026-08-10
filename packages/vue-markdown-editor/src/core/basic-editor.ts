@@ -1,5 +1,6 @@
 import {
   baseKeymap,
+  chainCommands,
   setBlockType,
   toggleMark,
   wrapIn,
@@ -27,9 +28,7 @@ import { EditorState, NodeSelection, Plugin, PluginKey } from "prosemirror-state
 import type { Command, StateField } from "prosemirror-state";
 import {
   liftListItem,
-  sinkListItem,
   splitListItem,
-  wrapInList,
 } from "prosemirror-schema-list";
 import {
   addColumnAfter,
@@ -49,6 +48,15 @@ import "prosemirror-view/style/prosemirror.css";
 import "katex/dist/katex.min.css";
 
 import { defaultMarkdownSchema, MarkdownCodec } from "./markdown";
+import {
+  collapseListsPlugin,
+  createListsInputRules,
+  joinPrevList,
+  liftEmptyListItem,
+  mergeListsPlugin,
+  sinkOnlySelectedListItem,
+  toList,
+} from "./lists";
 import { mountBasicMarkupEditor } from "./markup-editor";
 import { getAdvancedMarkdownRenderers } from "./optional-renderers";
 
@@ -199,6 +207,27 @@ const extendedMarkdownNodes: Record<string, NodeSpec> = {
 export const basicMarkdownSchema: Schema = new Schema({
   marks: defaultMarkdownSchema.spec.marks.append(basicMarks),
   nodes: defaultMarkdownSchema.spec.nodes
+    .update("list_item", {
+      attrs: { "data-line": { default: null }, markup: { default: null } },
+      content: "(paragraph|block)+",
+      defining: true,
+      parseDOM: [{ tag: "li" }],
+      toDOM: (node) => ["li", node.attrs, 0],
+    })
+    .update("bullet_list", {
+      attrs: { markup: { default: "*" }, tight: { default: true } },
+      content: "list_item+",
+      group: "block",
+      parseDOM: [{ tag: "ul", getAttrs: (dom) => ({ tight: (dom as HTMLElement).hasAttribute("data-tight") }) }],
+      toDOM: (node) => ["ul", { "data-tight": node.attrs.tight ? "true" : null }, 0],
+    })
+    .update("ordered_list", {
+      attrs: { markup: { default: "." }, order: { default: 1 }, tight: { default: true } },
+      content: "list_item+",
+      group: "block",
+      parseDOM: [{ tag: "ol", getAttrs: (dom) => ({ order: (dom as HTMLElement).hasAttribute("start") ? Number((dom as HTMLElement).getAttribute("start")) : 1, tight: (dom as HTMLElement).hasAttribute("data-tight") }) }],
+      toDOM: (node) => ["ol", { start: node.attrs.order === 1 ? null : node.attrs.order, "data-tight": node.attrs.tight ? "true" : null }, 0],
+    })
     .update("heading", {
       attrs: {
         class: { default: null },
@@ -219,6 +248,13 @@ export const basicMarkdownSchema: Schema = new Schema({
 });
 
 const tableTokenSpecs: Record<string, ParseSpec> = {
+  bullet_list: {
+    block: "bullet_list",
+    getAttrs: (token, tokens, index) => ({
+      markup: token.markup,
+      tight: listIsTight(tokens, index),
+    }),
+  },
   dd: { block: "definition_description" },
   dl: { block: "definition_list" },
   dt: { block: "definition_term" },
@@ -246,9 +282,24 @@ const tableTokenSpecs: Record<string, ParseSpec> = {
     node: "inline_math",
     getAttrs: (token) => ({ latex: token.content }),
   },
+  list_item: {
+    block: "list_item",
+    getAttrs: (token) => ({
+      "data-line": token.attrGet("data-line"),
+      markup: token.markup,
+    }),
+  },
   math_block: {
     node: "math_block",
     getAttrs: (token) => ({ latex: token.content }),
+  },
+  ordered_list: {
+    block: "ordered_list",
+    getAttrs: (token, tokens, index) => ({
+      markup: token.markup,
+      order: Number(token.attrGet("start")) || 1,
+      tight: listIsTight(tokens, index),
+    }),
   },
   mermaid: {
     node: "mermaid",
@@ -272,6 +323,13 @@ const tableTokenSpecs: Record<string, ParseSpec> = {
     getAttrs: (token) => ({ html: token.content }),
   },
 };
+
+function listIsTight(tokens: Array<{ hidden: boolean; type: string }>, index: number): boolean {
+  for (let next = index + 1; next < tokens.length; next += 1) {
+    if (tokens[next]?.type !== "list_item_open") return tokens[next]?.hidden === true;
+  }
+  return false;
+}
 
 function createExtendedMarkdownIt(): MarkdownIt {
   const markdown = new MarkdownIt("commonmark", { html: true })
@@ -434,6 +492,9 @@ const basicMarkdownParser = new MarkdownParser(
 const basicMarkdownSerializer = new MarkdownSerializer(
   {
     ...defaultMarkdownSerializer.nodes,
+    bullet_list(state, node) {
+      state.renderList(node, "  ", () => `${getListMarkup(node, ["-", "+", "*"], "*")} `);
+    },
     definition_description(state, node) {
       state.renderContent(node);
       state.closeBlock(node);
@@ -456,6 +517,16 @@ const basicMarkdownSerializer = new MarkdownSerializer(
     math_block(state, node) {
       state.write(`$$\n${node.attrs.latex}\n$$`);
       state.closeBlock(node);
+    },
+    ordered_list(state, node) {
+      const start = Number(node.attrs.order) || 1;
+      const maxWidth = String(start + node.childCount - 1).length;
+      const space = state.repeat(" ", maxWidth + 2);
+      state.renderList(node, space, (index) => {
+        const number = String(start + index);
+        const markup = getListMarkup(node, [".", ")"], ".");
+        return `${state.repeat(" ", maxWidth - number.length)}${number}${markup} `;
+      });
     },
     mermaid(state, node) {
       state.write(`\`\`\`mermaid\n${node.attrs.source}\n\`\`\``);
@@ -522,6 +593,15 @@ const basicMarkdownSerializer = new MarkdownSerializer(
     underline: { close: "</u>", open: "<u>" },
   },
 );
+
+function getListMarkup(
+  list: ProseMirrorNode,
+  supported: readonly string[],
+  fallback: string,
+): string {
+  const listMarkup = list.attrs.markup;
+  return supported.includes(listMarkup) ? listMarkup : fallback;
+}
 
 export const basicMarkdownCodec = new MarkdownCodec({
   parser: basicMarkdownParser,
@@ -640,6 +720,7 @@ export interface BasicEditorCommands {
   insertInlineMath: Command;
   insertTable(rows?: number, columns?: number): Command;
   italic: Command;
+  liftListItem: Command;
   link(href: string): Command;
   mark: Command;
   orderedList: Command;
@@ -1142,7 +1223,7 @@ export function createBasicEditorCommands(): BasicEditorCommands {
 
   return {
     bold: toggleMark(getMarkType("strong")),
-    bulletList: wrapInList(getNodeType("bullet_list")),
+    bulletList: toList(getNodeType("bullet_list")),
     code: toggleMark(getMarkType("code")),
     codeBlock: setBlockType(getNodeType("code_block")),
     heading: (level) => setBlockType(getNodeType("heading"), { level }),
@@ -1160,7 +1241,7 @@ export function createBasicEditorCommands(): BasicEditorCommands {
     insertImage: insertImageCommand,
     insertMathBlock: (state, dispatch) => {
       const {$from, empty} = state.selection;
-      if (!empty || $from.parent.type.name !== "paragraph" || $from.parent.content.size !== 0)
+      if (!empty || !$from.parent.isTextblock || $from.parent.content.size !== 0)
         return false;
       if (dispatch !== undefined) {
         const position = $from.before();
@@ -1193,12 +1274,13 @@ export function createBasicEditorCommands(): BasicEditorCommands {
     italic: toggleMark(getMarkType("em")),
     link: (href) => toggleMark(getMarkType("link"), { href }),
     mark: toggleMark(getMarkType("mark")),
-    orderedList: wrapInList(getNodeType("ordered_list")),
+    orderedList: toList(getNodeType("ordered_list")),
     paragraph: setBlockType(getNodeType("paragraph")),
     quote: wrapIn(getNodeType("blockquote")),
     redo,
     setColor: setColorCommand,
-    sinkListItem: sinkListItem(listItem),
+    liftListItem: liftListItem(listItem),
+    sinkListItem: sinkOnlySelectedListItem(listItem),
     splitListItem: splitListItem(listItem),
     strikethrough: toggleMark(getMarkType("strikethrough")),
     toggleHeadingFolding,
@@ -1224,6 +1306,19 @@ function hasAncestor(state: EditorState, nodeName: string): boolean {
     }
   }
   return false;
+}
+
+/**
+ * The upstream list command may correctly return `false` when an item cannot
+ * be nested any deeper. In an editable list, Tab must still stay in the
+ * ProseMirror surface instead of moving browser focus to the next control.
+ */
+function keepListFocus(command: Command): Command {
+  return (state, dispatch, view) => {
+    if (!hasAncestor(state, "list_item")) return false;
+    command(state, dispatch, view);
+    return true;
+  };
 }
 
 export function getBasicWysiwygSelectionState(
@@ -1294,6 +1389,10 @@ export function mountBasicWysiwygEditor({
   target,
 }: MountBasicWysiwygEditorOptions): BasicWysiwygEditor {
   const commands = createBasicEditorCommands();
+  const listItem = basicMarkdownSchema.nodes.list_item;
+  if (listItem === undefined) {
+    throw new Error("The basic Markdown schema must contain list_item");
+  }
   let view: EditorView;
   view = new EditorView(target, {
     attributes: { "data-placeholder": placeholder },
@@ -1332,8 +1431,17 @@ export function mountBasicWysiwygEditor({
         createFoldingPlugin(),
         createAtomicSourceEditorPlugin(),
         createTableControlsPlugin(),
+        mergeListsPlugin(),
+        collapseListsPlugin(),
+        createListsInputRules(basicMarkdownSchema),
         history(),
         keymap({
+          "Mod-[": commands.liftListItem,
+          "Mod-]": commands.sinkListItem,
+          "Shift-Tab": commands.liftListItem,
+          Backspace: chainCommands(liftEmptyListItem(listItem), joinPrevList),
+          Enter: commands.splitListItem,
+          Tab: keepListFocus(commands.sinkListItem),
           "Mod-Shift-z": commands.redo,
           "Mod-b": commands.bold,
           "Mod-i": commands.italic,
@@ -1368,8 +1476,17 @@ export function mountBasicWysiwygEditor({
             createFoldingPlugin(),
             createAtomicSourceEditorPlugin(),
             createTableControlsPlugin(),
+            mergeListsPlugin(),
+            collapseListsPlugin(),
+            createListsInputRules(basicMarkdownSchema),
             history(),
             keymap({
+              "Mod-[": commands.liftListItem,
+              "Mod-]": commands.sinkListItem,
+              "Shift-Tab": commands.liftListItem,
+              Backspace: chainCommands(liftEmptyListItem(listItem), joinPrevList),
+              Enter: commands.splitListItem,
+              Tab: keepListFocus(commands.sinkListItem),
               "Mod-Shift-z": commands.redo,
               "Mod-b": commands.bold,
               "Mod-i": commands.italic,

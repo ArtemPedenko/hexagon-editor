@@ -158,6 +158,23 @@ describe('basic Markdown extensions', () => {
         expect(nextState.doc.firstChild?.attrs.latex).toBe('E = mc^2');
     });
 
+    it('changes a list item nesting level', () => {
+        const document = basicMarkdownCodec.parse('* Первый пункт\n  * Второй пункт');
+        let secondItemPosition = 0;
+        document.descendants((node, position) => {
+            if (node.textContent === 'Второй пункт') secondItemPosition = position + 1;
+        });
+        const state = EditorState.create({doc: document, selection: TextSelection.create(document, secondItemPosition)});
+        let nestedState = state;
+        let liftedState = state;
+        const commands = createBasicEditorCommands();
+
+        expect(commands.liftListItem(state, (transaction) => { liftedState = state.apply(transaction); })).toBe(true);
+        expect(basicMarkdownCodec.serialize(liftedState.doc)).toBe('* Первый пункт\n* Второй пункт');
+        expect(commands.sinkListItem(liftedState, (transaction) => { nestedState = liftedState.apply(transaction); })).toBe(true);
+        expect(basicMarkdownCodec.serialize(nestedState.doc)).toBe('* Первый пункт\n  * Второй пункт');
+    });
+
     it('toggles bold for the selected text', () => {
         const text = basicMarkdownSchema.text('Text');
         const document = basicMarkdownSchema.node('doc', null, [

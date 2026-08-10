@@ -196,6 +196,66 @@ test.describe('Markdown editor playground', () => {
         await expect(page.locator('.ProseMirror table').last().locator('td').first()).toHaveCSS('border-top-style', 'solid');
     });
 
+    test('continues a bullet list after Enter', async ({page}) => {
+        await page.goto('/');
+
+        const paragraph = page.locator('.ProseMirror p').filter({hasText: 'Этот раздел можно свернуть кнопкой в тулбаре.'});
+        await paragraph.click();
+        await page.getByTitle('Маркированный список').click();
+        await page.keyboard.press('End');
+        await page.keyboard.press('Enter');
+        await page.keyboard.type('Новый пункт');
+
+        const list = page.locator('.ProseMirror > ul').last();
+        await expect(list.locator('li')).toHaveCount(2);
+        await expect(list.locator('li').last()).toHaveText('Новый пункт');
+    });
+
+    test('nests a bullet list item with Tab without leaving the editor', async ({page}) => {
+        await page.goto('/');
+
+        const paragraph = page.locator('.ProseMirror p').filter({hasText: 'Этот раздел можно свернуть кнопкой в тулбаре.'});
+        await paragraph.click();
+        await page.getByTitle('Маркированный список').click();
+        await page.keyboard.press('End');
+        await page.keyboard.press('Enter');
+        await page.keyboard.type('Второй пункт');
+        await page.keyboard.press('Tab');
+
+        const list = page.locator('.ProseMirror > ul').last();
+        await expect(list.locator(':scope > li')).toHaveCount(1);
+        await expect(list.locator(':scope > li > ul > li')).toHaveText('Второй пункт');
+        await page.keyboard.press('Tab');
+        await expect(page.locator('.ProseMirror')).toBeFocused();
+
+        await page.getByText('Второй пункт', {exact: true}).first().click();
+        await page.keyboard.press('Shift+Tab');
+        await expect(list.locator(':scope > li')).toHaveCount(2);
+        await expect(list.locator(':scope > li').last()).toHaveText('Второй пункт');
+    });
+
+    test('outdents an ordered list item with Shift+Tab', async ({page}) => {
+        await page.goto('/');
+
+        const paragraph = page.locator('.ProseMirror p').filter({hasText: 'Этот раздел можно свернуть кнопкой в тулбаре.'});
+        await paragraph.click();
+        await page.getByTitle('Нумерованный список').click();
+        await page.keyboard.press('End');
+        await page.keyboard.press('Enter');
+        await page.keyboard.type('Второй пункт');
+        await page.keyboard.press('Enter');
+        await page.keyboard.type('Третий пункт');
+        await page.keyboard.press('Tab');
+
+        const list = page.locator('.ProseMirror > ol').last();
+        await expect(list.locator(':scope > li')).toHaveCount(2);
+        await expect(list.locator(':scope > li > ol > li')).toHaveText('Третий пункт');
+
+        await page.keyboard.press('Shift+Tab');
+        await expect(list.locator(':scope > li')).toHaveCount(3);
+        await expect(list.locator(':scope > li').last()).toHaveText('Третий пункт');
+    });
+
     test('offers safe row and column deletion for a focused table cell', async ({page}) => {
         await page.goto('/');
         await page.getByTitle('Таблица 3×3').click();

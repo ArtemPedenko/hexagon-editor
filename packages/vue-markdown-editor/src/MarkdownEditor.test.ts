@@ -250,6 +250,7 @@ describe('MarkdownEditor', () => {
 
         target.querySelector<HTMLButtonElement>('[title="Формула"]')?.click();
         await nextTick();
+        document.querySelector<HTMLButtonElement>('[role="menuitem"]:last-child')?.click();
         await nextTick();
 
         expect(editor.value?.getMode()).toBe('markup');
