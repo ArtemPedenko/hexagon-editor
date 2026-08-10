@@ -39,7 +39,7 @@ describe('runtime token registries', () => {
         const document = parser.createParser(defaultMarkdownSchema, new MarkdownIt('commonmark')).parse('*Text*');
 
         expect(document.firstChild?.textContent).toBe('Text');
-        expect(serializer.createSerializer().serialize(document)).toBe('*Text*');
+        expect(serializer.createSerializer().serialize(document)).toBe('*Text*\n');
     });
 });
 

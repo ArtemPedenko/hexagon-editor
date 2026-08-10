@@ -16,7 +16,7 @@ describe('Code extension', () => {
 
         expect(parsed.firstChild?.firstChild?.marks[0]?.type.name).toBe(codeMarkName);
         expect(result.serializer.serialize(parsed)).toBe('`hello`\n');
-        expect(result.plugins).toHaveLength(3);
+        expect(result.plugins).toHaveLength(4);
     });
 
     it('uses additional backticks for code containing a backtick', () => {

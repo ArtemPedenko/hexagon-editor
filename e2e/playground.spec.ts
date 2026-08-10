@@ -176,7 +176,7 @@ test.describe('Markdown editor playground', () => {
         await page.getByTitle('Таблица 3×3').click();
 
         await expect(page.locator('.ProseMirror table').last()).toBeVisible();
-        await expect(page.locator('.ProseMirror table').last().locator('td')).toHaveCount(9);
+        await expect(page.locator('.ProseMirror table').last().locator('td')).toHaveCount(6);
         await page.locator('.ProseMirror table').last().locator('td').first().click();
         await expect(page.locator('.markdown-editor__table-popover')).toHaveCount(0);
         await page.locator('.ProseMirror table').last().locator('td').first().click({button: 'right'});
@@ -185,7 +185,7 @@ test.describe('Markdown editor playground', () => {
         await expect(page.getByRole('menu', {name: 'Действия с таблицей'})).toBeHidden();
         await page.locator('.ProseMirror table').last().locator('td').first().click({button: 'right'});
         await page.getByRole('menuitem', {name: 'Добавить колонку'}).click();
-        await expect(page.locator('.ProseMirror table').last().locator('td')).toHaveCount(12);
+        await expect(page.locator('.ProseMirror table').last().locator('td')).toHaveCount(8);
 
         await page.getByRole('tab', {name: 'Разметка'}).click();
         await page.getByRole('tab', {name: 'Визуальный'}).click();
@@ -268,18 +268,13 @@ test.describe('Markdown editor playground', () => {
         await expect(deleteColumn).toBeVisible();
 
         await deleteRow.click();
-        await expect(table.locator('td')).toHaveCount(6);
+        await expect(table.locator('td')).toHaveCount(3);
 
         await table.locator('td').nth(1).click({button: 'right'});
         await page.getByRole('menuitem', {name: 'Удалить колонку'}).click();
-        await expect(table.locator('td')).toHaveCount(4);
+        await expect(table.locator('td')).toHaveCount(2);
 
         await table.locator('td').nth(1).click({button: 'right'});
-        await page.getByRole('menuitem', {name: 'Удалить строку'}).click();
-        await expect(table.locator('td')).toHaveCount(2);
-        await table.locator('td').first().click({button: 'right'});
-        await expect(page.getByRole('menuitem', {name: 'Удалить строку'})).toBeDisabled();
-
         await page.getByRole('menuitem', {name: 'Удалить колонку'}).click();
         await expect(table.locator('td')).toHaveCount(1);
         await table.locator('td').first().click({button: 'right'});

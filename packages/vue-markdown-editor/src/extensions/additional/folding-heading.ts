@@ -71,7 +71,7 @@ export const FoldingHeading: ExtensionAuto = (builder) => {
         .addPlugin(() => new Plugin({
             key: foldingPluginKey,
             props: {
-                decorations: (state) => foldingPluginKey.getState(state),
+                decorations: (state) => foldingPluginKey.getState(state) ?? DecorationSet.empty,
                 handleClick: (view, position, event) => {
                     const $position = view.state.doc.resolve(position);
                     if ($position.parent.type.name !== 'heading') return false;

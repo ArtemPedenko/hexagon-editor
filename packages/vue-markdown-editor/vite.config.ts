@@ -6,6 +6,9 @@ import dts from 'vite-plugin-dts';
 import {libInjectCss} from 'vite-plugin-lib-inject-css';
 
 export default defineConfig({
+    test: {
+        environment: 'jsdom',
+    },
     plugins: [vue(), libInjectCss(), dts({tsconfigPath: './tsconfig.json'})],
     build: {
         lib: {

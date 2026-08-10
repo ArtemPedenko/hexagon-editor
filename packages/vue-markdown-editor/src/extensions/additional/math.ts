@@ -5,7 +5,7 @@ import {Fragment} from 'prosemirror-model';
 import type {NodeSpec, NodeType} from 'prosemirror-model';
 import type {ParseSpec} from 'prosemirror-markdown';
 import type {MarkdownSerializer} from 'prosemirror-markdown';
-import {NodeSelection, Plugin, TextSelection} from 'prosemirror-state';
+import {NodeSelection, Plugin, PluginKey, TextSelection} from 'prosemirror-state';
 import type {Command, EditorState} from 'prosemirror-state';
 
 import type {ExtensionAuto} from '../../core/extension-builder';
@@ -20,6 +20,7 @@ export const mathInlineActionName = 'addMathInline';
 export const mathBlockActionName = 'toMathBlock';
 const vscodeEditorDataType = 'vscode-editor-data';
 const latexModes = new Set(['tex', 'latex', 'bibtex', 'doctex', 'latex-expl3', 'pweave', 'jlweave', 'rsweave']);
+const latexPastePluginKey = new PluginKey('latex-paste');
 
 /** Local math tokenizer kept intentionally independent from @diplodoc/latex-extension. */
 export function configureMathMarkdown(markdown: MarkdownIt): MarkdownIt {
@@ -108,6 +109,7 @@ export function parseLatexFormulas(content: string): string[] {
 
 export function createLatexPastePlugin(): Plugin {
     return new Plugin({
+        key: latexPastePluginKey,
         props: {
             handleDOMEvents: {
                 paste: (view, event) => {

@@ -109,7 +109,12 @@ export class MarkdownParser {
     private closeNode(): Node | null {
         this.#marks = Mark.none;
         const node = this.#stack.pop();
-        return node === undefined ? null : this.addNode(node.type, node.attrs, node.content);
+        if (node === undefined) return null;
+        if (this.#stack.length === 0) {
+            const document = node.type.createAndFill(node.attrs, node.content) ?? node.type.create(node.attrs, node.content);
+            return this.#dynamicModifier?.processNode(document) ?? document;
+        }
+        return this.addNode(node.type, node.attrs, node.content);
     }
 
     private parseTokens(tokens: Token[]): void {

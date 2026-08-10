@@ -259,6 +259,7 @@ export class ExtensionBuilder {
             serializerNodes: () => new Map(serializerNodes),
             plugins(deps) {
                 const result: Plugin[] = [];
+                let anonymousPluginIndex = 0;
                 for (const entry of [...plugins, ...keymaps.map((factory) => ({
                     factory: (currentDeps: ExtensionDeps) => keymap(factory.factory(currentDeps)),
                     priority: factory.priority,
@@ -267,7 +268,12 @@ export class ExtensionBuilder {
                     priority: factory.priority,
                 }))].sort((left, right) => right.priority - left.priority)) {
                     const created = entry.factory(deps);
-                    result.push(...(Array.isArray(created) ? created : [created]));
+                    for (const plugin of Array.isArray(created) ? created : [created]) {
+                        if (plugin.key.startsWith('plugin$') && plugin.props.decorations === undefined) {
+                            plugin.key = `extension-plugin-${anonymousPluginIndex++}`;
+                        }
+                        result.push(plugin);
+                    }
                 }
                 return result;
             },

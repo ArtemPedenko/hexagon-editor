@@ -118,6 +118,12 @@ export class SerializerTokensRegistry {
     }
 
     createSerializer(): MarkdownSerializer {
-        return new MarkdownSerializer(this.#nodes, this.#marks);
+        const serializer = new MarkdownSerializer(this.#nodes, this.#marks);
+        const serialize = serializer.serialize.bind(serializer);
+        serializer.serialize = (content, options) => {
+            const markdown = serialize(content, options);
+            return markdown.length === 0 || markdown.endsWith('\n') ? markdown : `${markdown}\n`;
+        };
+        return serializer;
     }
 }

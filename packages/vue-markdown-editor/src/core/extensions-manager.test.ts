@@ -37,6 +37,6 @@ describe('ExtensionsManager', () => {
         expect(result.textParser.tokenizer.options.html).toBe(true);
         expect(result.plugins).toHaveLength(1);
         expect(result.actions.action('underline')?.isEnabled(undefined)).toBe(true);
-        expect(result.serializer.serialize(result.textParser.parse('Text'))).toBe('Text');
+        expect(result.serializer.serialize(result.textParser.parse('Text'))).toBe('Text\n');
     });
 });

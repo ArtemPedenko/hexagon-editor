@@ -33,8 +33,17 @@ export class MarkdownCodec {
     }
 
     serialize(document: ProseMirrorNode): string {
-        return this.#serializer.serialize(document);
+        const trailing = document.lastChild;
+        if (trailing?.type.name === 'paragraph' && trailing.childCount === 0) {
+            const content = document.content.cut(0, document.content.size - trailing.nodeSize);
+            return content.size === 0 ? '' : normalizeMarkdown(this.#serializer.serialize(document.copy(content)));
+        }
+        return normalizeMarkdown(this.#serializer.serialize(document));
     }
+}
+
+function normalizeMarkdown(markdown: string): string {
+    return markdown.endsWith('\n') ? markdown.slice(0, -1) : markdown;
 }
 
 const markdownPreviewRenderer = new MarkdownIt('commonmark', {html: false}).enable('table');

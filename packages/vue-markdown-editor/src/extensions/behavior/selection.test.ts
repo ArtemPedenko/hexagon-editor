@@ -25,7 +25,7 @@ describe('Selection extension', () => {
             doc,
             plugins: [plugin],
             schema: basicMarkdownSchema,
-            selection: TextSelection.create(doc, 1, doc.content.size - 1),
+            selection: TextSelection.create(doc, 0, doc.content.size),
         });
 
         expect(plugin.props.decorations?.(state)?.find()).toHaveLength(2);

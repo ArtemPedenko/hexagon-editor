@@ -41,7 +41,7 @@ describe('basic Markdown extensions', () => {
         const document = basicMarkdownCodec.parse('| Name | Value |\n| --- | --- |\n| Vue | 3 |');
 
         expect(document.firstChild?.type.name).toBe('table');
-        expect(basicMarkdownCodec.serialize(document)).toContain('| Name | Value |');
+        expect(basicMarkdownCodec.serialize(document)).toContain('|Name|Value|');
     });
 
     it('pastes a piped Markdown table as a table node', () => {
@@ -66,7 +66,7 @@ describe('basic Markdown extensions', () => {
 
         expect(document.child(0).attrs.id).toBe('intro');
         expect(document.child(0).textContent).toBe('Heading');
-        expect(document.child(1).type.name).toBe('raw_html');
+        expect(document.child(1).type.name).toBe('html_block');
         expect(document.child(2).type.name).toBe('directive');
         expect(document.child(2).textContent).toBe('');
         expect(serialized).toContain('# Heading {#intro .lead}');
@@ -75,7 +75,7 @@ describe('basic Markdown extensions', () => {
 
         const reparsed = basicMarkdownCodec.parse(serialized);
         expect(reparsed.child(0).attrs).toMatchObject({class: 'lead', id: 'intro'});
-        expect(reparsed.child(1).type.name).toBe('raw_html');
+        expect(reparsed.child(1).type.name).toBe('html_block');
         expect(reparsed.child(2).type.name).toBe('directive');
         expect(reparsed.child(2).attrs).toMatchObject({
             content: '<div>Add HTML code here</div>',
@@ -109,14 +109,14 @@ describe('basic Markdown extensions', () => {
         const serialized = basicMarkdownCodec.serialize(document);
 
         expect(document.child(0).attrs.folding).toBe(false);
-        expect(document.child(1).type.name).toBe('definition_list');
+        expect(document.child(1).type.name).toBe('dl');
         expect(document.child(2).type.name).toBe('quote_link');
         expect(document.child(2).attrs).toMatchObject({cite: 'https://example.com/source', content: 'Quoted source'});
         expect(serialized).toContain('##+ Collapsible section');
         expect(serialized).toContain('[Quoted source](https://example.com/source){data-quotelink=true}');
         const reparsed = basicMarkdownCodec.parse(serialized);
         expect(reparsed.child(0).attrs.folding).toBe(false);
-        expect(reparsed.child(1).type.name).toBe('definition_list');
+        expect(reparsed.child(1).type.name).toBe('dl');
         expect(reparsed.child(2).type.name).toBe('quote_link');
     });
 

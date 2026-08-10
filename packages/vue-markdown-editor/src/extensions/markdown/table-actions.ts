@@ -140,7 +140,7 @@ export const addTableColumn: Command = (state, dispatch) => {
     const transaction = state.tr;
     for (const row of tableRows(selection).reverse()) {
         const cellType = getNodeType(state.schema, row.node.firstChild?.type.name === TableNode.HeaderCell ? TableNode.HeaderCell : TableNode.DataCell);
-        transaction.insert(row.position + row.nodeSize - 1, cellType.create({[TableAttrs.CellAlign]: TableCellAlign.Left}));
+        transaction.insert(row.position + row.node.nodeSize - 1, cellType.create({[TableAttrs.CellAlign]: TableCellAlign.Left}));
     }
     dispatch?.(transaction.scrollIntoView());
     return true;
