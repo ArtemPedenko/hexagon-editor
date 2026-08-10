@@ -2,6 +2,7 @@ import type {Node} from 'prosemirror-model';
 import {textblockTypeInputRule} from 'prosemirror-inputrules';
 import {Plugin, PluginKey} from 'prosemirror-state';
 import type {Command} from 'prosemirror-state';
+import {TextSelection} from 'prosemirror-state';
 import {Decoration, DecorationSet} from 'prosemirror-view';
 
 import type {ExtensionAuto} from '../../core/extension-builder';
@@ -13,6 +14,27 @@ export const toggleFoldingHeading: Command = (state, dispatch) => {
     const {$from} = state.selection;
     if ($from.parent.type.name !== 'heading') return false;
     dispatch?.(state.tr.setNodeMarkup($from.before(), undefined, {...$from.parent.attrs, folding: !$from.parent.attrs.folding}).scrollIntoView());
+    return true;
+};
+
+export const removeFoldingAtHeadingStart: Command = (state, dispatch) => {
+    const cursor = state.selection.$cursor;
+    if (cursor === null || cursor === undefined || cursor.parentOffset !== 0 || cursor.parent.type.name !== 'heading' || cursor.parent.attrs.folding === null) return false;
+    dispatch?.(state.tr.setNodeMarkup(cursor.before(), undefined, {...cursor.parent.attrs, folding: null}).scrollIntoView());
+    return true;
+};
+
+export const openHeadingAndCreateParagraphAfter: Command = (state, dispatch) => {
+    const cursor = state.selection.$cursor;
+    if (cursor === null || cursor === undefined || cursor.parent.type.name !== 'heading' || cursor.parent.attrs.folding === null || cursor.parentOffset !== cursor.parent.content.size) return false;
+    const next = cursor.node(1).maybeChild(cursor.indexAfter(1));
+    if (next !== null && next.type.name !== 'heading') return false;
+    const paragraph = state.schema.nodes.paragraph;
+    if (paragraph === undefined) return false;
+    const position = cursor.after();
+    const transaction = state.tr.insert(position, paragraph.create());
+    transaction.setSelection(TextSelection.create(transaction.doc, position + 1));
+    dispatch?.(transaction.scrollIntoView());
     return true;
 };
 
@@ -45,6 +67,7 @@ export const FoldingHeading: ExtensionAuto = (builder) => {
             if (heading === undefined) throw new Error('FoldingHeading requires a heading node');
             return {rules: [textblockTypeInputRule(/^(#{1,6})\+\s$/, heading, (match) => ({folding: false, level: match[1]?.length ?? 1}))]};
         })
+        .addKeymap(() => ({Backspace: removeFoldingAtHeadingStart, Enter: openHeadingAndCreateParagraphAfter}), builder.Priority.High)
         .addPlugin(() => new Plugin({
             key: foldingPluginKey,
             props: {
