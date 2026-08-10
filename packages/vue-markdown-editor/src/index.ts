@@ -112,6 +112,23 @@ export type {AddImageAttrs} from './extensions/markdown/image';
 export {getMarkType, Mark, markMarkName, toggleHighlight} from './extensions/markdown/mark';
 export {getStrikeType, Strike, strikeMarkName, toggleStrike} from './extensions/markdown/strike';
 export {getUnderlineType, Underline, underlineMarkName, toggleUnderline} from './extensions/markdown/underline';
+export {
+    addTableColumn,
+    addTableRow,
+    createTable,
+    deleteTable,
+    deleteTableColumn,
+    deleteTableRow,
+    goToTableCell,
+    insertTable,
+    moveToNextTableRow,
+    setTableColumnAlignment,
+    Table,
+    TableAttrs,
+    TableCellAlign,
+    TableNode,
+    TableSpecs,
+} from './extensions/markdown/table';
 export {BaseInputRules, BaseKeymap, BaseSchema} from './extensions/base';
 export type {BaseSchemaOptions} from './extensions/base';
 export {ZeroPreset} from './presets/zero';
