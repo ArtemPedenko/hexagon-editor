@@ -1,9 +1,10 @@
 import {EditorState, TextSelection} from 'prosemirror-state';
-import {describe, expect, it} from 'vitest';
+import {describe, expect, it, vi} from 'vitest';
 
 import {
     basicMarkdownCodec,
     basicMarkdownSchema,
+    createMarkdownTablePastePlugin,
     createBasicEditorCommands,
     getBasicWysiwygSelectionState,
     mountBasicWysiwygEditor,
@@ -41,6 +42,21 @@ describe('basic Markdown extensions', () => {
 
         expect(document.firstChild?.type.name).toBe('table');
         expect(basicMarkdownCodec.serialize(document)).toContain('| Name | Value |');
+    });
+
+    it('pastes a piped Markdown table as a table node', () => {
+        const state = EditorState.create({schema: basicMarkdownSchema});
+        let nextState = state;
+        const preventDefault = vi.fn();
+        const plugin = createMarkdownTablePastePlugin();
+        const handled = plugin.props.handleDOMEvents?.paste?.(
+            {dispatch: (transaction) => { nextState = state.apply(transaction); }, state} as never,
+            {clipboardData: {getData: () => '|Name|Value|\n|---|---|\n|Vue|3|'}, preventDefault} as never,
+        );
+
+        expect(handled).toBe(true);
+        expect(preventDefault).toHaveBeenCalledOnce();
+        expect(nextState.doc.firstChild?.type.name).toBe('table');
     });
 
     it('round-trips raw HTML blocks, directives, and heading attributes', () => {

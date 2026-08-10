@@ -18,7 +18,7 @@ import type {
   NodeSpec,
 } from "prosemirror-model";
 import type { ParseSpec } from "prosemirror-markdown";
-import { EditorState, NodeSelection, Plugin, PluginKey } from "prosemirror-state";
+import { EditorState, NodeSelection, Plugin, PluginKey, TextSelection } from "prosemirror-state";
 import type { Command, StateField } from "prosemirror-state";
 import {
   liftListItem,
@@ -34,7 +34,6 @@ import {
   findTable,
   tableEditing,
   TableMap,
-  tableNodes,
 } from "prosemirror-tables";
 import { Decoration, DecorationSet, EditorView } from "prosemirror-view";
 
@@ -130,6 +129,19 @@ import {
   listSerializerNodes,
   listTokenSpecs,
 } from "../extensions/markdown/list-specs";
+import {
+  addTableColumn,
+  addTableRow,
+  TableCellAlign,
+  TableNode,
+  deleteTableColumn,
+  deleteTable,
+  deleteTableRow,
+  insertTable,
+  setTableColumnAlignment,
+  tableNodeSpecs,
+  tableSerializerNodes,
+} from "../extensions/markdown/table";
 
 const basicMarks: Record<string, MarkSpec> = {
   ins: underlineMarkSpec,
@@ -158,11 +170,7 @@ const basicMarks: Record<string, MarkSpec> = {
   },
 };
 
-const markdownTableNodes: Record<string, NodeSpec> = tableNodes({
-  cellAttributes: {},
-  cellContent: "inline*",
-  tableGroup: "block",
-});
+const markdownTableNodes: Record<string, NodeSpec> = tableNodeSpecs;
 
 function renderHtmlBlock(html: string, attribute: string): HTMLElement {
   const element = document.createElement("div");
@@ -372,11 +380,11 @@ const tableTokenSpecs: Record<string, ParseSpec> = {
     }),
   },
   table: { block: "table" },
-  tbody: { ignore: true },
-  td: { block: "table_cell" },
-  th: { block: "table_header" },
-  thead: { ignore: true },
-  tr: { block: "table_row" },
+  tbody: { block: TableNode.Body },
+  td: { block: TableNode.DataCell },
+  th: { block: TableNode.HeaderCell },
+  thead: { block: TableNode.Head },
+  tr: { block: TableNode.Row },
   yfm_html_block: {
     node: "yfm_html_block",
     getAttrs: (token) => ({ html: token.content }),
@@ -571,6 +579,28 @@ function createBasicDefaultPresetPlugins(
   );
 }
 
+export function createMarkdownTablePastePlugin(): Plugin {
+  return new Plugin({
+    props: {
+      handleDOMEvents: {
+        paste: (view, event) => {
+          const text = event.clipboardData?.getData('text/plain') ?? '';
+          const trimmed = text.trim();
+          if (!trimmed.startsWith('|') || !trimmed.endsWith('|')) return false;
+          const document = basicMarkdownCodec.parse(text);
+          const table = document.childCount === 1 && document.firstChild?.type.name === TableNode.Table
+            ? document.firstChild
+            : undefined;
+          if (table === undefined) return false;
+          event.preventDefault();
+          view.dispatch(view.state.tr.replaceSelectionWith(table).scrollIntoView());
+          return true;
+        },
+      },
+    },
+  });
+}
+
 const basicMarkdownSerializerNodes = {
   blockquote: serializeBlockquote,
   code_block: serializeCodeBlock,
@@ -639,24 +669,7 @@ const basicMarkdownSerializerNodes = {
       state.renderContent(node);
     });
   },
-  table(state, node) {
-    const rows = Array.from(node.content.content, (row) =>
-      Array.from(row.content.content, (cell) =>
-        escapeTableCell(cell.textContent),
-      ),
-    );
-    const firstRow = rows.at(0) ?? [];
-    const body = rows.slice(1);
-    const header = `| ${firstRow.join(" | ")} |`;
-    const divider = `| ${firstRow.map(() => "---").join(" | ")} |`;
-
-    state.write(
-      [header, divider, ...body.map((row) => `| ${row.join(" | ")} |`)].join(
-        "\n",
-      ),
-    );
-    state.closeBlock(node);
-  },
+  ...tableSerializerNodes,
 };
 
 const basicMarkdownSerializerMarks = {
@@ -694,10 +707,6 @@ export const basicMarkdownCodec = new MarkdownCodec({
   serializer: basicMarkdownSerializer,
 });
 
-function escapeTableCell(value: string): string {
-  return value.replaceAll("|", "\\|").replaceAll("\n", "<br>");
-}
-
 function getNodeType(name: string) {
   const nodeType = basicMarkdownSchema.nodes[name];
   if (nodeType === undefined) {
@@ -714,43 +723,8 @@ function getMarkType(name: string) {
   return markType;
 }
 
-function createTable(rows: number, columns: number): ProseMirrorNode {
-  const cellType = getNodeType("table_cell");
-  const rowType = getNodeType("table_row");
-  const tableType = getNodeType("table");
-  const rowNodes = Array.from({ length: rows }, () => {
-    const cells = Array.from({ length: columns }, () => {
-      const cell = cellType.createAndFill();
-      if (cell === null) {
-        throw new Error("Cannot create a basic editor table cell");
-      }
-      return cell;
-    });
-    const row = rowType.createAndFill(null, cells);
-    if (row === null) {
-      throw new Error("Cannot create a basic editor table row");
-    }
-    return row;
-  });
-
-  const table = tableType.createAndFill(null, rowNodes);
-  if (table === null) {
-    throw new Error("Cannot create a basic editor table");
-  }
-  return table;
-}
-
 function createTableCommand(rows = 3, columns = 3): Command {
-  return (state, dispatch) => {
-    if (dispatch !== undefined) {
-      dispatch(
-        state.tr
-          .replaceSelectionWith(createTable(rows, columns))
-          .scrollIntoView(),
-      );
-    }
-    return true;
-  };
+  return insertTable(rows, columns);
 }
 
 function insertFileCommand(href: string, name: string): Command {
@@ -794,10 +768,15 @@ function setColorCommand(color: string): Command {
 }
 
 export interface BasicEditorCommands {
+  addTableColumn: Command;
+  addTableRow: Command;
   bold: Command;
   bulletList: Command;
   code: Command;
   codeBlock: Command;
+  deleteTableColumn: Command;
+  deleteTable: Command;
+  deleteTableRow: Command;
   heading(level: number): Command;
   horizontalRule: Command;
   insertFile(href: string, name: string): Command;
@@ -1246,6 +1225,76 @@ function createTableControlsPlugin(): Plugin<number | null> {
   });
 }
 
+function createUpstreamTableControlsPlugin(): Plugin {
+  let closeMenu: (() => void) | undefined;
+  const close = (): void => {
+    closeMenu?.();
+    closeMenu = undefined;
+  };
+  return new Plugin({
+    view: () => ({destroy: close}),
+    props: {
+      handleDOMEvents: {
+        contextmenu: (view, event) => {
+          const position = view.posAtCoords({left: event.clientX, top: event.clientY})?.pos;
+          if (position === undefined) return false;
+          const selection = TextSelection.create(view.state.doc, position);
+          const transaction = view.state.tr.setSelection(selection);
+          const selectedState = view.state.apply(transaction);
+          if (!addTableRow(selectedState)) return false;
+          event.preventDefault();
+          close();
+          view.dispatch(transaction);
+
+          const controls = document.createElement('div');
+          controls.className = 'markdown-editor__table-popover';
+          controls.setAttribute('aria-label', 'Действия с таблицей');
+          controls.setAttribute('role', 'menu');
+          const actions = [
+            ['add-row', 'Добавить строку', addTableRow, false],
+            ['add-column', 'Добавить колонку', addTableColumn, false],
+            ['delete-row', 'Удалить строку', deleteTableRow, true],
+            ['delete-column', 'Удалить колонку', deleteTableColumn, true],
+            ['delete-table', 'Удалить таблицу', deleteTable, true],
+            ['align-left', 'Выровнять по левому краю', setTableColumnAlignment(TableCellAlign.Left), false],
+            ['align-center', 'Выровнять по центру', setTableColumnAlignment(TableCellAlign.Center), false],
+            ['align-right', 'Выровнять по правому краю', setTableColumnAlignment(TableCellAlign.Right), false],
+          ] as const;
+          for (const [name, label, command, destructive] of actions) {
+            const button = document.createElement('button');
+            button.className = destructive
+              ? 'markdown-editor__table-popover-action markdown-editor__table-popover-action--danger'
+              : 'markdown-editor__table-popover-action';
+            button.dataset.tableAction = name;
+            button.setAttribute('role', 'menuitem');
+            button.textContent = label;
+            button.type = 'button';
+            button.addEventListener('mousedown', (mouseEvent) => mouseEvent.preventDefault());
+            button.addEventListener('click', () => {
+              command(view.state, view.dispatch);
+              close();
+            });
+            controls.append(button);
+          }
+          document.body.append(controls);
+          const {left, top} = view.coordsAtPos(position);
+          Object.assign(controls.style, {left: `${left}px`, position: 'fixed', top: `${top + 8}px`});
+          const closeOutside = (pointerEvent: PointerEvent): void => {
+            if (pointerEvent.target instanceof Node && controls.contains(pointerEvent.target)) return;
+            close();
+          };
+          document.addEventListener('pointerdown', closeOutside, true);
+          closeMenu = () => {
+            document.removeEventListener('pointerdown', closeOutside, true);
+            controls.remove();
+          };
+          return true;
+        },
+      },
+    },
+  });
+}
+
 function createFoldingPlugin(): Plugin<DecorationSet> {
   const createDecorations = (document: ProseMirrorNode): DecorationSet => {
     const decorations: Decoration[] = [];
@@ -1309,10 +1358,15 @@ export function createBasicEditorCommands(): BasicEditorCommands {
   const listItem = getNodeType("list_item");
 
   return {
+    addTableColumn,
+    addTableRow,
     bold: toggleBold,
     bulletList: toList(getNodeType("bullet_list")),
     code: toggleCode,
     codeBlock: setCodeBlock,
+    deleteTableColumn,
+    deleteTable,
+    deleteTableRow,
     heading: toHeading,
     horizontalRule: addHorizontalRule(getNodeType("horizontal_rule")),
     insertFile: insertFileCommand,
@@ -1489,7 +1543,8 @@ export function mountBasicWysiwygEditor({
       plugins: [
         createFoldingPlugin(),
         createAtomicSourceEditorPlugin(),
-        createTableControlsPlugin(),
+        createUpstreamTableControlsPlugin(),
+        createMarkdownTablePastePlugin(),
         ...createBasicDefaultPresetPlugins(placeholder, onFiles, selectionContext),
         keymap({
           "Mod-[": commands.liftListItem,
@@ -1501,7 +1556,6 @@ export function mountBasicWysiwygEditor({
           "Mod-Shift-z": commands.redo,
           "Mod-z": commands.undo,
         }),
-        tableEditing(),
         ...plugins,
       ],
     }),

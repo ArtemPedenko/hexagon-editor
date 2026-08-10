@@ -69,7 +69,7 @@ export const Lists: ExtensionAuto<ListsOptions> = (builder, options) => {
         },
         builder.Priority.Low,
     );
-    builder.addInputRules(({schema}) => createListsInputRules(schema));
+    builder.addPlugin(({schema}) => createListsInputRules(schema));
     builder.addPlugin(mergeListsPlugin);
     builder.addPlugin(collapseListsPlugin);
 };

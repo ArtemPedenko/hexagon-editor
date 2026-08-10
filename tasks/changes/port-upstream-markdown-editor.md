@@ -2,14 +2,14 @@
 
 ## Статус постановки
 
-В работе — parity-инвентаризация зафиксирована в `tasks/changes/upstream-parity-matrix.md`; перенесены foundation `ExtensionBuilder`/`ExtensionsManager`, Markdown serializer registration и базовые markdown/behavior extensions до `Image`, включая `Lists`, `Blockquote`, `Bold`, `Italic`, `Code`, `CodeBlock`, `Heading`, `HorizontalRule`, `Link`, `Breaks`, `Deflist` и `Html`. Следующий срез — `Mark`.
+В работе — parity-инвентаризация зафиксирована в `tasks/changes/upstream-parity-matrix.md`; перенесены foundation `ExtensionBuilder`/`ExtensionsManager`, Markdown serializer registration и базовые markdown/behavior extensions до `Table`, включая `Lists`, `Blockquote`, `Bold`, `Italic`, `Code`, `CodeBlock`, `Heading`, `HorizontalRule`, `Link`, `Breaks`, `Deflist`, `Html`, `Image`, `Mark`, `Strike`, `Subscript`, `Table` и `Underline`. `Superscript` исключён из объёма работ. Следующий срез — интеграция upstream `Table` schema/actions в visual host либо additional/YFM extensions.
 
 ## Решения и [Уточнить]
 
 - Единственный эталон поведения и исходников — `gravity-ui/markdown-editor` commit `fcb1c73561e9d0ee04a8f2a73308c4fadd1cff14` (15.45.0, MIT).
 - Переносить весь применимый upstream-код; React-bound view, hooks и renderer заменять Vue 3-адаптером, не меняя редакторскую семантику.
 - Публичный API включает все применимые upstream export и extension/action points под теми же именами и семантикой; React entry points заменяются Vue-компонентом и composable.
-- GPT исключается полностью: исходники, i18n, иконки, зависимости, экспорты, playground и документация.
+- GPT исключается полностью: исходники, i18n, иконки, зависимости, экспорты, playground и документация. `Superscript` также исключён из переноса.
 - Интеграция с продуктом Yandex Forms исключается, если встретится в зависимом коде. Общие формы редактора для ссылок, изображений и файлов входят в перенос.
 - Текущий самописный код не является источником поведения: он заменяется или адаптируется только после сверки с upstream.
 
@@ -34,7 +34,7 @@
 
 ## Что не входит в задачу
 
-- GPT и интеграция Yandex Forms; редизайн или самостоятельная замена UX upstream.
+- GPT, `Superscript` и интеграция Yandex Forms; редизайн или самостоятельная замена UX upstream.
 
 ## Технические детали
 
