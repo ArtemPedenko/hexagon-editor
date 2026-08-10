@@ -28,13 +28,13 @@ export const Bold: ExtensionAuto<BoldOptions> = (builder, options) => {
     }
     builder.addInputRules(({schema}) => ({
         rules: [
-            markInputRule({close: '**', ignoreBetween: '*', open: '**'}, getBoldType(schema)),
-            markInputRule({close: '__', ignoreBetween: '_', open: '__'}, getBoldType(schema)),
+            createMarkdownMarkInputRule({close: '**', ignoreBetween: '*', open: '**'}, getBoldType(schema)),
+            createMarkdownMarkInputRule({close: '__', ignoreBetween: '_', open: '__'}, getBoldType(schema)),
         ],
     }));
 };
 
-function markInputRule(rule: {close: string; ignoreBetween?: string; open: string}, markType: MarkType): InputRule {
+export function createMarkdownMarkInputRule(rule: {close: string; ignoreBetween?: string; open: string}, markType: MarkType): InputRule {
     const open = escapeRegex(rule.open);
     const close = escapeRegex(rule.close);
     const ignored = escapeRegex(rule.ignoreBetween ?? '');

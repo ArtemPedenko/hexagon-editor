@@ -33,6 +33,15 @@ export {
     toggleBold,
 } from './extensions/markdown/bold';
 export type {BoldOptions} from './extensions/markdown/bold';
+export {
+    Italic,
+    ItalicAttrs,
+    ItalicSpecs,
+    getItalicType,
+    italicMarkName,
+    toggleItalic,
+} from './extensions/markdown/italic';
+export type {ItalicOptions} from './extensions/markdown/italic';
 export {BaseInputRules, BaseKeymap, BaseSchema} from './extensions/base';
 export type {BaseSchemaOptions} from './extensions/base';
 export {ZeroPreset} from './presets/zero';

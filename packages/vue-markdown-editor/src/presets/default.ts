@@ -16,6 +16,8 @@ import {Blockquote} from '../extensions/markdown/blockquote';
 import type {BlockquoteOptions} from '../extensions/markdown/blockquote';
 import {Bold} from '../extensions/markdown/bold';
 import type {BoldOptions} from '../extensions/markdown/bold';
+import {Italic} from '../extensions/markdown/italic';
+import type {ItalicOptions} from '../extensions/markdown/italic';
 
 import {ZeroPreset} from './zero';
 
@@ -23,6 +25,7 @@ export interface DefaultPresetOptions {
     baseSchema?: BaseSchemaOptions;
     blockquote?: BlockquoteOptions;
     bold?: BoldOptions;
+    italic?: ItalicOptions;
     filePaste?: FilePasteOptions;
     history?: HistoryOptions;
     lists?: ListsOptions;
@@ -36,6 +39,7 @@ export const DefaultPreset: ExtensionAuto<DefaultPresetOptions> = (builder, opti
         .use(ZeroPreset, {baseSchema: options?.baseSchema})
         .use(Blockquote, options?.blockquote ?? {})
         .use(Bold, options?.bold ?? {})
+        .use(Italic, options?.italic ?? {})
         .use(Lists, options?.lists ?? {})
         .use(History, options?.history ?? {})
         .use(Placeholder, options?.placeholder ?? {})

@@ -66,6 +66,12 @@ import {
   toggleBold,
 } from "../extensions/markdown/bold";
 import {
+  italicMarkSpec,
+  italicTokenSpec,
+  serializeItalic,
+  toggleItalic,
+} from "../extensions/markdown/italic";
+import {
   listNodeSpecs,
   listSerializerNodes,
   listTokenSpecs,
@@ -216,7 +222,10 @@ const extendedMarkdownNodes: Record<string, NodeSpec> = {
 
 /** Schema for the first WYSIWYG milestone. YFM-specific nodes are added later. */
 export const basicMarkdownSchema: Schema = new Schema({
-  marks: defaultMarkdownSchema.spec.marks.update("strong", boldMarkSpec).append(basicMarks),
+  marks: defaultMarkdownSchema.spec.marks
+    .update("em", italicMarkSpec)
+    .update("strong", boldMarkSpec)
+    .append(basicMarks),
   nodes: defaultMarkdownSchema.spec.nodes
     .update("blockquote", blockquoteNodeSpec)
     .update("list_item", listNodeSpecs.list_item)
@@ -243,6 +252,7 @@ export const basicMarkdownSchema: Schema = new Schema({
 
 const tableTokenSpecs: Record<string, ParseSpec> = {
   blockquote: blockquoteTokenSpec,
+  em: italicTokenSpec,
   strong: boldTokenSpec,
   ...listTokenSpecs,
   dd: { block: "definition_description" },
@@ -475,6 +485,7 @@ function createBasicDefaultPresetPlugins(
     (builder) => builder.use(DefaultPreset, {
       bold: { boldKey: "Mod-b" },
       filePaste: { onFiles },
+      italic: { italicKey: "Mod-i" },
       placeholder: { content: placeholder },
       selectionContext,
     }),
@@ -564,6 +575,7 @@ const basicMarkdownSerializerNodes = {
 };
 
 const basicMarkdownSerializerMarks = {
+  em: serializeItalic,
   strong: serializeBold,
   color: {
     close: "</span>",
@@ -1256,7 +1268,7 @@ export function createBasicEditorCommands(): BasicEditorCommands {
       return true;
     },
     insertTable: createTableCommand,
-    italic: toggleMark(getMarkType("em")),
+    italic: toggleItalic,
     link: (href) => toggleMark(getMarkType("link"), { href }),
     mark: toggleMark(getMarkType("mark")),
     orderedList: toList(getNodeType("ordered_list")),
@@ -1406,7 +1418,6 @@ export function mountBasicWysiwygEditor({
           Enter: commands.splitListItem,
           Tab: keepListFocus(commands.sinkListItem),
           "Mod-Shift-z": commands.redo,
-          "Mod-i": commands.italic,
           "Mod-z": commands.undo,
         }),
         tableEditing(),
