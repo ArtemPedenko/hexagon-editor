@@ -56,7 +56,8 @@
 | `Superscript` | — | excluded | Явно исключён из объёма работ. |
 | `Table` | `extensions/markdown/{table,table-specs,table-actions}.ts`, `core/basic-editor.ts` | partial | Самостоятельный extension: upstream-style schema, Markdown parser/serializer, создание/удаление таблицы, добавление/удаление строк и колонок, Tab/Shift+Tab и Enter navigation, column alignment, piped Markdown paste и unit-тест; включён в `DefaultPreset` и visual host. Контекстное меню visual host использует новые команды. Full upstream plugin/action parity pending. |
 | `Underline` | `extensions/markdown/underline.ts` | done | Самостоятельный extension: markdown-it, schema, parser/serializer, input rule, toggle-команда и unit-тест; включён в `DefaultPreset`. |
-| `additional/FoldingHeading`, `Math`, `Mermaid`, `QuoteLink`, `YfmHtmlBlock` | `src/extensions/additional/*` | pending | В `basic-editor` есть часть рендера/Markdown, но отсутствуют upstream extensions/actions/views. |
+| `additional/FoldingHeading` | `extensions/additional/folding-heading.ts`, `core/basic-editor.ts` | partial | Folding plugin и toggle-команда вынесены в самостоятельный extension и подключены к DefaultPreset; Markdown codec и toolbar сохраняют текущую семантику. Upstream input rules, click affordance и full plugin parity pending. |
+| `additional/Math`, `Mermaid`, `QuoteLink`, `YfmHtmlBlock` | `src/extensions/additional/*` | pending | В `basic-editor` есть часть рендера/Markdown, но отсутствуют upstream extensions/actions/views. |
 | `additional/GPT/*`, `icons/GPT*.tsx`, GPT i18n/tests | — | excluded | Явное исключение. |
 
 ## Behavior extensions
@@ -93,6 +94,6 @@
 
 ## Следующий реализуемый срез
 
-1. Проверить Table в playground и закрыть remaining upstream plugin/action parity.
-2. Затем продолжить additional и YFM extensions.
+1. Довести FoldingHeading: upstream input rules, click affordance и plugin parity.
+2. Затем продолжить additional extensions: Math, Mermaid, QuoteLink и YfmHtmlBlock.
 3. Для каждого последующего расширения сначала переносить non-React код и tests, затем Vue node/widget/form view и Chromium scenario.

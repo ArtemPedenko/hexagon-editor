@@ -881,6 +881,29 @@ defineExpose<MarkdownEditorExposed>({
     display: none;
 }
 
+.markdown-editor :deep(.markdown-editor__folding-heading) {
+    position: relative;
+    padding-left: 1.4rem;
+}
+
+.markdown-editor :deep(.markdown-editor__folding-heading)::before {
+    position: absolute;
+    top: 0.2em;
+    left: 0;
+    width: 1rem;
+    height: 1rem;
+    color: var(--markdown-focus-text);
+    content: '⌄';
+    cursor: pointer;
+    font-size: 0.9em;
+    line-height: 1rem;
+    text-align: center;
+}
+
+.markdown-editor :deep(.markdown-editor__folding-heading--folded)::before {
+    content: '›';
+}
+
 .markdown-editor :deep(.ProseMirror[data-placeholder]:has(> p:only-child > .ProseMirror-trailingBreak))::before {
     position: absolute;
     color: #8b919e;

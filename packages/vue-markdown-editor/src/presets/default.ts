@@ -10,6 +10,7 @@ import type {PlaceholderOptions} from '../extensions/behavior/placeholder';
 import {Selection} from '../extensions/behavior/selection';
 import {SelectionContext} from '../extensions/behavior/selection-context';
 import type {SelectionContextOptions} from '../extensions/behavior/selection-context';
+import {FoldingHeading} from '../extensions/additional/folding-heading';
 import {Lists} from '../extensions/markdown/lists';
 import type {ListsOptions} from '../extensions/markdown/lists';
 import {Blockquote} from '../extensions/markdown/blockquote';
@@ -67,6 +68,7 @@ export const DefaultPreset: ExtensionAuto<DefaultPresetOptions> = (builder, opti
         .use(Code, options?.code ?? {})
         .use(CodeBlock, options?.codeBlock ?? {})
         .use(Heading, options?.heading ?? {})
+        .use(FoldingHeading)
         .use(HorizontalRule)
         .use(Link, options?.link ?? {})
         .use(Breaks, options?.breaks ?? {})

@@ -142,6 +142,7 @@ import {
   tableNodeSpecs,
   tableSerializerNodes,
 } from "../extensions/markdown/table";
+import {toggleFoldingHeading} from '../extensions/additional/folding-heading';
 
 const basicMarks: Record<string, MarkSpec> = {
   ins: underlineMarkSpec,
@@ -817,7 +818,7 @@ export interface BasicWysiwygSelectionState {
   underline: boolean;
 }
 
-const foldingPluginKey = new PluginKey<DecorationSet>("folding-heading");
+const foldingPluginKey = new PluginKey<DecorationSet>("legacy-folding-heading");
 const atomicSourcePluginKey = new PluginKey<number | null>("atomic-source-editor");
 const tablePopoverPluginKey = new PluginKey<number | null>("table-popover");
 const tablePopoverCleanups = new WeakMap<HTMLElement, () => void>();
@@ -1336,21 +1337,7 @@ function createFoldingPlugin(): Plugin<DecorationSet> {
   });
 }
 
-const toggleHeadingFolding: Command = (state, dispatch) => {
-  const { $from } = state.selection;
-  if ($from.parent.type.name !== "heading") {
-    return false;
-  }
-  if (dispatch !== undefined) {
-    dispatch(
-      state.tr.setNodeMarkup($from.before(), undefined, {
-        ...$from.parent.attrs,
-        folding: !$from.parent.attrs.folding,
-      }),
-    );
-  }
-  return true;
-};
+const toggleHeadingFolding = toggleFoldingHeading;
 
 /** Framework-agnostic commands consumed later by the Vue toolbar and shortcuts. */
 export function createBasicEditorCommands(): BasicEditorCommands {
@@ -1541,7 +1528,6 @@ export function mountBasicWysiwygEditor({
     state: EditorState.create({
       doc: basicMarkdownCodec.parse(initialValue),
       plugins: [
-        createFoldingPlugin(),
         createAtomicSourceEditorPlugin(),
         createUpstreamTableControlsPlugin(),
         createMarkdownTablePastePlugin(),
