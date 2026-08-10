@@ -17,12 +17,6 @@ import type {
   Node as ProseMirrorNode,
   NodeSpec,
 } from "prosemirror-model";
-import {
-  defaultMarkdownParser,
-  defaultMarkdownSerializer,
-  MarkdownParser,
-  MarkdownSerializer,
-} from "prosemirror-markdown";
 import type { ParseSpec } from "prosemirror-markdown";
 import { EditorState, NodeSelection, Plugin, PluginKey } from "prosemirror-state";
 import type { Command, StateField } from "prosemirror-state";
@@ -48,6 +42,7 @@ import "prosemirror-view/style/prosemirror.css";
 import "katex/dist/katex.min.css";
 
 import { defaultMarkdownSchema, MarkdownCodec } from "./markdown";
+import { WysiwygContentHandler } from "./content-handler";
 import {
   collapseListsPlugin,
   createListsInputRules,
@@ -57,6 +52,8 @@ import {
   sinkOnlySelectedListItem,
   toList,
 } from "./lists";
+import { ExtensionsManager } from "./extensions-manager";
+import type { ExtensionBuilder } from "./extension-builder";
 import { mountBasicMarkupEditor } from "./markup-editor";
 import { getAdvancedMarkdownRenderers } from "./optional-renderers";
 
@@ -331,8 +328,8 @@ function listIsTight(tokens: Array<{ hidden: boolean; type: string }>, index: nu
   return false;
 }
 
-function createExtendedMarkdownIt(): MarkdownIt {
-  const markdown = new MarkdownIt("commonmark", { html: true })
+function createExtendedMarkdownIt(markdown = new MarkdownIt("commonmark", { html: true })): MarkdownIt {
+  markdown
     .enable("table")
     .use(deflist);
   markdown.inline.ruler.after("escape", "inline_math", (state, silent) => {
@@ -483,116 +480,135 @@ function createExtendedMarkdownIt(): MarkdownIt {
   return markdown;
 }
 
-const basicMarkdownParser = new MarkdownParser(
-  basicMarkdownSchema,
-  createExtendedMarkdownIt(),
-  { ...defaultMarkdownParser.tokens, ...tableTokenSpecs },
-);
+const basicMarkdownParserExtension = (builder: ExtensionBuilder) => {
+  builder.configureMd(createExtendedMarkdownIt);
+  for (const [name, token] of Object.entries(tableTokenSpecs)) {
+    builder.addParserToken(name, token);
+  }
+};
 
-const basicMarkdownSerializer = new MarkdownSerializer(
+const basicMarkdownParser = ExtensionsManager.process(
+  basicMarkdownParserExtension,
   {
-    ...defaultMarkdownSerializer.nodes,
-    bullet_list(state, node) {
-      state.renderList(node, "  ", () => `${getListMarkup(node, ["-", "+", "*"], "*")} `);
-    },
-    definition_description(state, node) {
-      state.renderContent(node);
-      state.closeBlock(node);
-    },
-    definition_list(state, node) {
-      state.renderContent(node);
-      state.closeBlock(node);
-    },
-    definition_term(state, node) {
-      state.renderInline(node);
-      state.write("\n: ");
-    },
-    directive(state, node) {
-      state.write(`::: ${node.attrs.name}\n${node.attrs.content}\n:::`);
-      state.closeBlock(node);
-    },
-    inline_math(state, node) {
-      state.write(`$${node.attrs.latex}$`);
-    },
-    math_block(state, node) {
-      state.write(`$$\n${node.attrs.latex}\n$$`);
-      state.closeBlock(node);
-    },
-    ordered_list(state, node) {
-      const start = Number(node.attrs.order) || 1;
-      const maxWidth = String(start + node.childCount - 1).length;
-      const space = state.repeat(" ", maxWidth + 2);
-      state.renderList(node, space, (index) => {
-        const number = String(start + index);
-        const markup = getListMarkup(node, [".", ")"], ".");
-        return `${state.repeat(" ", maxWidth - number.length)}${number}${markup} `;
-      });
-    },
-    mermaid(state, node) {
-      state.write(`\`\`\`mermaid\n${node.attrs.source}\n\`\`\``);
-      state.closeBlock(node);
-    },
-    heading(state, node) {
-      state.write(
-        `${"#".repeat(node.attrs.level)}${node.attrs.folding === null ? "" : "+"} `,
-      );
-      state.renderInline(node);
-      const attributes = [
-        node.attrs.id === null ? "" : `#${node.attrs.id}`,
-        node.attrs.class === null ? "" : `.${node.attrs.class}`,
-      ]
-        .filter(Boolean)
-        .join(" ");
-      if (attributes) state.write(` {${attributes}}`);
-      state.closeBlock(node);
-    },
-    raw_html(state, node) {
-      state.write(node.attrs.html);
-      state.closeBlock(node);
-    },
-    yfm_html_block(state, node) {
-      state.write(`:::html\n${node.attrs.html}\n:::`);
-      state.closeBlock(node);
-    },
-    quote_link(state, node) {
-      state.wrapBlock("> ", null, node, () => {
-        state.write(
-          `[${node.attrs.content}](${node.attrs.cite}){data-quotelink=true}`,
-        );
-        state.write("\n\n");
-        state.renderContent(node);
-      });
-    },
-    table(state, node) {
-      const rows = Array.from(node.content.content, (row) =>
-        Array.from(row.content.content, (cell) =>
-          escapeTableCell(cell.textContent),
-        ),
-      );
-      const firstRow = rows.at(0) ?? [];
-      const body = rows.slice(1);
-      const header = `| ${firstRow.join(" | ")} |`;
-      const divider = `| ${firstRow.map(() => "---").join(" | ")} |`;
+    baseSchema: basicMarkdownSchema,
+    markdown: { html: true },
+  },
+).textParser;
 
+const basicMarkdownSerializerNodes = {
+  bullet_list(state, node) {
+    state.renderList(node, "  ", () => `${getListMarkup(node, ["-", "+", "*"], "*")} `);
+  },
+  definition_description(state, node) {
+    state.renderContent(node);
+    state.closeBlock(node);
+  },
+  definition_list(state, node) {
+    state.renderContent(node);
+    state.closeBlock(node);
+  },
+  definition_term(state, node) {
+    state.renderInline(node);
+    state.write("\n: ");
+  },
+  directive(state, node) {
+    state.write(`::: ${node.attrs.name}\n${node.attrs.content}\n:::`);
+    state.closeBlock(node);
+  },
+  inline_math(state, node) {
+    state.write(`$${node.attrs.latex}$`);
+  },
+  math_block(state, node) {
+    state.write(`$$\n${node.attrs.latex}\n$$`);
+    state.closeBlock(node);
+  },
+  ordered_list(state, node) {
+    const start = Number(node.attrs.order) || 1;
+    const maxWidth = String(start + node.childCount - 1).length;
+    const space = state.repeat(" ", maxWidth + 2);
+    state.renderList(node, space, (index) => {
+      const number = String(start + index);
+      const markup = getListMarkup(node, [".", ")"], ".");
+      return `${state.repeat(" ", maxWidth - number.length)}${number}${markup} `;
+    });
+  },
+  mermaid(state, node) {
+    state.write(`\`\`\`mermaid\n${node.attrs.source}\n\`\`\``);
+    state.closeBlock(node);
+  },
+  heading(state, node) {
+    state.write(
+      `${"#".repeat(node.attrs.level)}${node.attrs.folding === null ? "" : "+"} `,
+    );
+    state.renderInline(node);
+    const attributes = [
+      node.attrs.id === null ? "" : `#${node.attrs.id}`,
+      node.attrs.class === null ? "" : `.${node.attrs.class}`,
+    ]
+      .filter(Boolean)
+      .join(" ");
+    if (attributes) state.write(` {${attributes}}`);
+    state.closeBlock(node);
+  },
+  raw_html(state, node) {
+    state.write(node.attrs.html);
+    state.closeBlock(node);
+  },
+  yfm_html_block(state, node) {
+    state.write(`:::html\n${node.attrs.html}\n:::`);
+    state.closeBlock(node);
+  },
+  quote_link(state, node) {
+    state.wrapBlock("> ", null, node, () => {
       state.write(
-        [header, divider, ...body.map((row) => `| ${row.join(" | ")} |`)].join(
-          "\n",
-        ),
+        `[${node.attrs.content}](${node.attrs.cite}){data-quotelink=true}`,
       );
-      state.closeBlock(node);
-    },
+      state.write("\n\n");
+      state.renderContent(node);
+    });
   },
-  {
-    ...defaultMarkdownSerializer.marks,
-    color: {
-      close: "</span>",
-      open: (_state, mark) => `<span style="color: ${mark.attrs.color}">`,
-    },
-    mark: { close: "==", open: "==" },
-    strikethrough: { close: "~~", open: "~~" },
-    underline: { close: "</u>", open: "<u>" },
+  table(state, node) {
+    const rows = Array.from(node.content.content, (row) =>
+      Array.from(row.content.content, (cell) =>
+        escapeTableCell(cell.textContent),
+      ),
+    );
+    const firstRow = rows.at(0) ?? [];
+    const body = rows.slice(1);
+    const header = `| ${firstRow.join(" | ")} |`;
+    const divider = `| ${firstRow.map(() => "---").join(" | ")} |`;
+
+    state.write(
+      [header, divider, ...body.map((row) => `| ${row.join(" | ")} |`)].join(
+        "\n",
+      ),
+    );
+    state.closeBlock(node);
   },
-);
+};
+
+const basicMarkdownSerializerMarks = {
+  color: {
+    close: "</span>",
+    open: (_state, mark) => `<span style="color: ${mark.attrs.color}">`,
+  },
+  mark: { close: "==", open: "==" },
+  strikethrough: { close: "~~", open: "~~" },
+  underline: { close: "</u>", open: "<u>" },
+};
+
+const basicMarkdownSerializer = ExtensionsManager.process(
+  (builder) => {
+    basicMarkdownParserExtension(builder);
+    for (const [name, token] of Object.entries(basicMarkdownSerializerNodes)) {
+      builder.addNodeSerializer(name, token);
+    }
+    for (const [name, token] of Object.entries(basicMarkdownSerializerMarks)) {
+      builder.addMarkSerializer(name, token);
+    }
+  },
+  { baseSchema: basicMarkdownSchema, markdown: { html: true } },
+).serializer;
 
 function getListMarkup(
   list: ProseMirrorNode,
@@ -1453,6 +1469,7 @@ export function mountBasicWysiwygEditor({
       ],
     }),
   });
+  const contentHandler = new WysiwygContentHandler(view, basicMarkdownCodec);
   onSelectionChange?.(getBasicWysiwygSelectionState(view.state));
 
   return {
@@ -1468,37 +1485,7 @@ export function mountBasicWysiwygEditor({
       if (value === basicMarkdownCodec.serialize(view.state.doc)) {
         return;
       }
-
-      view.updateState(
-        EditorState.create({
-          doc: basicMarkdownCodec.parse(value),
-          plugins: [
-            createFoldingPlugin(),
-            createAtomicSourceEditorPlugin(),
-            createTableControlsPlugin(),
-            mergeListsPlugin(),
-            collapseListsPlugin(),
-            createListsInputRules(basicMarkdownSchema),
-            history(),
-            keymap({
-              "Mod-[": commands.liftListItem,
-              "Mod-]": commands.sinkListItem,
-              "Shift-Tab": commands.liftListItem,
-              Backspace: chainCommands(liftEmptyListItem(listItem), joinPrevList),
-              Enter: commands.splitListItem,
-              Tab: keepListFocus(commands.sinkListItem),
-              "Mod-Shift-z": commands.redo,
-              "Mod-b": commands.bold,
-              "Mod-i": commands.italic,
-              "Mod-z": commands.undo,
-            }),
-            keymap(baseKeymap),
-            tableEditing(),
-            ...plugins,
-          ],
-        }),
-      );
-      onSelectionChange?.(getBasicWysiwygSelectionState(view.state));
+      contentHandler.replace(value);
     },
   };
 }

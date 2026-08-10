@@ -6,9 +6,22 @@ import {
     basicMarkdownSchema,
     createBasicEditorCommands,
     getBasicWysiwygSelectionState,
+    mountBasicWysiwygEditor,
 } from './basic-editor';
 
 describe('basic Markdown extensions', () => {
+    it('updates mounted content through transactions without recreating plugins', () => {
+        const target = document.createElement('div');
+        const changes: string[] = [];
+        const editor = mountBasicWysiwygEditor({initialValue: 'Initial', onChange: (value) => changes.push(value), target});
+
+        editor.setValue('* Updated');
+
+        expect(editor.getValue()).toBe('* Updated');
+        expect(changes).toEqual(['* Updated']);
+        editor.destroy();
+    });
+
     it('does not report marks as active for ordinary text', () => {
         const state = EditorState.create({schema: basicMarkdownSchema});
 

@@ -2,7 +2,7 @@
 
 ## Статус постановки
 
-Готова к оценке
+В работе — parity-инвентаризация зафиксирована в `tasks/changes/upstream-parity-matrix.md`; перенесены foundation `ExtensionBuilder`/`ExtensionsManager`, Markdown serializer registration, `Lists` и `WysiwygContentHandler`. Handler подключён к visual editor для обновления Markdown через upstream-транзакции. Следующий срез — core registries и Markdown parser/serializer contracts.
 
 ## Решения и [Уточнить]
 
@@ -26,7 +26,7 @@
 
 ## Что нужно сделать
 
-1. Составить versioned parity-матрицу всех upstream export, core, presets, extensions, actions, schema/parser/serializer, plugins, keymaps, node/widget views, toolbar, i18n, styles и тестов; для каждого элемента зафиксировать upstream-файл, Vue-адаптацию и статус.
+1. Составить versioned parity-матрицу всех upstream export, core, presets, extensions, actions, schema/parser/serializer, plugins, keymaps, node/widget views, toolbar, i18n, styles и тестов; для каждого элемента зафиксировать upstream-файл, Vue-адаптацию и статус. **Готово:** `tasks/changes/upstream-parity-matrix.md`.
 2. Перенести редакторское ядро `core`, `common`, `commands`, `cm`, `pm`, `markup`, markdown-it, registries, менеджеры extensions/actions и public types. Сохранить порядок регистрации, транзакционную семантику, parser/serializer и Markdown/YFM round-trip.
 3. Перенести base, markdown, behavior, additional и YFM-расширения вертикальными срезами: сначала независимый код, затем Vue renderer/forms/node views/toolbar, затем upstream unit-тесты и Vue integration/e2e. Обязательный первый срез — полный `Lists`: schema, Markdown attrs, parser/serializer, input rules, commands, merge/collapse plugins и keymap.
 4. Заменить React view, hooks, toolbar, popups, forms и decorations Vue-компонентами и mount-адаптером ProseMirror; React и `react-dom` не должны попасть в runtime dependencies. Сохранить WYSIWYG, markup и split-view, accessibility, локали и темы upstream.
