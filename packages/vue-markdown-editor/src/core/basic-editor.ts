@@ -7,6 +7,7 @@ import { keymap } from "prosemirror-keymap";
 import katex from "katex";
 import MarkdownIt from "markdown-it";
 import deflist from "markdown-it-deflist";
+import markPlugin from "markdown-it-mark";
 import { autoUpdate, computePosition, flip, offset, shift } from "@floating-ui/dom";
 import { Schema } from "prosemirror-model";
 import type {
@@ -90,6 +91,35 @@ import {
   horizontalRuleTokenSpec,
   serializeHorizontalRule,
 } from "../extensions/markdown/horizontal-rule";
+import {
+  linkMarkSpec,
+  linkTokenSpec,
+  serializeLink,
+  toggleLink,
+} from "../extensions/markdown/link";
+import {
+  breakTokenSpecs,
+  hardBreakNodeSpec,
+  serializeHardBreak,
+  serializeSoftBreak,
+  softBreakNodeSpec,
+} from "../extensions/markdown/breaks";
+import {
+  deflistNodeSpecs,
+  deflistSerializerNodes,
+  deflistTokenSpecs,
+} from "../extensions/markdown/deflist";
+import {
+  htmlNodeSpecs,
+  htmlSerializerNodes,
+  htmlTokenSpecs,
+} from "../extensions/markdown/html";
+import {
+  imageNodeSpec,
+  imageTokenSpec,
+  serializeImage,
+} from "../extensions/markdown/image";
+import { markTokenSpec } from "../extensions/markdown/mark";
 import {
   listNodeSpecs,
   listSerializerNodes,
@@ -244,12 +274,15 @@ export const basicMarkdownSchema: Schema = new Schema({
   marks: defaultMarkdownSchema.spec.marks
     .update("code", codeMarkSpec)
     .update("em", italicMarkSpec)
+    .update("link", linkMarkSpec)
     .update("strong", boldMarkSpec)
     .append(basicMarks),
   nodes: defaultMarkdownSchema.spec.nodes
     .update("blockquote", blockquoteNodeSpec)
     .update("code_block", codeBlockNodeSpec)
     .update("horizontal_rule", horizontalRuleNodeSpec)
+    .update("image", imageNodeSpec)
+    .update("hard_break", hardBreakNodeSpec)
     .update("list_item", listNodeSpecs.list_item)
     .update("bullet_list", listNodeSpecs.bullet_list)
     .update("ordered_list", listNodeSpecs.ordered_list)
@@ -269,7 +302,13 @@ export const basicMarkdownSchema: Schema = new Schema({
         0,
       ],
     })
-    .append({ ...markdownTableNodes, ...extendedMarkdownNodes }),
+    .append({
+      soft_break: softBreakNodeSpec,
+      ...deflistNodeSpecs,
+      ...htmlNodeSpecs,
+      ...markdownTableNodes,
+      ...extendedMarkdownNodes,
+    }),
 });
 
 const tableTokenSpecs: Record<string, ParseSpec> = {
@@ -278,11 +317,14 @@ const tableTokenSpecs: Record<string, ParseSpec> = {
   ...codeBlockTokenSpecs,
   em: italicTokenSpec,
   hr: horizontalRuleTokenSpec,
+  link: linkTokenSpec,
+  image: imageTokenSpec,
+  mark: markTokenSpec,
+  ...breakTokenSpecs,
   strong: boldTokenSpec,
   ...listTokenSpecs,
-  dd: { block: "definition_description" },
-  dl: { block: "definition_list" },
-  dt: { block: "definition_term" },
+  ...deflistTokenSpecs,
+  ...htmlTokenSpecs,
   directive: {
     node: "directive",
     getAttrs: (token) => ({ content: token.content, name: token.info }),
@@ -298,10 +340,6 @@ const tableTokenSpecs: Record<string, ParseSpec> = {
       id: token.attrGet("id"),
       level: Number(token.tag.slice(1)),
     }),
-  },
-  html_block: {
-    node: "raw_html",
-    getAttrs: (token) => ({ html: token.content }),
   },
   inline_math: {
     node: "inline_math",
@@ -337,7 +375,8 @@ const tableTokenSpecs: Record<string, ParseSpec> = {
 function createExtendedMarkdownIt(markdown = new MarkdownIt("commonmark", { html: true })): MarkdownIt {
   markdown
     .enable("table")
-    .use(deflist);
+    .use(deflist)
+    .use(markPlugin);
   markdown.inline.ruler.after("escape", "inline_math", (state, silent) => {
     if (state.src.charCodeAt(state.pos) !== 0x24) return false;
     const close = state.src.indexOf("$", state.pos + 1);
@@ -521,7 +560,9 @@ function createBasicDefaultPresetPlugins(
 const basicMarkdownSerializerNodes = {
   blockquote: serializeBlockquote,
   code_block: serializeCodeBlock,
+  hard_break: serializeHardBreak,
   horizontal_rule: serializeHorizontalRule,
+  image: serializeImage,
   ...listSerializerNodes,
   definition_description(state, node) {
     state.renderContent(node);
@@ -568,6 +609,9 @@ const basicMarkdownSerializerNodes = {
     state.write(node.attrs.html);
     state.closeBlock(node);
   },
+  soft_break: serializeSoftBreak,
+  ...deflistSerializerNodes,
+  ...htmlSerializerNodes,
   yfm_html_block(state, node) {
     state.write(`:::html\n${node.attrs.html}\n:::`);
     state.closeBlock(node);
@@ -604,6 +648,7 @@ const basicMarkdownSerializerNodes = {
 const basicMarkdownSerializerMarks = {
   code: serializeCode,
   em: serializeItalic,
+  link: serializeLink,
   strong: serializeBold,
   color: {
     close: "</span>",
@@ -1288,7 +1333,7 @@ export function createBasicEditorCommands(): BasicEditorCommands {
     },
     insertTable: createTableCommand,
     italic: toggleItalic,
-    link: (href) => toggleMark(getMarkType("link"), { href }),
+    link: (href) => toggleLink(href),
     mark: toggleMark(getMarkType("mark")),
     orderedList: toList(getNodeType("ordered_list")),
     paragraph: setBlockType(getNodeType("paragraph")),

@@ -79,6 +79,37 @@ export {
     horizontalRuleMarkupAttr,
     horizontalRuleNodeName,
 } from './extensions/markdown/horizontal-rule';
+export {
+    getLinkType,
+    Link,
+    LinkAttr,
+    LinkSpecs,
+    linkMarkName,
+    removeLink,
+    toggleLink,
+} from './extensions/markdown/link';
+export type {LinkOptions} from './extensions/markdown/link';
+export {
+    addBreak,
+    BreakNodeName,
+    Breaks,
+    BreaksSpecs,
+    isBreakNode,
+} from './extensions/markdown/breaks';
+export type {BreaksOptions} from './extensions/markdown/breaks';
+export {
+    Deflist,
+    DeflistAttr,
+    DeflistNode,
+    DeflistSpecs,
+    getDeflistTypes,
+    splitDeflist,
+    wrapToDeflist,
+} from './extensions/markdown/deflist';
+export {Html, HtmlAttr, HtmlNode} from './extensions/markdown/html';
+export {addImage, getImageType, Image, ImageAttr, imageNodeName} from './extensions/markdown/image';
+export type {AddImageAttrs} from './extensions/markdown/image';
+export {getMarkType, Mark, markMarkName, toggleHighlight} from './extensions/markdown/mark';
 export {BaseInputRules, BaseKeymap, BaseSchema} from './extensions/base';
 export type {BaseSchemaOptions} from './extensions/base';
 export {ZeroPreset} from './presets/zero';

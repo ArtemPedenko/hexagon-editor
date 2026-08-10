@@ -25,16 +25,26 @@ import type {CodeBlockOptions} from '../extensions/markdown/code-block';
 import {Heading} from '../extensions/markdown/heading';
 import type {HeadingOptions} from '../extensions/markdown/heading';
 import {HorizontalRule} from '../extensions/markdown/horizontal-rule';
+import {Link} from '../extensions/markdown/link';
+import type {LinkOptions} from '../extensions/markdown/link';
+import {Breaks} from '../extensions/markdown/breaks';
+import type {BreaksOptions} from '../extensions/markdown/breaks';
+import {Deflist} from '../extensions/markdown/deflist';
+import {Html} from '../extensions/markdown/html';
+import {Image} from '../extensions/markdown/image';
+import {Mark} from '../extensions/markdown/mark';
 
 import {ZeroPreset} from './zero';
 
 export interface DefaultPresetOptions {
     baseSchema?: BaseSchemaOptions;
     blockquote?: BlockquoteOptions;
+    breaks?: BreaksOptions;
     bold?: BoldOptions;
     code?: CodeOptions;
     codeBlock?: CodeBlockOptions;
     heading?: HeadingOptions;
+    link?: LinkOptions;
     italic?: ItalicOptions;
     filePaste?: FilePasteOptions;
     history?: HistoryOptions;
@@ -54,6 +64,12 @@ export const DefaultPreset: ExtensionAuto<DefaultPresetOptions> = (builder, opti
         .use(CodeBlock, options?.codeBlock ?? {})
         .use(Heading, options?.heading ?? {})
         .use(HorizontalRule)
+        .use(Link, options?.link ?? {})
+        .use(Breaks, options?.breaks ?? {})
+        .use(Deflist)
+        .use(Html)
+        .use(Image)
+        .use(Mark)
         .use(Lists, options?.lists ?? {})
         .use(History, options?.history ?? {})
         .use(Placeholder, options?.placeholder ?? {})

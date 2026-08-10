@@ -45,8 +45,13 @@
 | `CodeBlock` | `extensions/markdown/{code-block,code-block-specs}.ts`, `core/basic-editor.ts` | partial | Schema/parser/serializer specs, безопасный fence, Tab, shortcut option и команды подключены к DefaultPreset/visual editor; IDE-paste, Vue node-view, line numbers и highlight pending. |
 | `Heading` | `extensions/markdown/{heading,heading-specs}.ts`, `core/basic-editor.ts` | done | Schema/parser/serializer specs, input rule, shortcut options и toggle/reset commands подключены к DefaultPreset/visual editor; добавочные attrs existing codec сохранены до переноса FoldingHeading. |
 | `HorizontalRule` | `extensions/markdown/{horizontal-rule,horizontal-rule-specs}.ts`, `core/basic-editor.ts` | done | Schema/parser/serializer specs, markup-preserving input rule и вставка rule с последующим paragraph подключены к DefaultPreset/visual editor. |
-| `Breaks`, `Link` | `src/extensions/markdown/*` | pending | Функции частично присутствуют в `basic-editor`, но extension API не перенесён. |
-| `Deflist`, `Html`, `Image`, `Mark`, `Strike`, `Subscript`, `Superscript`, `Table`, `Underline` | `src/extensions/markdown/*` | pending | То же: runtime-фрагменты не считаются ported extension. |
+| `Link` | `extensions/markdown/{link,link-specs}.ts`, `core/basic-editor.ts` | partial | Mark/schema/parser/serializer specs, input rule и toggle/remove commands подключены к DefaultPreset/visual editor; tooltip, placeholder widget, URL-paste enhancement и Vue form pending. |
+| `Breaks` | `extensions/markdown/{breaks,breaks-specs}.ts`, `core/basic-editor.ts` | done | hard/soft break schema/parser/serializer, preferred-break option и Shift+Enter command подключены к DefaultPreset/visual editor. |
+| `Deflist` | `extensions/markdown/{deflist,deflist-specs}.ts`, `core/basic-editor.ts` | partial | Schema/parser/serializer specs with upstream `dl`/`dt`/`dd` nodes and wrap command подключены к DefaultPreset/visual editor; specialized `splitDeflist` ожидает common parent-node utilities. |
+| `Html` | `extensions/markdown/html.ts`, `core/basic-editor.ts` | partial | upstream html_block/html_inline schema/parser/serializer подключены к DefaultPreset/visual codec; block renderer пока сохраняет текущий raw HTML без upstream sanitizer. |
+| `Image` | `extensions/markdown/image.ts`, `core/basic-editor.ts` | partial | Schema/parser/serializer и insertion command подключены к DefaultPreset/visual editor; URL-paste enhancement и upstream actions/forms pending. |
+| `Mark` | `extensions/markdown/mark.ts`, `core/basic-editor.ts` | done | mark schema/parser/serializer, `==` input rule и toggle command подключены к DefaultPreset/visual editor. |
+| `Strike`, `Subscript`, `Superscript`, `Table`, `Underline` | `src/extensions/markdown/*` | pending | То же: runtime-фрагменты не считаются ported extension. |
 | `additional/FoldingHeading`, `Math`, `Mermaid`, `QuoteLink`, `YfmHtmlBlock` | `src/extensions/additional/*` | pending | В `basic-editor` есть часть рендера/Markdown, но отсутствуют upstream extensions/actions/views. |
 | `additional/GPT/*`, `icons/GPT*.tsx`, GPT i18n/tests | — | excluded | Явное исключение. |
 
@@ -84,6 +89,6 @@
 
 ## Следующий реализуемый срез
 
-1. Перенести `extensions/markdown/Link` как самостоятельный extension: mark/parser/serializer, command/keymap и tests.
-2. Затем перенести базовое extension `Breaks`.
+1. Перенести `extensions/markdown/Strike` как самостоятельный extension.
+2. Затем продолжить extensions `Subscript`, `Superscript`, `Table`, `Underline`.
 3. Для каждого последующего расширения сначала переносить non-React код и tests, затем Vue node/widget/form view и Chromium scenario.
