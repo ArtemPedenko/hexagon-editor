@@ -72,6 +72,18 @@ import {
   toggleItalic,
 } from "../extensions/markdown/italic";
 import {
+  codeMarkSpec,
+  codeTokenSpec,
+  serializeCode,
+  toggleCode,
+} from "../extensions/markdown/code";
+import {
+  codeBlockNodeSpec,
+  codeBlockTokenSpecs,
+  serializeCodeBlock,
+  setCodeBlock,
+} from "../extensions/markdown/code-block";
+import {
   listNodeSpecs,
   listSerializerNodes,
   listTokenSpecs,
@@ -223,11 +235,13 @@ const extendedMarkdownNodes: Record<string, NodeSpec> = {
 /** Schema for the first WYSIWYG milestone. YFM-specific nodes are added later. */
 export const basicMarkdownSchema: Schema = new Schema({
   marks: defaultMarkdownSchema.spec.marks
+    .update("code", codeMarkSpec)
     .update("em", italicMarkSpec)
     .update("strong", boldMarkSpec)
     .append(basicMarks),
   nodes: defaultMarkdownSchema.spec.nodes
     .update("blockquote", blockquoteNodeSpec)
+    .update("code_block", codeBlockNodeSpec)
     .update("list_item", listNodeSpecs.list_item)
     .update("bullet_list", listNodeSpecs.bullet_list)
     .update("ordered_list", listNodeSpecs.ordered_list)
@@ -252,6 +266,8 @@ export const basicMarkdownSchema: Schema = new Schema({
 
 const tableTokenSpecs: Record<string, ParseSpec> = {
   blockquote: blockquoteTokenSpec,
+  code_inline: codeTokenSpec,
+  ...codeBlockTokenSpecs,
   em: italicTokenSpec,
   strong: boldTokenSpec,
   ...listTokenSpecs,
@@ -495,6 +511,7 @@ function createBasicDefaultPresetPlugins(
 
 const basicMarkdownSerializerNodes = {
   blockquote: serializeBlockquote,
+  code_block: serializeCodeBlock,
   ...listSerializerNodes,
   definition_description(state, node) {
     state.renderContent(node);
@@ -575,6 +592,7 @@ const basicMarkdownSerializerNodes = {
 };
 
 const basicMarkdownSerializerMarks = {
+  code: serializeCode,
   em: serializeItalic,
   strong: serializeBold,
   color: {
@@ -1221,8 +1239,8 @@ export function createBasicEditorCommands(): BasicEditorCommands {
   return {
     bold: toggleBold,
     bulletList: toList(getNodeType("bullet_list")),
-    code: toggleMark(getMarkType("code")),
-    codeBlock: setBlockType(getNodeType("code_block")),
+    code: toggleCode,
+    codeBlock: setCodeBlock,
     heading: (level) => setBlockType(getNodeType("heading"), { level }),
     horizontalRule: (state, dispatch) => {
       if (dispatch !== undefined) {

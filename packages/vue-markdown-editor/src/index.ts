@@ -42,6 +42,25 @@ export {
     toggleItalic,
 } from './extensions/markdown/italic';
 export type {ItalicOptions} from './extensions/markdown/italic';
+export {
+    Code,
+    CodeSpecs,
+    codeMarkName,
+    getCodeType,
+    toggleCode,
+} from './extensions/markdown/code';
+export type {CodeOptions} from './extensions/markdown/code';
+export {
+    CodeBlock,
+    CodeBlockAttrs,
+    CodeBlockSpecs,
+    codeBlockNodeName,
+    getCodeBlockType,
+    newlineInCode,
+    resetCodeBlock,
+    setCodeBlock,
+} from './extensions/markdown/code-block';
+export type {CodeBlockOptions} from './extensions/markdown/code-block';
 export {BaseInputRules, BaseKeymap, BaseSchema} from './extensions/base';
 export type {BaseSchemaOptions} from './extensions/base';
 export {ZeroPreset} from './presets/zero';
