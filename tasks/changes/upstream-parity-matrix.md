@@ -57,7 +57,8 @@
 | `Table` | `extensions/markdown/{table,table-specs,table-actions}.ts`, `core/basic-editor.ts` | partial | Самостоятельный extension: upstream-style schema, Markdown parser/serializer, создание/удаление таблицы, добавление/удаление строк и колонок, Tab/Shift+Tab и Enter navigation, column alignment, piped Markdown paste и unit-тест; включён в `DefaultPreset` и visual host. Контекстное меню visual host использует новые команды. Full upstream plugin/action parity pending. |
 | `Underline` | `extensions/markdown/underline.ts` | done | Самостоятельный extension: markdown-it, schema, parser/serializer, input rule, toggle-команда и unit-тест; включён в `DefaultPreset`. |
 | `additional/FoldingHeading` | `extensions/additional/folding-heading.ts`, `core/basic-editor.ts` | partial | Folding plugin и toggle-команда вынесены в самостоятельный extension и подключены к DefaultPreset; Markdown codec и toolbar сохраняют текущую семантику. Upstream input rules, click affordance и full plugin parity pending. |
-| `additional/Math`, `Mermaid`, `QuoteLink`, `YfmHtmlBlock` | `src/extensions/additional/*` | pending | В `basic-editor` есть часть рендера/Markdown, но отсутствуют upstream extensions/actions/views. |
+| `additional/Math` | `extensions/additional/math.ts`, `core/basic-editor.ts` | partial | Самостоятельный extension: локальный Markdown-it tokenizer без Diplodoc, schema/parser/serializer, input rules, VS Code LaTeX paste и keymap для inline-формул; KaTeX renderer и локальный source editor подключены в visual host. Upstream React node views и полный action contract pending. |
+| `additional/Mermaid`, `QuoteLink`, `YfmHtmlBlock` | `src/extensions/additional/*` | pending | В `basic-editor` есть часть рендера/Markdown, но отсутствуют upstream extensions/actions/views. |
 | `additional/GPT/*`, `icons/GPT*.tsx`, GPT i18n/tests | — | excluded | Явное исключение. |
 
 ## Behavior extensions

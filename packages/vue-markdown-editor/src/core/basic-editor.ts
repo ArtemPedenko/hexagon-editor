@@ -19,6 +19,7 @@ import type {
 } from "prosemirror-model";
 import type { ParseSpec } from "prosemirror-markdown";
 import { EditorState, NodeSelection, Plugin, PluginKey, TextSelection } from "prosemirror-state";
+import type {Transaction} from "prosemirror-state";
 import type { Command, StateField } from "prosemirror-state";
 import {
   liftListItem,
@@ -143,6 +144,7 @@ import {
   tableSerializerNodes,
 } from "../extensions/markdown/table";
 import {toggleFoldingHeading} from '../extensions/additional/folding-heading';
+import {configureMathMarkdown, createMathNodeSpecs, defaultMathLatex, mathSerializerNodes, mathTokenSpecs} from '../extensions/additional/math';
 
 const basicMarks: Record<string, MarkSpec> = {
   ins: underlineMarkSpec,
@@ -218,19 +220,7 @@ function renderYfmHtml(source: string): HTMLElement {
 }
 
 const extendedMarkdownNodes: Record<string, NodeSpec> = {
-  inline_math: {
-    atom: true,
-    attrs: { latex: { default: "" } },
-    group: "inline",
-    inline: true,
-    toDOM: (node) => renderOptionalBlock("math", node.attrs.latex, false),
-  },
-  math_block: {
-    atom: true,
-    attrs: { latex: { default: "" } },
-    group: "block",
-    toDOM: (node) => renderOptionalBlock("math", node.attrs.latex),
-  },
+  ...createMathNodeSpecs((latex, display) => renderOptionalBlock("math", latex, display)),
   mermaid: {
     atom: true,
     attrs: { source: { default: "" } },
@@ -361,14 +351,7 @@ const tableTokenSpecs: Record<string, ParseSpec> = {
       level: Number(token.tag.slice(1)),
     }),
   },
-  inline_math: {
-    node: "inline_math",
-    getAttrs: (token) => ({ latex: token.content }),
-  },
-  math_block: {
-    node: "math_block",
-    getAttrs: (token) => ({ latex: token.content }),
-  },
+  ...mathTokenSpecs,
   mermaid: {
     node: "mermaid",
     getAttrs: (token) => ({ source: token.content }),
@@ -400,39 +383,7 @@ function createExtendedMarkdownIt(markdown = new MarkdownIt("commonmark", { html
     .enable("strikethrough")
     .use(subPlugin)
     .use(insPlugin);
-  markdown.inline.ruler.after("escape", "inline_math", (state, silent) => {
-    if (state.src.charCodeAt(state.pos) !== 0x24) return false;
-    const close = state.src.indexOf("$", state.pos + 1);
-    if (close <= state.pos + 1 || state.src.charCodeAt(state.pos + 1) === 0x24)
-      return false;
-    if (!silent) {
-      const token = state.push("inline_math", "", 0);
-      token.content = state.src.slice(state.pos + 1, close);
-    }
-    state.pos = close + 1;
-    return true;
-  });
-  markdown.block.ruler.before(
-    "fence",
-    "math_block",
-    (state, startLine, endLine, silent) => {
-      if (state.getLines(startLine, startLine + 1, 0, false).trim() !== "$$")
-        return false;
-      let line = startLine + 1;
-      while (
-        line < endLine &&
-        state.getLines(line, line + 1, 0, false).trim() !== "$$"
-      )
-        line += 1;
-      if (line === endLine) return false;
-      if (!silent) {
-        const token = state.push("math_block", "", 0);
-        token.content = state.getLines(startLine + 1, line, 0, false).trim();
-      }
-      state.line = line + 1;
-      return true;
-    },
-  );
+  configureMathMarkdown(markdown);
   markdown.core.ruler.after("block", "advanced_fences", (state) => {
     for (const token of state.tokens) {
       if (token.type === "fence" && token.info.trim() === "mermaid")
@@ -625,13 +576,7 @@ const basicMarkdownSerializerNodes = {
     state.write(`::: ${node.attrs.name}\n${node.attrs.content}\n:::`);
     state.closeBlock(node);
   },
-  inline_math(state, node) {
-    state.write(`$${node.attrs.latex}$`);
-  },
-  math_block(state, node) {
-    state.write(`$$\n${node.attrs.latex}\n$$`);
-    state.closeBlock(node);
-  },
+  ...mathSerializerNodes,
   mermaid(state, node) {
     state.write(`\`\`\`mermaid\n${node.attrs.source}\n\`\`\``);
     state.closeBlock(node);
@@ -769,6 +714,7 @@ function setColorCommand(color: string): Command {
 }
 
 export interface BasicEditorCommands {
+  addMathInline: Command;
   addTableColumn: Command;
   addTableRow: Command;
   bold: Command;
@@ -797,6 +743,7 @@ export interface BasicEditorCommands {
   sinkListItem: Command;
   splitListItem: Command;
   strikethrough: Command;
+  toMathBlock: Command;
   toggleHeadingFolding: Command;
   underline: Command;
   undo: Command;
@@ -1339,12 +1286,41 @@ function createFoldingPlugin(): Plugin<DecorationSet> {
 
 const toggleHeadingFolding = toggleFoldingHeading;
 
+function insertMathBlockAndEdit(state: EditorState, dispatch?: (transaction: Transaction) => void): boolean {
+  const {$from, empty} = state.selection;
+  if (!empty || !$from.parent.isTextblock || $from.parent.content.size !== 0) return false;
+  if (dispatch !== undefined) {
+    const position = $from.before();
+    const transaction = state.tr.replaceWith(
+      position,
+      $from.after(),
+      getNodeType("math_block").create({latex: defaultMathLatex}),
+    );
+    transaction.setMeta(atomicSourcePluginKey, transaction.mapping.map(position, -1)).scrollIntoView();
+    dispatch(transaction);
+  }
+  return true;
+}
+
+function insertInlineMathAndEdit(state: EditorState, dispatch?: (transaction: Transaction) => void): boolean {
+  if (dispatch !== undefined) {
+    const position = state.selection.from;
+    const transaction = state.tr.replaceSelectionWith(
+      getNodeType("inline_math").create({latex: defaultMathLatex}),
+    );
+    transaction.setMeta(atomicSourcePluginKey, transaction.mapping.map(position, -1)).scrollIntoView();
+    dispatch(transaction);
+  }
+  return true;
+}
+
 /** Framework-agnostic commands consumed later by the Vue toolbar and shortcuts. */
 export function createBasicEditorCommands(): BasicEditorCommands {
   const historyActions = createHistoryActions();
   const listItem = getNodeType("list_item");
 
   return {
+    addMathInline: insertInlineMathAndEdit,
     addTableColumn,
     addTableRow,
     bold: toggleBold,
@@ -1358,37 +1334,8 @@ export function createBasicEditorCommands(): BasicEditorCommands {
     horizontalRule: addHorizontalRule(getNodeType("horizontal_rule")),
     insertFile: insertFileCommand,
     insertImage: insertImageCommand,
-    insertMathBlock: (state, dispatch) => {
-      const {$from, empty} = state.selection;
-      if (!empty || !$from.parent.isTextblock || $from.parent.content.size !== 0)
-        return false;
-      if (dispatch !== undefined) {
-        const position = $from.before();
-        const transaction = state.tr.replaceWith(
-          position,
-          $from.after(),
-          getNodeType("math_block").create({latex: "E = mc^2"}),
-        );
-        transaction
-          .setMeta(atomicSourcePluginKey, transaction.mapping.map(position, -1))
-          .scrollIntoView();
-        dispatch(transaction);
-      }
-      return true;
-    },
-    insertInlineMath: (state, dispatch) => {
-      if (dispatch !== undefined) {
-        const position = state.selection.from;
-        const transaction = state.tr.replaceSelectionWith(
-          getNodeType("inline_math").create({latex: "E = mc^2"}),
-        );
-        transaction
-          .setMeta(atomicSourcePluginKey, transaction.mapping.map(position, -1))
-          .scrollIntoView();
-        dispatch(transaction);
-      }
-      return true;
-    },
+    insertMathBlock: insertMathBlockAndEdit,
+    insertInlineMath: insertInlineMathAndEdit,
     insertTable: createTableCommand,
     italic: toggleItalic,
     link: (href) => toggleLink(href),
@@ -1402,6 +1349,7 @@ export function createBasicEditorCommands(): BasicEditorCommands {
     sinkListItem: sinkOnlySelectedListItem(listItem),
     splitListItem: splitListItem(listItem),
     strikethrough: toggleMark(getMarkType("strikethrough")),
+    toMathBlock: insertMathBlockAndEdit,
     toggleHeadingFolding,
     underline: toggleMark(getMarkType("underline")),
     undo: historyActions.undo,
