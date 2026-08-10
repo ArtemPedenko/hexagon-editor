@@ -1,8 +1,8 @@
 export interface EditorAction<Arguments = undefined, Metadata = undefined> {
-    isActive(): boolean;
-    isEnabled(arguments_: Arguments): boolean;
+    isActive(arguments_?: Arguments): boolean;
+    isEnabled(arguments_?: Arguments): boolean;
     metadata(): Metadata;
-    run(arguments_: Arguments): void;
+    run(arguments_?: Arguments): void;
 }
 
 export type EditorActions = Record<string, EditorAction<unknown, unknown>>;
@@ -28,4 +28,3 @@ export class ActionsManager<Actions extends EditorActions = EditorActions> {
         return this;
     }
 }
-

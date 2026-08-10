@@ -881,6 +881,10 @@ defineExpose<MarkdownEditorExposed>({
     display: none;
 }
 
+.markdown-editor :deep(.markdown-editor__folding-content) {
+    position: relative;
+}
+
 .markdown-editor :deep(.markdown-editor__folding-heading) {
     position: relative;
     padding-left: 1.4rem;

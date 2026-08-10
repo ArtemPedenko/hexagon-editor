@@ -321,6 +321,19 @@ test.describe('Markdown editor playground', () => {
             .toHaveClass(/markdown-editor__folded-content/);
     });
 
+    test('folds a section from its heading gutter', async ({page}) => {
+        await page.goto('/');
+
+        const heading = page.locator('.ProseMirror h2');
+        const bounds = await heading.boundingBox();
+        if (bounds === null) throw new Error('Folding heading is not visible');
+        await heading.click({position: {x: 4, y: Math.min(12, bounds.height / 2)}});
+
+        await expect(heading).toHaveClass(/markdown-editor__folding-heading--folded/);
+        await expect(page.locator('.ProseMirror p').filter({hasText: 'Этот раздел можно свернуть кнопкой в тулбаре.'}))
+            .toHaveClass(/markdown-editor__folded-content/);
+    });
+
     test('preserves folding heading attributes when changing editor modes', async ({page}) => {
         await page.goto('/');
 
