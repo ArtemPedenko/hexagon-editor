@@ -2,7 +2,7 @@
 
 ## Статус постановки
 
-В работе — parity-инвентаризация зафиксирована в `tasks/changes/upstream-parity-matrix.md`; перенесены foundation `ExtensionBuilder`/`ExtensionsManager`, Markdown serializer registration, `Lists` и `WysiwygContentHandler`. Handler подключён к visual editor для обновления Markdown через upstream-транзакции. Следующий срез — core registries и Markdown parser/serializer contracts.
+В работе — parity-инвентаризация зафиксирована в `tasks/changes/upstream-parity-matrix.md`; перенесены foundation `ExtensionBuilder`/`ExtensionsManager`, Markdown serializer registration, `Lists`, `Blockquote`, `WysiwygContentHandler`, `History`, `Clipboard`, `FilePaste`, `Placeholder`, `Selection` и Vue-адаптация `SelectionContext`. Все подключаемые behavior/markdown-расширения включены в visual editor через `DefaultPreset`. Следующий срез — `Bold`.
 
 ## Решения и [Уточнить]
 

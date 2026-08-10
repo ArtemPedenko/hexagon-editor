@@ -1,11 +1,8 @@
 import {
-  baseKeymap,
   chainCommands,
   setBlockType,
   toggleMark,
-  wrapIn,
 } from "prosemirror-commands";
-import { history, redo, undo } from "prosemirror-history";
 import { keymap } from "prosemirror-keymap";
 import katex from "katex";
 import MarkdownIt from "markdown-it";
@@ -44,11 +41,8 @@ import "katex/dist/katex.min.css";
 import { defaultMarkdownSchema, MarkdownCodec } from "./markdown";
 import { WysiwygContentHandler } from "./content-handler";
 import {
-  collapseListsPlugin,
-  createListsInputRules,
   joinPrevList,
   liftEmptyListItem,
-  mergeListsPlugin,
   sinkOnlySelectedListItem,
   toList,
 } from "./lists";
@@ -56,6 +50,20 @@ import { ExtensionsManager } from "./extensions-manager";
 import type { ExtensionBuilder } from "./extension-builder";
 import { mountBasicMarkupEditor } from "./markup-editor";
 import { getAdvancedMarkdownRenderers } from "./optional-renderers";
+import { DefaultPreset } from "../presets/default";
+import { createHistoryActions } from "../extensions/behavior/history";
+import type { SelectionContextOptions } from "../extensions/behavior/selection-context";
+import {
+  blockquoteNodeSpec,
+  blockquoteTokenSpec,
+  serializeBlockquote,
+  toggleQuote,
+} from "../extensions/markdown/blockquote";
+import {
+  listNodeSpecs,
+  listSerializerNodes,
+  listTokenSpecs,
+} from "../extensions/markdown/list-specs";
 
 const basicMarks: Record<string, MarkSpec> = {
   color: {
@@ -204,27 +212,10 @@ const extendedMarkdownNodes: Record<string, NodeSpec> = {
 export const basicMarkdownSchema: Schema = new Schema({
   marks: defaultMarkdownSchema.spec.marks.append(basicMarks),
   nodes: defaultMarkdownSchema.spec.nodes
-    .update("list_item", {
-      attrs: { "data-line": { default: null }, markup: { default: null } },
-      content: "(paragraph|block)+",
-      defining: true,
-      parseDOM: [{ tag: "li" }],
-      toDOM: (node) => ["li", node.attrs, 0],
-    })
-    .update("bullet_list", {
-      attrs: { markup: { default: "*" }, tight: { default: true } },
-      content: "list_item+",
-      group: "block",
-      parseDOM: [{ tag: "ul", getAttrs: (dom) => ({ tight: (dom as HTMLElement).hasAttribute("data-tight") }) }],
-      toDOM: (node) => ["ul", { "data-tight": node.attrs.tight ? "true" : null }, 0],
-    })
-    .update("ordered_list", {
-      attrs: { markup: { default: "." }, order: { default: 1 }, tight: { default: true } },
-      content: "list_item+",
-      group: "block",
-      parseDOM: [{ tag: "ol", getAttrs: (dom) => ({ order: (dom as HTMLElement).hasAttribute("start") ? Number((dom as HTMLElement).getAttribute("start")) : 1, tight: (dom as HTMLElement).hasAttribute("data-tight") }) }],
-      toDOM: (node) => ["ol", { start: node.attrs.order === 1 ? null : node.attrs.order, "data-tight": node.attrs.tight ? "true" : null }, 0],
-    })
+    .update("blockquote", blockquoteNodeSpec)
+    .update("list_item", listNodeSpecs.list_item)
+    .update("bullet_list", listNodeSpecs.bullet_list)
+    .update("ordered_list", listNodeSpecs.ordered_list)
     .update("heading", {
       attrs: {
         class: { default: null },
@@ -245,13 +236,8 @@ export const basicMarkdownSchema: Schema = new Schema({
 });
 
 const tableTokenSpecs: Record<string, ParseSpec> = {
-  bullet_list: {
-    block: "bullet_list",
-    getAttrs: (token, tokens, index) => ({
-      markup: token.markup,
-      tight: listIsTight(tokens, index),
-    }),
-  },
+  blockquote: blockquoteTokenSpec,
+  ...listTokenSpecs,
   dd: { block: "definition_description" },
   dl: { block: "definition_list" },
   dt: { block: "definition_term" },
@@ -279,24 +265,9 @@ const tableTokenSpecs: Record<string, ParseSpec> = {
     node: "inline_math",
     getAttrs: (token) => ({ latex: token.content }),
   },
-  list_item: {
-    block: "list_item",
-    getAttrs: (token) => ({
-      "data-line": token.attrGet("data-line"),
-      markup: token.markup,
-    }),
-  },
   math_block: {
     node: "math_block",
     getAttrs: (token) => ({ latex: token.content }),
-  },
-  ordered_list: {
-    block: "ordered_list",
-    getAttrs: (token, tokens, index) => ({
-      markup: token.markup,
-      order: Number(token.attrGet("start")) || 1,
-      tight: listIsTight(tokens, index),
-    }),
   },
   mermaid: {
     node: "mermaid",
@@ -320,13 +291,6 @@ const tableTokenSpecs: Record<string, ParseSpec> = {
     getAttrs: (token) => ({ html: token.content }),
   },
 };
-
-function listIsTight(tokens: Array<{ hidden: boolean; type: string }>, index: number): boolean {
-  for (let next = index + 1; next < tokens.length; next += 1) {
-    if (tokens[next]?.type !== "list_item_open") return tokens[next]?.hidden === true;
-  }
-  return false;
-}
 
 function createExtendedMarkdownIt(markdown = new MarkdownIt("commonmark", { html: true })): MarkdownIt {
   markdown
@@ -495,10 +459,24 @@ const basicMarkdownParser = ExtensionsManager.process(
   },
 ).textParser;
 
+function createBasicDefaultPresetPlugins(
+  placeholder: string,
+  onFiles: MountBasicWysiwygEditorOptions["onFiles"],
+  selectionContext: MountBasicWysiwygEditorOptions["selectionContext"],
+): Plugin[] {
+  return ExtensionsManager.plugins(
+    (builder) => builder.use(DefaultPreset, {
+      filePaste: { onFiles },
+      placeholder: { content: placeholder },
+      selectionContext,
+    }),
+    basicMarkdownSchema,
+  );
+}
+
 const basicMarkdownSerializerNodes = {
-  bullet_list(state, node) {
-    state.renderList(node, "  ", () => `${getListMarkup(node, ["-", "+", "*"], "*")} `);
-  },
+  blockquote: serializeBlockquote,
+  ...listSerializerNodes,
   definition_description(state, node) {
     state.renderContent(node);
     state.closeBlock(node);
@@ -521,16 +499,6 @@ const basicMarkdownSerializerNodes = {
   math_block(state, node) {
     state.write(`$$\n${node.attrs.latex}\n$$`);
     state.closeBlock(node);
-  },
-  ordered_list(state, node) {
-    const start = Number(node.attrs.order) || 1;
-    const maxWidth = String(start + node.childCount - 1).length;
-    const space = state.repeat(" ", maxWidth + 2);
-    state.renderList(node, space, (index) => {
-      const number = String(start + index);
-      const markup = getListMarkup(node, [".", ")"], ".");
-      return `${state.repeat(" ", maxWidth - number.length)}${number}${markup} `;
-    });
   },
   mermaid(state, node) {
     state.write(`\`\`\`mermaid\n${node.attrs.source}\n\`\`\``);
@@ -609,15 +577,6 @@ const basicMarkdownSerializer = ExtensionsManager.process(
   },
   { baseSchema: basicMarkdownSchema, markdown: { html: true } },
 ).serializer;
-
-function getListMarkup(
-  list: ProseMirrorNode,
-  supported: readonly string[],
-  fallback: string,
-): string {
-  const listMarkup = list.attrs.markup;
-  return supported.includes(listMarkup) ? listMarkup : fallback;
-}
 
 export const basicMarkdownCodec = new MarkdownCodec({
   parser: basicMarkdownParser,
@@ -1235,6 +1194,7 @@ const toggleHeadingFolding: Command = (state, dispatch) => {
 
 /** Framework-agnostic commands consumed later by the Vue toolbar and shortcuts. */
 export function createBasicEditorCommands(): BasicEditorCommands {
+  const historyActions = createHistoryActions();
   const listItem = getNodeType("list_item");
 
   return {
@@ -1292,8 +1252,8 @@ export function createBasicEditorCommands(): BasicEditorCommands {
     mark: toggleMark(getMarkType("mark")),
     orderedList: toList(getNodeType("ordered_list")),
     paragraph: setBlockType(getNodeType("paragraph")),
-    quote: wrapIn(getNodeType("blockquote")),
-    redo,
+    quote: toggleQuote,
+    redo: historyActions.redo,
     setColor: setColorCommand,
     liftListItem: liftListItem(listItem),
     sinkListItem: sinkOnlySelectedListItem(listItem),
@@ -1301,7 +1261,7 @@ export function createBasicEditorCommands(): BasicEditorCommands {
     strikethrough: toggleMark(getMarkType("strikethrough")),
     toggleHeadingFolding,
     underline: toggleMark(getMarkType("underline")),
-    undo,
+    undo: historyActions.undo,
   };
 }
 
@@ -1387,6 +1347,7 @@ export interface MountBasicWysiwygEditorOptions {
   onSelectionChange?(selection: BasicWysiwygSelectionState): void;
   placeholder?: string;
   plugins?: readonly Plugin[];
+  selectionContext?: SelectionContextOptions;
   target: HTMLElement;
 }
 
@@ -1402,6 +1363,7 @@ export function mountBasicWysiwygEditor({
   onSelectionChange,
   placeholder = "",
   plugins = [],
+  selectionContext,
   target,
 }: MountBasicWysiwygEditorOptions): BasicWysiwygEditor {
   const commands = createBasicEditorCommands();
@@ -1411,27 +1373,6 @@ export function mountBasicWysiwygEditor({
   }
   let view: EditorView;
   view = new EditorView(target, {
-    attributes: { "data-placeholder": placeholder },
-    handleDOMEvents: {
-      drop: (_view, event) => {
-        const files = Array.from(event.dataTransfer?.files ?? []);
-        if (files.length === 0 || onFiles === undefined) {
-          return false;
-        }
-        event.preventDefault();
-        onFiles(files);
-        return true;
-      },
-      paste: (_view, event) => {
-        const files = Array.from(event.clipboardData?.files ?? []);
-        if (files.length === 0 || onFiles === undefined) {
-          return false;
-        }
-        event.preventDefault();
-        onFiles(files);
-        return true;
-      },
-    },
     dispatchTransaction(transaction) {
       const state = view.state.apply(transaction);
       view.updateState(state);
@@ -1447,10 +1388,7 @@ export function mountBasicWysiwygEditor({
         createFoldingPlugin(),
         createAtomicSourceEditorPlugin(),
         createTableControlsPlugin(),
-        mergeListsPlugin(),
-        collapseListsPlugin(),
-        createListsInputRules(basicMarkdownSchema),
-        history(),
+        ...createBasicDefaultPresetPlugins(placeholder, onFiles, selectionContext),
         keymap({
           "Mod-[": commands.liftListItem,
           "Mod-]": commands.sinkListItem,
@@ -1463,7 +1401,6 @@ export function mountBasicWysiwygEditor({
           "Mod-i": commands.italic,
           "Mod-z": commands.undo,
         }),
-        keymap(baseKeymap),
         tableEditing(),
         ...plugins,
       ],

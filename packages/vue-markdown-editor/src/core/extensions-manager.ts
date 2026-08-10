@@ -20,11 +20,14 @@ import type {
     ExtensionMarkSpec,
     ExtensionNodeSpec,
 } from './extension-builder';
+import {ParserTokensRegistry, SerializerTokensRegistry} from './registries';
+import type {SchemaSpecModifier} from './registries';
 
 export interface ExtensionsManagerOptions {
     baseSchema?: Schema;
     markdown?: MarkdownItOptions;
     parserTokens?: Record<string, ParseSpec>;
+    schemaModifier?: SchemaSpecModifier;
 }
 
 export interface ExtensionsBuildResult extends ExtensionDeps {
@@ -41,6 +44,10 @@ export interface ExtensionsBuildResult extends ExtensionDeps {
  * Vue-specific node and widget views remain consumers of this result.
  */
 export class ExtensionsManager {
+    static plugins(extension: Extension, schema: Schema): Plugin[] {
+        return new ExtensionBuilder().use(extension).build().plugins({schema});
+    }
+
     static process(extension: Extension, options: ExtensionsManagerOptions = {}): ExtensionsBuildResult {
         return new ExtensionsManager(extension, options).build();
     }
@@ -85,11 +92,19 @@ export class ExtensionsManager {
         marks: ReadonlyMap<string, ExtensionMarkSpec>,
     ): Schema {
         const base = this.#options.baseSchema ?? defaultMarkdownSchema;
-        if (nodes.size === 0 && marks.size === 0) {
+        if (nodes.size === 0 && marks.size === 0 && this.#options.schemaModifier === undefined) {
             return base;
         }
         let nodeSpecs = base.spec.nodes;
         let markSpecs = base.spec.marks;
+        if (this.#options.schemaModifier !== undefined) {
+            base.spec.nodes.forEach((name, spec) => {
+                nodeSpecs = nodeSpecs.update(
+                    name,
+                    this.#options.schemaModifier?.processNodeSpec(name, spec) ?? spec,
+                );
+            });
+        }
         for (const [name, entry] of nodes) nodeSpecs = nodeSpecs.update(name, entry.spec);
         for (const [name, entry] of marks) markSpecs = markSpecs.update(name, entry.spec);
         return new Schema({marks: markSpecs, nodes: nodeSpecs, topNode: base.spec.topNode});
@@ -100,15 +115,18 @@ export class ExtensionsManager {
         marks: ReadonlyMap<string, ExtensionMarkSpec>,
         extensionTokens: ReadonlyMap<string, unknown>,
     ) {
-        const tokens = {...(this.#options.parserTokens ?? defaultMarkdownParser.tokens)};
-        for (const [name, token] of extensionTokens) tokens[name] = token as typeof tokens[string];
+        const registry = new ParserTokensRegistry();
+        for (const [name, token] of Object.entries(this.#options.parserTokens ?? defaultMarkdownParser.tokens)) {
+            registry.addToken(name, token);
+        }
+        for (const [name, token] of extensionTokens) registry.addToken(name, token as ParseSpec);
         for (const [name, entry] of nodes) {
-            if (entry.fromMd !== undefined) tokens[name] = entry.fromMd as typeof tokens[string];
+            if (entry.fromMd !== undefined) registry.addToken(name, entry.fromMd as ParseSpec);
         }
         for (const [name, entry] of marks) {
-            if (entry.fromMd !== undefined) tokens[name] = entry.fromMd as typeof tokens[string];
+            if (entry.fromMd !== undefined) registry.addToken(name, entry.fromMd as ParseSpec);
         }
-        return tokens;
+        return registry.tokens();
     }
 
     private createSerializer(
@@ -117,16 +135,17 @@ export class ExtensionsManager {
         extensionNodes: ReadonlyMap<string, unknown>,
         extensionMarks: ReadonlyMap<string, unknown>,
     ): MarkdownSerializer {
-        const serializerNodes = {...defaultMarkdownSerializer.nodes};
-        const serializerMarks = {...defaultMarkdownSerializer.marks};
+        const registry = new SerializerTokensRegistry();
+        for (const [name, token] of Object.entries(defaultMarkdownSerializer.nodes)) registry.addNode(name, token);
+        for (const [name, token] of Object.entries(defaultMarkdownSerializer.marks)) registry.addMark(name, token);
         for (const [name, entry] of nodes) {
-            if (entry.toMd !== undefined) serializerNodes[name] = entry.toMd as typeof serializerNodes[string];
+            if (entry.toMd !== undefined) registry.addNode(name, entry.toMd as Parameters<typeof MarkdownSerializer>[0][string]);
         }
         for (const [name, entry] of marks) {
-            if (entry.toMd !== undefined) serializerMarks[name] = entry.toMd as typeof serializerMarks[string];
+            if (entry.toMd !== undefined) registry.addMark(name, entry.toMd as Parameters<typeof MarkdownSerializer>[1][string]);
         }
-        for (const [name, token] of extensionNodes) serializerNodes[name] = token as typeof serializerNodes[string];
-        for (const [name, token] of extensionMarks) serializerMarks[name] = token as typeof serializerMarks[string];
-        return new MarkdownSerializer(serializerNodes, serializerMarks);
+        for (const [name, token] of extensionNodes) registry.addNode(name, token as Parameters<typeof MarkdownSerializer>[0][string]);
+        for (const [name, token] of extensionMarks) registry.addMark(name, token as Parameters<typeof MarkdownSerializer>[1][string]);
+        return registry.createSerializer();
     }
 }

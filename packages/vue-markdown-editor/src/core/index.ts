@@ -45,11 +45,21 @@ export {
 } from './lists';
 export {defaultMarkdownSchema, MarkdownCodec, renderMarkdownPreview} from './markdown';
 export type {MarkdownCodecOptions} from './markdown';
+export {MarkdownParser, MarkdownParserDynamicModifier} from './markdown-parser';
+export type {MarkdownParserDynamicModifierConfig, ParserToken} from './markdown-parser';
+export {SchemaDynamicModifier} from './schema-dynamic-modifier';
+export type {SchemaDynamicModifierConfig} from './schema-dynamic-modifier';
 export {mountBasicMarkupEditor} from './markup-editor';
 export type {BasicMarkupEditor, MountBasicMarkupEditorOptions} from './markup-editor';
 export {configureAdvancedMarkdownRenderers, getAdvancedMarkdownRenderers} from './optional-renderers';
 export type {AdvancedMarkdownRenderers} from './optional-renderers';
-export {ParserTokenRegistry, SchemaSpecRegistry, SerializerTokenRegistry} from './registries';
+export {
+    ParserTokenRegistry,
+    ParserTokensRegistry,
+    SchemaSpecRegistry,
+    SerializerTokenRegistry,
+    SerializerTokensRegistry,
+} from './registries';
 export type {SchemaSpecModifier} from './registries';
 export {
     createVueContextPanelPlugin,

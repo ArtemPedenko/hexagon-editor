@@ -2,11 +2,9 @@
 import {autoUpdate, computePosition, flip, offset, shift} from '@floating-ui/dom';
 import {computed, h, nextTick, onBeforeUnmount, onMounted, ref, watch} from 'vue';
 import type {FunctionalComponent} from 'vue';
-import {TextSelection} from 'prosemirror-state';
 
 import {
     createBasicEditorCommands,
-    createVueContextPanelPlugin,
     mountBasicMarkupEditor,
     mountBasicWysiwygEditor,
 } from './core';
@@ -23,6 +21,7 @@ export interface MarkdownEditorExposed {
     focus(): void;
     getMode(): MarkdownEditorMode;
     getValue(): string;
+    openSearch(): Promise<void>;
     setMode(mode: MarkdownEditorMode): Promise<void>;
     setValue(value: string): void;
 }
@@ -378,14 +377,14 @@ function mountHosts(): void {
                 toolbarState.value = nextSelection;
             },
             placeholder: props.placeholder,
-            plugins: [createVueContextPanelPlugin(selectionPanel, {
+            selectionContext: {
                 className: 'markdown-editor__selection-panel',
+                component: selectionPanel,
                 props: {
                     onBold: () => execute(commands.bold),
                     onItalic: () => execute(commands.italic),
                 },
-                shouldShow: (state) => state.selection instanceof TextSelection,
-            })],
+            },
             target: visualTarget.value,
         });
     }
@@ -414,6 +413,13 @@ async function setMode(nextMode: MarkdownEditorMode): Promise<void> {
     if (changeId === modeChangeId) {
         mountHosts();
     }
+}
+
+async function openSearch(): Promise<void> {
+    if (mode.value === 'wysiwyg') {
+        await setMode('markup');
+    }
+    markupEditor?.openSearch();
 }
 
 function execute(command: Parameters<BasicWysiwygEditor['run']>[0]): void {
@@ -474,6 +480,7 @@ defineExpose<MarkdownEditorExposed>({
     focus: () => (mode.value === 'markup' ? markupEditor?.focus() : visualEditor?.focus()),
     getMode: () => mode.value,
     getValue: () => value.value,
+    openSearch,
     setMode,
     setValue,
 });

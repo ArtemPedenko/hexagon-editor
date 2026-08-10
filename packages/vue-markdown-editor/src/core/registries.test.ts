@@ -1,6 +1,15 @@
 import {describe, expect, it} from 'vitest';
 
-import {ParserTokenRegistry, SchemaSpecRegistry, SerializerTokenRegistry} from './registries';
+import MarkdownIt from 'markdown-it';
+import {defaultMarkdownParser, schema as defaultMarkdownSchema} from 'prosemirror-markdown';
+
+import {
+    ParserTokenRegistry,
+    ParserTokensRegistry,
+    SchemaSpecRegistry,
+    SerializerTokenRegistry,
+    SerializerTokensRegistry,
+} from './registries';
 
 describe('SchemaSpecRegistry', () => {
     it('applies a dynamic node modifier before creating the schema', () => {
@@ -15,6 +24,22 @@ describe('SchemaSpecRegistry', () => {
             .createSchema();
 
         expect(schema.nodes.paragraph?.isAtom).toBe(true);
+    });
+});
+
+describe('runtime token registries', () => {
+    it('creates parser and serializer instances from registered tokens', () => {
+        const parser = new ParserTokensRegistry();
+        for (const [name, token] of Object.entries(defaultMarkdownParser.tokens)) parser.addToken(name, token);
+        const serializer = new SerializerTokensRegistry()
+            .addNode('paragraph', (state, node) => { state.renderInline(node); state.closeBlock(node); })
+            .addNode('text', (state, node) => state.text(node.text ?? ''))
+            .addMark('em', {close: '*', open: '*'});
+
+        const document = parser.createParser(defaultMarkdownSchema, new MarkdownIt('commonmark')).parse('*Text*');
+
+        expect(document.firstChild?.textContent).toBe('Text');
+        expect(serializer.createSerializer().serialize(document)).toBe('*Text*');
     });
 });
 

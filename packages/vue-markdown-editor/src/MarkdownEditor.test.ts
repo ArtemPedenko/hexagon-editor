@@ -85,6 +85,22 @@ describe('MarkdownEditor', () => {
         app.unmount();
     });
 
+    it('opens CodeMirror search from the public editor API', async () => {
+        const editor = ref<MarkdownEditorExposed>();
+        const target = document.createElement('div');
+        const app = createApp(() => h(MarkdownEditor, {ref: editor}));
+
+        document.body.append(target);
+        app.mount(target);
+        await nextTick();
+        await editor.value?.openSearch();
+        await nextTick();
+
+        expect(target.querySelector('.markdown-editor')?.getAttribute('data-mode')).toBe('markup');
+        expect(target.querySelector('.cm-search')).not.toBeNull();
+        app.unmount();
+    });
+
     it('localizes labels, applies the selected theme, and supports arrow-key mode navigation', async () => {
         const target = document.createElement('div');
         const app = createApp(() => h(MarkdownEditor, {locale: 'en', theme: 'dark'}));
