@@ -39,7 +39,8 @@
 | --- | --- | --- | --- |
 | `extensions/markdown/Lists/*` | `core/lists.ts`, `extensions/markdown/{list-specs,lists}.ts`, `core/basic-editor.ts` | partial | Runtime list behavior, schema/parser/serializer specs, action factories и самостоятельная builder extension готовы; остаются подключение через preset и полный набор upstream tests. |
 | `Blockquote` | `extensions/markdown/{blockquote,blockquote-specs}.ts`, `core/basic-editor.ts` | partial | Schema/parser/serializer specs, input rule, shortcut, toggle/lift commands и DefaultPreset подключены к runtime; `joinPrevQuote` ожидает общий upstream `commands/join`. |
-| `Bold`, `Breaks`, `Code`, `CodeBlock`, `Heading`, `HorizontalRule`, `Italic`, `Link` | `src/extensions/markdown/*` | pending | Функции частично присутствуют в `basic-editor`, но extension API не перенесён. |
+| `Bold` | `extensions/markdown/{bold,bold-specs}.ts`, `core/basic-editor.ts` | done | Mark/schema/parser/serializer specs, `**`/`__` input rules, shortcut и toggle command подключены к DefaultPreset/visual editor. |
+| `Breaks`, `Code`, `CodeBlock`, `Heading`, `HorizontalRule`, `Italic`, `Link` | `src/extensions/markdown/*` | pending | Функции частично присутствуют в `basic-editor`, но extension API не перенесён. |
 | `Deflist`, `Html`, `Image`, `Mark`, `Strike`, `Subscript`, `Superscript`, `Table`, `Underline` | `src/extensions/markdown/*` | pending | То же: runtime-фрагменты не считаются ported extension. |
 | `additional/FoldingHeading`, `Math`, `Mermaid`, `QuoteLink`, `YfmHtmlBlock` | `src/extensions/additional/*` | pending | В `basic-editor` есть часть рендера/Markdown, но отсутствуют upstream extensions/actions/views. |
 | `additional/GPT/*`, `icons/GPT*.tsx`, GPT i18n/tests | — | excluded | Явное исключение. |
@@ -78,6 +79,6 @@
 
 ## Следующий реализуемый срез
 
-1. Перенести `extensions/markdown/Bold` как самостоятельный extension: mark/parser/serializer, command/keymap и tests.
-2. Затем аналогично перенести базовые inline/block extensions (`Italic`, `Code`, `CodeBlock`, `Heading`, `HorizontalRule`, `Link`, `Breaks`).
+1. Перенести `extensions/markdown/Italic` как самостоятельный extension: mark/parser/serializer, command/keymap и tests.
+2. Затем аналогично перенести базовые inline/block extensions (`Code`, `CodeBlock`, `Heading`, `HorizontalRule`, `Link`, `Breaks`).
 3. Для каждого последующего расширения сначала переносить non-React код и tests, затем Vue node/widget/form view и Chromium scenario.

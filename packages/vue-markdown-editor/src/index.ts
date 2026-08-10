@@ -24,6 +24,15 @@ export {
     toggleQuote,
 } from './extensions/markdown/blockquote';
 export type {BlockquoteOptions} from './extensions/markdown/blockquote';
+export {
+    Bold,
+    BoldAttrs,
+    BoldSpecs,
+    boldMarkName,
+    getBoldType,
+    toggleBold,
+} from './extensions/markdown/bold';
+export type {BoldOptions} from './extensions/markdown/bold';
 export {BaseInputRules, BaseKeymap, BaseSchema} from './extensions/base';
 export type {BaseSchemaOptions} from './extensions/base';
 export {ZeroPreset} from './presets/zero';

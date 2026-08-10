@@ -60,6 +60,12 @@ import {
   toggleQuote,
 } from "../extensions/markdown/blockquote";
 import {
+  boldMarkSpec,
+  boldTokenSpec,
+  serializeBold,
+  toggleBold,
+} from "../extensions/markdown/bold";
+import {
   listNodeSpecs,
   listSerializerNodes,
   listTokenSpecs,
@@ -210,7 +216,7 @@ const extendedMarkdownNodes: Record<string, NodeSpec> = {
 
 /** Schema for the first WYSIWYG milestone. YFM-specific nodes are added later. */
 export const basicMarkdownSchema: Schema = new Schema({
-  marks: defaultMarkdownSchema.spec.marks.append(basicMarks),
+  marks: defaultMarkdownSchema.spec.marks.update("strong", boldMarkSpec).append(basicMarks),
   nodes: defaultMarkdownSchema.spec.nodes
     .update("blockquote", blockquoteNodeSpec)
     .update("list_item", listNodeSpecs.list_item)
@@ -237,6 +243,7 @@ export const basicMarkdownSchema: Schema = new Schema({
 
 const tableTokenSpecs: Record<string, ParseSpec> = {
   blockquote: blockquoteTokenSpec,
+  strong: boldTokenSpec,
   ...listTokenSpecs,
   dd: { block: "definition_description" },
   dl: { block: "definition_list" },
@@ -466,6 +473,7 @@ function createBasicDefaultPresetPlugins(
 ): Plugin[] {
   return ExtensionsManager.plugins(
     (builder) => builder.use(DefaultPreset, {
+      bold: { boldKey: "Mod-b" },
       filePaste: { onFiles },
       placeholder: { content: placeholder },
       selectionContext,
@@ -556,6 +564,7 @@ const basicMarkdownSerializerNodes = {
 };
 
 const basicMarkdownSerializerMarks = {
+  strong: serializeBold,
   color: {
     close: "</span>",
     open: (_state, mark) => `<span style="color: ${mark.attrs.color}">`,
@@ -1198,7 +1207,7 @@ export function createBasicEditorCommands(): BasicEditorCommands {
   const listItem = getNodeType("list_item");
 
   return {
-    bold: toggleMark(getMarkType("strong")),
+    bold: toggleBold,
     bulletList: toList(getNodeType("bullet_list")),
     code: toggleMark(getMarkType("code")),
     codeBlock: setBlockType(getNodeType("code_block")),
@@ -1397,7 +1406,6 @@ export function mountBasicWysiwygEditor({
           Enter: commands.splitListItem,
           Tab: keepListFocus(commands.sinkListItem),
           "Mod-Shift-z": commands.redo,
-          "Mod-b": commands.bold,
           "Mod-i": commands.italic,
           "Mod-z": commands.undo,
         }),
