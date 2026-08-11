@@ -522,7 +522,7 @@ defineExpose<MarkdownEditorExposed>({
       </label>
       <button v-if="toolbarPreset === 'default'" type="button" title="Изображение" @mousedown.prevent @click="openFilePicker('image')">▧</button>
       <template v-if="toolbarState.image">
-        <button type="button" title="На всю ширину" @mousedown.prevent @click="execute(commands.setImageDisplay('100%', 'contain'))">↔</button>
+        <button type="button" title="На всю ширину" @mousedown.prevent @click="execute(commands.setImageDisplay('100%', 'contain', null))">↔</button>
         <label class="markdown-editor__image-fit">
           <select :value="toolbarState.imageObjectFit" aria-label="Отображение изображения" @change="execute(commands.setImageDisplay(undefined, ($event.target as HTMLSelectElement).value as 'contain' | 'cover' | 'fill' | 'none' | 'scale-down'))">
             <option value="contain">Contain</option>

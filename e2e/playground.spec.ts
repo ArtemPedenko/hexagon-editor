@@ -56,6 +56,10 @@ test.describe('Markdown editor playground', () => {
         await page.mouse.up();
 
         await expect(image).not.toHaveAttribute('style', /width: 100%/);
+        await expect(image).toHaveAttribute('style', /height: \d+px/);
+        await page.getByTitle('На всю ширину').click();
+        await expect(image).toHaveAttribute('style', /width: 100%/);
+        await expect(image).not.toHaveAttribute('style', /height:/);
     });
 
     test('does not show text-selection actions for atomic Markdown blocks', async ({page}) => {

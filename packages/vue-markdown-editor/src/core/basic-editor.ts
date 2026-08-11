@@ -652,7 +652,7 @@ export interface BasicEditorCommands {
   horizontalRule: Command;
   insertFile(href: string, name: string): Command;
   insertImage(src: string, alt: string): Command;
-  setImageDisplay(width?: number | string, objectFit?: ImageObjectFit): Command;
+  setImageDisplay(width?: number | string, objectFit?: ImageObjectFit, height?: number | null): Command;
   insertMathBlock: Command;
   insertInlineMath: Command;
   insertTable(rows?: number, columns?: number): Command;
@@ -1320,7 +1320,7 @@ export function createBasicEditorCommands(): BasicEditorCommands {
     horizontalRule: addHorizontalRule(getNodeType("horizontal_rule")),
     insertFile: insertFileCommand,
     insertImage: insertImageCommand,
-    setImageDisplay: (width, objectFit) => setImageDisplay({...(width === undefined ? {} : {width}), ...(objectFit === undefined ? {} : {objectFit})}),
+    setImageDisplay: (width, objectFit, height) => setImageDisplay({...(height === undefined ? {} : {height}), ...(width === undefined ? {} : {width}), ...(objectFit === undefined ? {} : {objectFit})}),
     insertMathBlock: insertMathBlockAndEdit,
     insertInlineMath: insertInlineMathAndEdit,
     insertTable: createTableCommand,

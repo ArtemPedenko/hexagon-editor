@@ -107,9 +107,14 @@ export interface AddImageAttrs {
     width?: number | string;
 }
 
-export const setImageDisplay = (attrs: {objectFit?: ImageObjectFit; width?: number | string}): Command => (state, dispatch) => {
+export const setImageDisplay = (attrs: {height?: number | null; objectFit?: ImageObjectFit; width?: number | string}): Command => (state, dispatch) => {
     if (!(state.selection instanceof NodeSelection) || state.selection.node.type.name !== imageNodeName) return false;
-    const nextAttrs = {...state.selection.node.attrs, ...(attrs.width === undefined ? {} : {[ImageAttr.Width]: attrs.width}), ...(attrs.objectFit === undefined ? {} : {[ImageAttr.ObjectFit]: attrs.objectFit})};
+    const nextAttrs = {
+        ...state.selection.node.attrs,
+        ...(attrs.height === undefined ? {} : {[ImageAttr.Height]: attrs.height}),
+        ...(attrs.width === undefined ? {} : {[ImageAttr.Width]: attrs.width}),
+        ...(attrs.objectFit === undefined ? {} : {[ImageAttr.ObjectFit]: attrs.objectFit}),
+    };
     const transaction = state.tr.setNodeMarkup(state.selection.from, undefined, nextAttrs);
     dispatch?.(transaction.setSelection(NodeSelection.create(transaction.doc, state.selection.from)));
     return true;
