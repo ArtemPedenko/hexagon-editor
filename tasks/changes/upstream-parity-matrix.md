@@ -58,7 +58,8 @@
 | `Underline` | `extensions/markdown/underline.ts` | done | Самостоятельный extension: markdown-it, schema, parser/serializer, input rule, toggle-команда и unit-тест; включён в `DefaultPreset`. |
 | `additional/FoldingHeading` | `extensions/additional/folding-heading.ts`, `core/basic-editor.ts` | done | Folding plugin, structural visible/hidden section decorations, action contract, toggle-команда, input rule с trailing paragraph и click affordance вынесены в самостоятельный extension и подключены к DefaultPreset; Markdown codec и toolbar сохраняют текущую семантику. |
 | `additional/Math` | `extensions/additional/math.ts`, `core/basic-editor.ts` | done | Самостоятельный extension: локальный Markdown-it tokenizer без Diplodoc, schema/parser/serializer, input rules, VS Code LaTeX paste, keymap и action contract для inline/block-формул; KaTeX renderer, локальный source editor, подсказка редактирования и отображение ошибки формулы подключены в Vue visual host. |
-| `additional/Mermaid`, `QuoteLink`, `YfmHtmlBlock` | `src/extensions/additional/*` | pending | В `basic-editor` есть часть рендера/Markdown, но отсутствуют upstream extensions/actions/views. |
+| `additional/Mermaid` | `extensions/additional/mermaid.ts`, `core/basic-editor.ts` | done | Самостоятельный extension: Mermaid fence tokenizer, schema/parser/serializer, action для вставки диаграммы и unit-тест подключены к DefaultPreset. Vue visual host переиспользует атомарный source editor и optional host renderer без bundling Mermaid runtime. |
+| `additional/QuoteLink`, `YfmHtmlBlock` | `src/extensions/additional/*` | pending | В `basic-editor` есть часть рендера/Markdown, но отсутствуют upstream extensions/actions/views. |
 | `additional/GPT/*`, `icons/GPT*.tsx`, GPT i18n/tests | — | excluded | Явное исключение. |
 
 ## Behavior extensions

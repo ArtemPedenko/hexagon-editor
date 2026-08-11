@@ -94,6 +94,21 @@ test.describe('Markdown editor playground', () => {
         await expect(formula.locator('.markdown-editor__math-error')).toHaveText('\\invalid');
     });
 
+    test('keeps Mermaid source editable in the visual editor', async ({page}) => {
+        await page.goto('/');
+        await page.locator('.ProseMirror [data-mermaid]').dblclick();
+
+        const sourceEditor = page.locator('.markdown-editor__atomic-source .cm-content');
+        await sourceEditor.click();
+        await page.keyboard.press('Control+a');
+        await page.keyboard.type('flowchart LR\\n  Start --> Finish');
+        await page.keyboard.press('Control+Enter');
+
+        const diagram = page.locator('.ProseMirror [data-mermaid]');
+        await expect(diagram).toContainText('flowchart LR');
+        await expect(diagram).toContainText('Start --> Finish');
+    });
+
     test('does not insert another formula while editing the current formula', async ({page}) => {
         await page.goto('/');
         await page.locator('.ProseMirror [data-math-block]').dblclick();

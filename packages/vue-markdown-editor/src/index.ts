@@ -107,6 +107,8 @@ export {
     wrapToDeflist,
 } from './extensions/markdown/deflist';
 export {Html, HtmlAttr, HtmlNode} from './extensions/markdown/html';
+export {defaultMermaidSource, insertMermaid, Mermaid, mermaidActionName, mermaidNodeName} from './extensions/additional/mermaid';
+export type {MermaidActionContext} from './extensions/additional/mermaid';
 export {addImage, getImageType, Image, ImageAttr, imageNodeName} from './extensions/markdown/image';
 export type {AddImageAttrs} from './extensions/markdown/image';
 export {getMarkType, Mark, markMarkName, toggleHighlight} from './extensions/markdown/mark';

@@ -145,6 +145,7 @@ import {
 } from "../extensions/markdown/table";
 import {toggleFoldingHeading} from '../extensions/additional/folding-heading';
 import {configureMathMarkdown, createMathNodeSpecs, defaultMathLatex, mathSerializerNodes, mathTokenSpecs} from '../extensions/additional/math';
+import {configureMermaidMarkdown, createMermaidNodeSpec, mermaidTokenSpec, serializeMermaid} from '../extensions/additional/mermaid';
 
 const basicMarks: Record<string, MarkSpec> = {
   ins: underlineMarkSpec,
@@ -235,12 +236,7 @@ function renderYfmHtml(source: string): HTMLElement {
 
 const extendedMarkdownNodes: Record<string, NodeSpec> = {
   ...createMathNodeSpecs((latex, display) => renderOptionalBlock("math", latex, display)),
-  mermaid: {
-    atom: true,
-    attrs: { source: { default: "" } },
-    group: "block",
-    toDOM: (node) => renderOptionalBlock("mermaid", node.attrs.source),
-  },
+  mermaid: createMermaidNodeSpec((source) => renderOptionalBlock("mermaid", source)),
   definition_description: {
     content: "block+",
     group: "block",
@@ -366,10 +362,6 @@ const tableTokenSpecs: Record<string, ParseSpec> = {
     }),
   },
   ...mathTokenSpecs,
-  mermaid: {
-    node: "mermaid",
-    getAttrs: (token) => ({ source: token.content }),
-  },
   quote_link: {
     block: "quote_link",
     getAttrs: (token) => ({
@@ -398,12 +390,7 @@ function createExtendedMarkdownIt(markdown = new MarkdownIt("commonmark", { html
     .use(subPlugin)
     .use(insPlugin);
   configureMathMarkdown(markdown);
-  markdown.core.ruler.after("block", "advanced_fences", (state) => {
-    for (const token of state.tokens) {
-      if (token.type === "fence" && token.info.trim() === "mermaid")
-        token.type = "mermaid";
-    }
-  });
+  configureMermaidMarkdown(markdown);
   markdown.core.ruler.after("block", "folding_heading", (state) => {
     for (const [index, token] of state.tokens.entries()) {
       const inline = state.tokens[index + 1];
@@ -518,6 +505,7 @@ const basicMarkdownParserExtension = (builder: ExtensionBuilder) => {
   for (const [name, token] of Object.entries(tableTokenSpecs)) {
     builder.addParserToken(name, token);
   }
+  builder.addParserToken('mermaid', mermaidTokenSpec);
 };
 
 const basicMarkdownParser = ExtensionsManager.process(
@@ -591,10 +579,7 @@ const basicMarkdownSerializerNodes = {
     state.closeBlock(node);
   },
   ...mathSerializerNodes,
-  mermaid(state, node) {
-    state.write(`\`\`\`mermaid\n${node.attrs.source}\n\`\`\``);
-    state.closeBlock(node);
-  },
+  mermaid: serializeMermaid,
   heading(state, node) {
     state.write(
       `${"#".repeat(node.attrs.level)}${node.attrs.folding === null ? "" : "+"} `,
