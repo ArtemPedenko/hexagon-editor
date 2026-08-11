@@ -76,6 +76,24 @@ test.describe('Markdown editor playground', () => {
         await expect(image).toHaveAttribute('style', /width: 100%/);
     });
 
+    test('inserts a titled link from the toolbar form', async ({page}) => {
+        const errors: string[] = [];
+        page.on('pageerror', (error) => errors.push(error.message));
+        await page.goto('/');
+        await page.getByTitle('Ссылка').click();
+        await page.getByLabel('Адрес ссылки').fill('https://example.com/docs');
+        await page.getByLabel('Текст ссылки').fill('Документация');
+        await page.getByLabel('Заголовок ссылки').fill('Документы');
+        await page.getByRole('button', {name: 'Готово'}).last().click();
+
+        const link = page.locator('.ProseMirror a', {hasText: 'Документация'});
+        await expect(link).toHaveAttribute('href', 'https://example.com/docs');
+        await expect(link).toHaveAttribute('title', 'Документы');
+        await link.click();
+        await expect(page.getByTitle('Ссылка')).toHaveAttribute('aria-pressed', 'true');
+        expect(errors).toEqual([]);
+    });
+
     test('does not show text-selection actions for atomic Markdown blocks', async ({page}) => {
         await page.goto('/');
 

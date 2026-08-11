@@ -101,6 +101,8 @@ const imageTitle = ref('');
 const imageForm = ref<HTMLElement>();
 const linkEditorVisible = ref(false);
 const linkUrl = ref('https://');
+const linkText = ref('');
+const linkTitle = ref('');
 const fileInput = ref<HTMLInputElement>();
 const formulaMenuVisible = ref(false);
 const uploadKind = ref<'file' | 'image'>('image');
@@ -114,6 +116,9 @@ const toolbarState = ref<BasicWysiwygSelectionState>({
     headingLevel: undefined,
     image: false,
     imageObjectFit: undefined,
+    linkHref: undefined,
+    linkText: undefined,
+    linkTitle: undefined,
     italic: false,
     mark: false,
     orderedList: false,
@@ -171,6 +176,9 @@ function destroyHosts(): void {
         headingLevel: undefined,
         image: false,
         imageObjectFit: undefined,
+        linkHref: undefined,
+        linkText: undefined,
+        linkTitle: undefined,
         italic: false,
         mark: false,
         orderedList: false,
@@ -217,7 +225,7 @@ function applyLink(): void {
         return;
     }
 
-    execute(commands.link(linkUrl.value.trim()));
+    execute(commands.setLink(linkUrl.value.trim(), linkTitle.value.trim() || undefined, linkText.value.trim() || undefined));
     linkEditorVisible.value = false;
 }
 
@@ -274,6 +282,9 @@ async function toggleLinkEditor(): Promise<void> {
     stopLinkFloating?.();
     stopLinkFloating = undefined;
     if (!linkEditorVisible.value) return;
+    linkUrl.value = toolbarState.value.linkHref ?? 'https://';
+    linkText.value = toolbarState.value.linkText ?? '';
+    linkTitle.value = toolbarState.value.linkTitle ?? '';
     await nextTick();
     startFloating(linkButton.value, linkForm.value, (cleanup) => { stopLinkFloating = cleanup; });
 }
@@ -550,7 +561,7 @@ defineExpose<MarkdownEditorExposed>({
         ▸
       </button>
       <button v-if="toolbarPreset === 'default'" :aria-pressed="toolbarState.codeBlock" type="button" title="Code block" @mousedown.prevent @click="execute(commands.codeBlock)">{ }</button>
-      <button ref="linkButton" :aria-expanded="linkEditorVisible" type="button" :aria-label="t('link')" :title="t('link')" @mousedown.prevent @click="toggleLinkEditor">⌁</button>
+      <button ref="linkButton" :aria-expanded="linkEditorVisible" :aria-pressed="toolbarState.linkHref !== undefined" type="button" :aria-label="t('link')" :title="t('link')" @mousedown.prevent @click="toggleLinkEditor">⌁</button>
       <label v-if="toolbarPreset === 'default'" class="markdown-editor__color" title="Цвет текста">
         <input aria-label="Цвет текста" type="color" value="#202125" @input="execute(commands.setColor(($event.target as HTMLInputElement).value))" />
       </label>
@@ -597,8 +608,11 @@ defineExpose<MarkdownEditorExposed>({
         <button role="menuitem" type="button" @click="insertInlineMath">Формула в тексте</button>
         <button role="menuitem" type="button" @click="insertMathBlock">Блок с формулой</button>
       </div>
-      <form v-if="linkEditorVisible" ref="linkForm" class="markdown-editor__link-form" @submit.prevent="applyLink">
+      <form v-if="linkEditorVisible" ref="linkForm" class="markdown-editor__link-form markdown-editor__link-form--extended" @submit.prevent="applyLink">
         <input v-model="linkUrl" aria-label="Адрес ссылки" type="url" />
+        <input v-model="linkText" aria-label="Текст ссылки" placeholder="Текст ссылки" />
+        <input v-model="linkTitle" aria-label="Заголовок ссылки" placeholder="Заголовок" />
+        <button v-if="toolbarState.linkHref !== undefined" type="button" title="Удалить ссылку" @mousedown.prevent @click="execute(commands.removeLink)">Удалить</button>
         <button type="submit">Готово</button>
       </form>
       <form v-if="imageEditorVisible" ref="imageForm" class="markdown-editor__link-form markdown-editor__image-form" @submit.prevent="applyImage">
@@ -697,6 +711,15 @@ defineExpose<MarkdownEditorExposed>({
     border-radius: 0.375rem;
     box-shadow: 0 0.5rem 1.25rem rgb(0 0 0 / 18%);
     background: var(--markdown-background);
+}
+
+.markdown-editor__link-form--extended {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+}
+
+.markdown-editor__link-form--extended input {
+    grid-column: 1 / -1;
 }
 
 .markdown-editor__image-form {

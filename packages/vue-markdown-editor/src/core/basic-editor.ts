@@ -94,9 +94,12 @@ import {
   serializeHorizontalRule,
 } from "../extensions/markdown/horizontal-rule";
 import {
+  getCurrentLink,
   linkMarkSpec,
   linkTokenSpec,
+  removeCurrentLink,
   serializeLink,
+  setLink,
   toggleLink,
 } from "../extensions/markdown/link";
 import {
@@ -659,6 +662,8 @@ export interface BasicEditorCommands {
   italic: Command;
   liftListItem: Command;
   link(href: string): Command;
+  removeLink: Command;
+  setLink(href: string, title?: string, text?: string): Command;
   mark: Command;
   orderedList: Command;
   paragraph: Command;
@@ -683,6 +688,9 @@ export interface BasicWysiwygSelectionState {
   headingLevel: number | undefined;
   image: boolean;
   imageObjectFit: string | undefined;
+  linkHref: string | undefined;
+  linkText: string | undefined;
+  linkTitle: string | undefined;
   headingFolded: boolean;
   italic: boolean;
   mark: boolean;
@@ -1326,6 +1334,8 @@ export function createBasicEditorCommands(): BasicEditorCommands {
     insertTable: createTableCommand,
     italic: toggleItalic,
     link: (href) => toggleLink(href),
+    removeLink: removeCurrentLink,
+    setLink: (href, title, text) => setLink(href, title, text),
     mark: toggleMark(getMarkType("mark")),
     orderedList: toList(getNodeType("ordered_list")),
     paragraph: setBlockType(getNodeType("paragraph")),
@@ -1384,6 +1394,7 @@ export function getBasicWysiwygSelectionState(
     atomicSourcePosition === null || atomicSourcePosition === undefined
       ? undefined
       : findAtomicSourceNode(state.doc, atomicSourcePosition)?.node;
+  const currentLink = getCurrentLink(state);
 
   return {
     bold: hasActiveMark(state, "strong"),
@@ -1399,6 +1410,9 @@ export function getBasicWysiwygSelectionState(
         : undefined,
     image: state.selection instanceof NodeSelection && state.selection.node.type.name === 'image',
     imageObjectFit: state.selection instanceof NodeSelection && state.selection.node.type.name === 'image' ? state.selection.node.attrs['object-fit'] : undefined,
+    linkHref: currentLink?.href,
+    linkText: currentLink?.text,
+    linkTitle: currentLink?.title ?? undefined,
     headingFolded:
       $from.parent.type.name === "heading" &&
       $from.parent.attrs.folding === true,

@@ -81,11 +81,14 @@ export {
 } from './extensions/markdown/horizontal-rule';
 export {
     getLinkType,
+    getCurrentLink,
     Link,
     LinkAttr,
     LinkSpecs,
     linkMarkName,
     removeLink,
+    removeCurrentLink,
+    setLink,
     toggleLink,
 } from './extensions/markdown/link';
 export type {LinkOptions} from './extensions/markdown/link';
