@@ -146,6 +146,7 @@ import {
 import {toggleFoldingHeading} from '../extensions/additional/folding-heading';
 import {configureMathMarkdown, createMathNodeSpecs, defaultMathLatex, mathSerializerNodes, mathTokenSpecs} from '../extensions/additional/math';
 import {configureMermaidMarkdown, createMermaidNodeSpec, mermaidTokenSpec, serializeMermaid} from '../extensions/additional/mermaid';
+import {configureQuoteLinkMarkdown, quoteLinkNodeSpec, quoteLinkTokenSpec, serializeQuoteLink} from '../extensions/additional/quote-link';
 
 const basicMarks: Record<string, MarkSpec> = {
   ins: underlineMarkSpec,
@@ -248,21 +249,7 @@ const extendedMarkdownNodes: Record<string, NodeSpec> = {
     toDOM: () => ["dl", 0],
   },
   definition_term: { content: "inline*", toDOM: () => ["dt", 0] },
-  quote_link: {
-    attrs: { cite: { default: "" }, content: { default: "" } },
-    content: "block+",
-    defining: true,
-    group: "block",
-    toDOM: (node) => [
-      "blockquote",
-      {
-        cite: node.attrs.cite,
-        "data-content": node.attrs.content,
-        "data-quote-link": "",
-      },
-      0,
-    ],
-  },
+  quote_link: quoteLinkNodeSpec,
   directive: {
     atom: true,
     attrs: { content: { default: "" }, name: { default: "note" } },
@@ -362,13 +349,7 @@ const tableTokenSpecs: Record<string, ParseSpec> = {
     }),
   },
   ...mathTokenSpecs,
-  quote_link: {
-    block: "quote_link",
-    getAttrs: (token) => ({
-      cite: token.attrGet("cite"),
-      content: token.attrGet("data-content"),
-    }),
-  },
+  quote_link: quoteLinkTokenSpec,
   table: { block: "table" },
   tbody: { block: TableNode.Body },
   td: { block: TableNode.DataCell },
@@ -391,6 +372,7 @@ function createExtendedMarkdownIt(markdown = new MarkdownIt("commonmark", { html
     .use(insPlugin);
   configureMathMarkdown(markdown);
   configureMermaidMarkdown(markdown);
+  configureQuoteLinkMarkdown(markdown);
   markdown.core.ruler.after("block", "folding_heading", (state) => {
     for (const [index, token] of state.tokens.entries()) {
       const inline = state.tokens[index + 1];
@@ -428,45 +410,6 @@ function createExtendedMarkdownIt(markdown = new MarkdownIt("commonmark", { html
         if (attribute.startsWith("."))
           token.attrSet("class", attribute.slice(1));
       }
-    }
-  });
-  markdown.core.ruler.after("inline", "quote_link", (state) => {
-    let index = 0;
-    while (index < state.tokens.length) {
-      const token = state.tokens[index];
-      const paragraph = state.tokens[index + 1];
-      const inline = state.tokens[index + 2];
-      const paragraphClose = state.tokens[index + 3];
-      if (
-        token?.type !== "blockquote_open" ||
-        paragraph?.type !== "paragraph_open" ||
-        inline?.type !== "inline" ||
-        paragraphClose?.type !== "paragraph_close"
-      ) {
-        index += 1;
-        continue;
-      }
-      const match = inline.content.match(
-        /^\[([^\]]+)\]\(([^)]+)\)\{data-quotelink=true\}$/,
-      );
-      if (match === null) {
-        index += 1;
-        continue;
-      }
-      const closeIndex = state.tokens.findIndex(
-        (candidate, candidateIndex) =>
-          candidateIndex > index && candidate.type === "blockquote_close",
-      );
-      if (closeIndex === -1) {
-        index += 1;
-        continue;
-      }
-      token.type = "quote_link_open";
-      token.attrSet("cite", match[2] ?? "");
-      token.attrSet("data-content", match[1] ?? "");
-      state.tokens[closeIndex]!.type = "quote_link_close";
-      state.tokens.splice(index + 1, 3);
-      index += 1;
     }
   });
   markdown.block.ruler.before(
@@ -605,15 +548,7 @@ const basicMarkdownSerializerNodes = {
     state.write(`:::html\n${node.attrs.html}\n:::`);
     state.closeBlock(node);
   },
-  quote_link(state, node) {
-    state.wrapBlock("> ", null, node, () => {
-      state.write(
-        `[${node.attrs.content}](${node.attrs.cite}){data-quotelink=true}`,
-      );
-      state.write("\n\n");
-      state.renderContent(node);
-    });
-  },
+  quote_link: serializeQuoteLink,
   ...tableSerializerNodes,
 };
 

@@ -13,6 +13,7 @@ import type {SelectionContextOptions} from '../extensions/behavior/selection-con
 import {FoldingHeading} from '../extensions/additional/folding-heading';
 import {Math} from '../extensions/additional/math';
 import {Mermaid} from '../extensions/additional/mermaid';
+import {QuoteLink} from '../extensions/additional/quote-link';
 import {Lists} from '../extensions/markdown/lists';
 import type {ListsOptions} from '../extensions/markdown/lists';
 import {Blockquote} from '../extensions/markdown/blockquote';
@@ -73,6 +74,7 @@ export const DefaultPreset: ExtensionAuto<DefaultPresetOptions> = (builder, opti
         .use(FoldingHeading)
         .use(Math)
         .use(Mermaid)
+        .use(QuoteLink)
         .use(HorizontalRule)
         .use(Link, options?.link ?? {})
         .use(Breaks, options?.breaks ?? {})
