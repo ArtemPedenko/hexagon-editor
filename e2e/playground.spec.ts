@@ -27,7 +27,7 @@ test.describe('Markdown editor playground', () => {
         expect(errors).toEqual([]);
     });
 
-    test('uploads an image from the playground toolbar for manual resize checks', async ({page}) => {
+    test('uploads and resizes an image from the playground toolbar', async ({page}) => {
         await page.goto('/');
         await page.locator('.markdown-editor__file-input').setInputFiles({
             buffer: Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="80" height="40"><rect width="80" height="40" fill="red"/></svg>'),
@@ -35,7 +35,27 @@ test.describe('Markdown editor playground', () => {
             name: 'resize-fixture.svg',
         });
 
-        await expect(page.locator('.ProseMirror img[alt="resize-fixture.svg"]')).toBeVisible();
+        const image = page.locator('.ProseMirror img[alt="resize-fixture.svg"]');
+        await expect(image).toBeVisible();
+        await image.click();
+        await expect(image).toHaveCSS('width', /px/);
+        const objectFit = page.getByLabel('Отображение изображения');
+        await expect(objectFit).toHaveValue('contain');
+        await objectFit.selectOption('cover');
+        await expect(image).toHaveCSS('object-fit', 'cover');
+        await page.getByTitle('На всю ширину').click();
+        await expect(objectFit).toHaveValue('contain');
+        await expect(image).toHaveAttribute('style', /width: 100%/);
+        const handle = page.locator('.markdown-editor__image-resize-handle');
+        await expect(handle).toBeVisible();
+        const bounds = await handle.boundingBox();
+        if (bounds === null) throw new Error('Resize handle is not measurable');
+        await page.mouse.move(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
+        await page.mouse.down();
+        await page.mouse.move(bounds.x + bounds.width / 2 + 40, bounds.y + bounds.height / 2);
+        await page.mouse.up();
+
+        await expect(image).not.toHaveAttribute('style', /width: 100%/);
     });
 
     test('does not show text-selection actions for atomic Markdown blocks', async ({page}) => {

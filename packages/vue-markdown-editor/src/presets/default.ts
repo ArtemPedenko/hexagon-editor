@@ -9,6 +9,7 @@ import {Placeholder} from '../extensions/behavior/placeholder';
 import type {PlaceholderOptions} from '../extensions/behavior/placeholder';
 import {Selection} from '../extensions/behavior/selection';
 import {SelectionContext} from '../extensions/behavior/selection-context';
+import {Resizable} from '../extensions/behavior/resizable';
 import type {SelectionContextOptions} from '../extensions/behavior/selection-context';
 import {FoldingHeading} from '../extensions/additional/folding-heading';
 import {Math} from '../extensions/additional/math';
@@ -94,5 +95,6 @@ export const DefaultPreset: ExtensionAuto<DefaultPresetOptions> = (builder, opti
         .use(FilePaste, options?.filePaste ?? {})
         .use(Clipboard)
         .use(Selection)
+        .use(Resizable)
         .use(SelectionContext, options?.selectionContext ?? {});
 };

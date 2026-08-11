@@ -113,8 +113,8 @@ export {getQuoteLinkType, QuoteLink, quoteLinkActionName, quoteLinkNodeName, tog
 export type {QuoteLinkActionContext} from './extensions/additional/quote-link';
 export {defaultYfmHtml, insertYfmHtmlBlock, YfmHtmlBlock, yfmHtmlBlockActionName, yfmHtmlBlockNodeName} from './extensions/additional/yfm-html-block';
 export type {YfmHtmlBlockActionContext} from './extensions/additional/yfm-html-block';
-export {addImage, getImageType, Image, ImageAttr, imageNodeName} from './extensions/markdown/image';
-export type {AddImageAttrs} from './extensions/markdown/image';
+export {addImage, getImageType, Image, ImageAttr, imageNodeName, imageObjectFitValues, setImageDisplay} from './extensions/markdown/image';
+export type {AddImageAttrs, ImageObjectFit} from './extensions/markdown/image';
 export {getMarkType, Mark, markMarkName, toggleHighlight} from './extensions/markdown/mark';
 export {getStrikeType, Strike, strikeMarkName, toggleStrike} from './extensions/markdown/strike';
 export {getUnderlineType, Underline, underlineMarkName, toggleUnderline} from './extensions/markdown/underline';
@@ -149,6 +149,7 @@ export {FilePaste} from './extensions/behavior/file-paste';
 export type {FilePasteOptions} from './extensions/behavior/file-paste';
 export {Clipboard, isInsideCode} from './extensions/behavior/clipboard';
 export {Selection} from './extensions/behavior/selection';
+export {Resizable} from './extensions/behavior/resizable';
 export {SelectionContext} from './extensions/behavior/selection-context';
 export type {SelectionContextOptions} from './extensions/behavior/selection-context';
 

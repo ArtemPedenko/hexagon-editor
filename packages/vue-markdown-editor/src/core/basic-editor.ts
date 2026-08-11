@@ -117,10 +117,13 @@ import {
   htmlTokenSpecs,
 } from "../extensions/markdown/html";
 import {
+  configureImageMarkdown,
   imageNodeSpec,
   imageTokenSpec,
   serializeImage,
+  setImageDisplay,
 } from "../extensions/markdown/image";
+import type {ImageObjectFit} from "../extensions/markdown/image";
 import { markTokenSpec } from "../extensions/markdown/mark";
 import {serializeStrike, strikeMarkSpec, strikeTokenSpec} from "../extensions/markdown/strike";
 import {serializeSubscript, subscriptMarkSpec, subscriptTokenSpec} from "../extensions/markdown/subscript";
@@ -367,6 +370,7 @@ function createExtendedMarkdownIt(markdown = new MarkdownIt("commonmark", { html
   configureMermaidMarkdown(markdown);
   configureQuoteLinkMarkdown(markdown);
   configureYfmHtmlBlockMarkdown(markdown);
+  configureImageMarkdown(markdown);
   markdown.core.ruler.after("block", "folding_heading", (state) => {
     for (const [index, token] of state.tokens.entries()) {
       const inline = state.tokens[index + 1];
@@ -610,7 +614,7 @@ function insertFileCommand(href: string, name: string): Command {
 function insertImageCommand(src: string, alt: string): Command {
   return (state, dispatch) => {
     if (dispatch !== undefined) {
-      const image = getNodeType("image").create({ alt, src, title: null });
+      const image = getNodeType("image").create({ alt, src, title: null, width: '100%', 'object-fit': 'contain' });
       dispatch(state.tr.replaceSelectionWith(image).scrollIntoView());
     }
     return true;
@@ -648,6 +652,7 @@ export interface BasicEditorCommands {
   horizontalRule: Command;
   insertFile(href: string, name: string): Command;
   insertImage(src: string, alt: string): Command;
+  setImageDisplay(width?: number | string, objectFit?: ImageObjectFit): Command;
   insertMathBlock: Command;
   insertInlineMath: Command;
   insertTable(rows?: number, columns?: number): Command;
@@ -676,6 +681,8 @@ export interface BasicWysiwygSelectionState {
   codeBlock: boolean;
   formula: boolean;
   headingLevel: number | undefined;
+  image: boolean;
+  imageObjectFit: string | undefined;
   headingFolded: boolean;
   italic: boolean;
   mark: boolean;
@@ -1313,6 +1320,7 @@ export function createBasicEditorCommands(): BasicEditorCommands {
     horizontalRule: addHorizontalRule(getNodeType("horizontal_rule")),
     insertFile: insertFileCommand,
     insertImage: insertImageCommand,
+    setImageDisplay: (width, objectFit) => setImageDisplay({...(width === undefined ? {} : {width}), ...(objectFit === undefined ? {} : {objectFit})}),
     insertMathBlock: insertMathBlockAndEdit,
     insertInlineMath: insertInlineMathAndEdit,
     insertTable: createTableCommand,
@@ -1389,6 +1397,8 @@ export function getBasicWysiwygSelectionState(
       $from.parent.type.name === "heading"
         ? Number($from.parent.attrs.level)
         : undefined,
+    image: state.selection instanceof NodeSelection && state.selection.node.type.name === 'image',
+    imageObjectFit: state.selection instanceof NodeSelection && state.selection.node.type.name === 'image' ? state.selection.node.attrs['object-fit'] : undefined,
     headingFolded:
       $from.parent.type.name === "heading" &&
       $from.parent.attrs.folding === true,

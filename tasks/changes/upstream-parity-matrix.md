@@ -68,7 +68,7 @@
 | Upstream source | Vue target | Status |
 | --- | --- | --- |
 | `Autocomplete`, `ClicksOnEdges`, `Clipboard`, `CommandMenu`, `Cursor`, `EditorModeKeymap` | `src/extensions/behavior/*` | pending |
-| `FilePaste`, `History`, `Placeholder`, `Resizable`, `Selection`, `SelectionContext`, `SharedState` | `src/extensions/behavior/*` | partial — `History`, document-level `Placeholder`, callback-based `FilePaste`, `Selection` node-selection decorations и Vue `SelectionContext` перенесены и подключены к DefaultPreset/visual editor; schema-driven placeholder decorations и остальные pending. Search is deliberately excluded. |
+| `FilePaste`, `History`, `Placeholder`, `Resizable`, `Selection`, `SelectionContext`, `SharedState` | `src/extensions/behavior/*` | partial — `History`, document-level `Placeholder`, callback-based `FilePaste`, `Selection` node-selection decorations и Vue `SelectionContext` перенесены и подключены к DefaultPreset/visual editor. Resizable supports selected image drag handles and Markdown dimension round-trip; generic node-view resizing, schema-driven placeholder decorations и остальное pending. Search is deliberately excluded. |
 | `ReactRenderer`, `WidgetDecoration` | `core/vue-renderer.ts`, `src/extensions/behavior/*` | partial |
 | `behavior/utils/*` | `src/extensions/behavior/utils/*` | pending |
 

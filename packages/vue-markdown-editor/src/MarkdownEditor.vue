@@ -106,6 +106,8 @@ const toolbarState = ref<BasicWysiwygSelectionState>({
     formula: false,
     headingFolded: false,
     headingLevel: undefined,
+    image: false,
+    imageObjectFit: undefined,
     italic: false,
     mark: false,
     orderedList: false,
@@ -160,6 +162,8 @@ function destroyHosts(): void {
         formula: false,
         headingFolded: false,
         headingLevel: undefined,
+        image: false,
+        imageObjectFit: undefined,
         italic: false,
         mark: false,
         orderedList: false,
@@ -517,6 +521,18 @@ defineExpose<MarkdownEditorExposed>({
         <input aria-label="Цвет текста" type="color" value="#202125" @input="execute(commands.setColor(($event.target as HTMLInputElement).value))" />
       </label>
       <button v-if="toolbarPreset === 'default'" type="button" title="Изображение" @mousedown.prevent @click="openFilePicker('image')">▧</button>
+      <template v-if="toolbarState.image">
+        <button type="button" title="На всю ширину" @mousedown.prevent @click="execute(commands.setImageDisplay('100%', 'contain'))">↔</button>
+        <label class="markdown-editor__image-fit">
+          <select :value="toolbarState.imageObjectFit" aria-label="Отображение изображения" @change="execute(commands.setImageDisplay(undefined, ($event.target as HTMLSelectElement).value as 'contain' | 'cover' | 'fill' | 'none' | 'scale-down'))">
+            <option value="contain">Contain</option>
+            <option value="cover">Cover</option>
+            <option value="fill">Fill</option>
+            <option value="none">None</option>
+            <option value="scale-down">Scale down</option>
+          </select>
+        </label>
+      </template>
       <button v-if="toolbarPreset === 'default'" type="button" title="Файл" @mousedown.prevent @click="openFilePicker('file')">⌕</button>
       <div v-if="toolbarPreset === 'default'" class="markdown-editor__formula-control">
         <button
@@ -528,7 +544,9 @@ defineExpose<MarkdownEditorExposed>({
           type="button"
           @mousedown.prevent
           @click="toggleFormulaMenu"
-        >Σ</button>
+        >
+          Σ
+        </button>
       </div>
       <button v-if="toolbarPreset === 'default'" type="button" :aria-label="t('html')" :title="t('html')" @mousedown.prevent @click="insertHtmlDirective">&lt;/&gt;</button>
       <button v-if="toolbarPreset === 'default'" type="button" title="Горизонтальная линия" @mousedown.prevent @click="execute(commands.horizontalRule)">―</button>
@@ -805,6 +823,29 @@ defineExpose<MarkdownEditorExposed>({
 .markdown-editor :deep(.markdown-editor__math-error) {
     margin: 0;
     font: inherit;
+}
+
+.markdown-editor :deep(.markdown-editor__image-resize-handle) {
+    position: fixed;
+    z-index: 1;
+    width: 1.35rem;
+    height: 1.35rem;
+    margin: 0;
+    padding: 0;
+    border: 2px solid var(--markdown-background);
+    border-radius: 50%;
+    color: var(--markdown-background);
+    background: var(--markdown-accent);
+    box-shadow: 0 0.1rem 0.35rem rgb(0 0 0 / 35%);
+    cursor: nwse-resize;
+    font-size: 0.8rem;
+    line-height: 1;
+    vertical-align: bottom;
+}
+
+.markdown-editor :deep(img.pm-node-selected) {
+    outline: 2px solid var(--markdown-accent);
+    outline-offset: 2px;
 }
 
 .markdown-editor :deep(.markdown-editor__atomic-source) {

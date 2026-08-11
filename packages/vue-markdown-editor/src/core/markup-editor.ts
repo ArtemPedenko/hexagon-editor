@@ -38,7 +38,6 @@ export function mountBasicMarkupEditor({
                 lineNumbers(),
                 history(),
                 bracketMatching(),
-                highlightSelectionMatches(),
                 markdown({base: markdownLanguage}),
                 syntaxHighlighting(defaultHighlightStyle, {fallback: true}),
                 keymap.of([
