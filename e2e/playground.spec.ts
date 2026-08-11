@@ -27,6 +27,17 @@ test.describe('Markdown editor playground', () => {
         expect(errors).toEqual([]);
     });
 
+    test('uploads an image from the playground toolbar for manual resize checks', async ({page}) => {
+        await page.goto('/');
+        await page.locator('.markdown-editor__file-input').setInputFiles({
+            buffer: Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="80" height="40"><rect width="80" height="40" fill="red"/></svg>'),
+            mimeType: 'image/svg+xml',
+            name: 'resize-fixture.svg',
+        });
+
+        await expect(page.locator('.ProseMirror img[alt="resize-fixture.svg"]')).toBeVisible();
+    });
+
     test('does not show text-selection actions for atomic Markdown blocks', async ({page}) => {
         await page.goto('/');
 
