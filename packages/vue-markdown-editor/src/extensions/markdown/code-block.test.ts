@@ -4,7 +4,7 @@ import {describe, expect, it} from 'vitest';
 import {basicMarkdownSchema} from '../../core/basic-editor';
 import {ExtensionsManager} from '../../core/extensions-manager';
 
-import {CodeBlock, CodeBlockAttrs, codeBlockNodeName, setCodeBlock} from './code-block';
+import {CodeBlock, CodeBlockAttrs, codeBlockNodeName, setCodeBlock, setCodeBlockLanguage} from './code-block';
 
 describe('CodeBlock extension', () => {
     it('preserves fenced code language and markup', () => {
@@ -18,7 +18,7 @@ describe('CodeBlock extension', () => {
         expect(parsed.firstChild?.attrs[CodeBlockAttrs.Lang]).toBe('typescript');
         expect(parsed.firstChild?.attrs[CodeBlockAttrs.Markup]).toBe('~~~');
         expect(result.serializer.serialize(parsed)).toBe('~~~typescript\nconst value = 1;\n~~~\n');
-        expect(result.plugins).toHaveLength(2);
+        expect(result.plugins).toHaveLength(3);
     });
 
     it('extends a fence that appears in code content', () => {
@@ -44,5 +44,18 @@ describe('CodeBlock extension', () => {
             next = state.apply(transaction);
         })).toBe(true);
         expect(next.doc.firstChild?.type.name).toBe(codeBlockNodeName);
+    });
+
+    it('updates the language of the current code block', () => {
+        const documentNode = basicMarkdownSchema.node('doc', null, [
+            basicMarkdownSchema.node('code_block', null, basicMarkdownSchema.text('const value = 1;')),
+        ]);
+        const state = EditorState.create({doc: documentNode, selection: TextSelection.create(documentNode, 2)});
+        let next = state;
+
+        expect(setCodeBlockLanguage('typescript')(state, (transaction) => {
+            next = state.apply(transaction);
+        })).toBe(true);
+        expect(next.doc.firstChild?.attrs[CodeBlockAttrs.Lang]).toBe('typescript');
     });
 });

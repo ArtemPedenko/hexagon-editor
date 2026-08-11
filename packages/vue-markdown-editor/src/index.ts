@@ -59,6 +59,7 @@ export {
     newlineInCode,
     resetCodeBlock,
     setCodeBlock,
+    setCodeBlockLanguage,
 } from './extensions/markdown/code-block';
 export type {CodeBlockOptions} from './extensions/markdown/code-block';
 export {

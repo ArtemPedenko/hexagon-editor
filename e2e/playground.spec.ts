@@ -94,6 +94,17 @@ test.describe('Markdown editor playground', () => {
         expect(errors).toEqual([]);
     });
 
+    test('sets a language and shows line numbers for a code block', async ({page}) => {
+        await page.goto('/');
+        await page.locator('.ProseMirror pre[data-language="typescript"] code').click();
+        const language = page.getByLabel('Язык кода');
+        await expect(language).toBeVisible();
+        await language.selectOption('typescript');
+
+        await expect(page.locator('.ProseMirror pre[data-language="typescript"]')).toBeVisible();
+        await expect(page.locator('.ProseMirror pre[data-language="typescript"] .markdown-editor__code-line-number')).toHaveText(['1', '2']);
+    });
+
     test('does not show text-selection actions for atomic Markdown blocks', async ({page}) => {
         await page.goto('/');
 

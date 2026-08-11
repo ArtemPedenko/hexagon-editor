@@ -81,10 +81,12 @@ import {
   toggleCode,
 } from "../extensions/markdown/code";
 import {
+  CodeBlockAttrs,
   codeBlockNodeSpec,
   codeBlockTokenSpecs,
   serializeCodeBlock,
   setCodeBlock,
+  setCodeBlockLanguage,
 } from "../extensions/markdown/code-block";
 import { toHeading } from "../extensions/markdown/heading";
 import {
@@ -648,6 +650,7 @@ export interface BasicEditorCommands {
   bulletList: Command;
   code: Command;
   codeBlock: Command;
+  setCodeBlockLanguage(language: string): Command;
   deleteTableColumn: Command;
   deleteTable: Command;
   deleteTableRow: Command;
@@ -684,6 +687,7 @@ export interface BasicWysiwygSelectionState {
   bulletList: boolean;
   code: boolean;
   codeBlock: boolean;
+  codeBlockLanguage: string | undefined;
   formula: boolean;
   headingLevel: number | undefined;
   image: boolean;
@@ -1321,6 +1325,7 @@ export function createBasicEditorCommands(): BasicEditorCommands {
     bulletList: toList(getNodeType("bullet_list")),
     code: toggleCode,
     codeBlock: setCodeBlock,
+    setCodeBlockLanguage,
     deleteTableColumn,
     deleteTable,
     deleteTableRow,
@@ -1400,7 +1405,12 @@ export function getBasicWysiwygSelectionState(
     bold: hasActiveMark(state, "strong"),
     bulletList: hasAncestor(state, "bullet_list"),
     code: hasActiveMark(state, "code"),
-    codeBlock: hasAncestor(state, "code_block"),
+    codeBlock: state.selection instanceof NodeSelection
+      ? state.selection.node.type.name === "code_block"
+      : hasAncestor(state, "code_block"),
+    codeBlockLanguage: state.selection instanceof NodeSelection && state.selection.node.type.name === "code_block"
+      ? state.selection.node.attrs[CodeBlockAttrs.Lang] as string
+      : $from.parent.type.name === "code_block" ? $from.parent.attrs[CodeBlockAttrs.Lang] as string : undefined,
     formula:
       atomicSourceNode?.type.name === "inline_math" ||
       atomicSourceNode?.type.name === "math_block",

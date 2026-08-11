@@ -111,6 +111,7 @@ const toolbarState = ref<BasicWysiwygSelectionState>({
     bulletList: false,
     code: false,
     codeBlock: false,
+    codeBlockLanguage: undefined,
     formula: false,
     headingFolded: false,
     headingLevel: undefined,
@@ -171,6 +172,7 @@ function destroyHosts(): void {
         bulletList: false,
         code: false,
         codeBlock: false,
+        codeBlockLanguage: undefined,
         formula: false,
         headingFolded: false,
         headingLevel: undefined,
@@ -561,6 +563,16 @@ defineExpose<MarkdownEditorExposed>({
         ▸
       </button>
       <button v-if="toolbarPreset === 'default'" :aria-pressed="toolbarState.codeBlock" type="button" title="Code block" @mousedown.prevent @click="execute(commands.codeBlock)">{ }</button>
+      <label v-if="toolbarPreset === 'default'" class="markdown-editor__code-language">
+        <select :value="toolbarState.codeBlockLanguage" aria-label="Язык кода" @change="execute(commands.setCodeBlockLanguage(($event.target as HTMLSelectElement).value))">
+          <option value="">Текст</option>
+          <option value="javascript">JavaScript</option>
+          <option value="typescript">TypeScript</option>
+          <option value="json">JSON</option>
+          <option value="html">HTML</option>
+          <option value="css">CSS</option>
+        </select>
+      </label>
       <button ref="linkButton" :aria-expanded="linkEditorVisible" :aria-pressed="toolbarState.linkHref !== undefined" type="button" :aria-label="t('link')" :title="t('link')" @mousedown.prevent @click="toggleLinkEditor">⌁</button>
       <label v-if="toolbarPreset === 'default'" class="markdown-editor__color" title="Цвет текста">
         <input aria-label="Цвет текста" type="color" value="#202125" @input="execute(commands.setColor(($event.target as HTMLInputElement).value))" />
@@ -752,6 +764,22 @@ defineExpose<MarkdownEditorExposed>({
     cursor: pointer;
 }
 
+.markdown-editor__code-language {
+    display: inline-flex;
+    height: 2rem;
+    padding: 0 0.25rem;
+    border-radius: 0.25rem;
+    background: var(--markdown-focus-background);
+}
+
+.markdown-editor__code-language select {
+    max-width: 8rem;
+    border: 0;
+    color: inherit;
+    background: transparent;
+    font: inherit;
+}
+
 .markdown-editor__link-form input {
     flex: 1;
     min-width: 0;
@@ -844,6 +872,42 @@ defineExpose<MarkdownEditorExposed>({
     line-height: 1.6;
     cursor: text;
 }
+
+.markdown-editor :deep(.ProseMirror pre) {
+    position: relative;
+    overflow: auto;
+    padding: 1.75rem 0.75rem 0.75rem;
+    border-radius: 0.375rem;
+    color: #e6edf3;
+    background: #161b22;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    line-height: 1.5;
+}
+
+.markdown-editor :deep(.ProseMirror pre[data-language]:not([data-language=''])::before) {
+    position: absolute;
+    top: 0.35rem;
+    right: 0.6rem;
+    color: #8b949e;
+    content: attr(data-language);
+    font: 0.72rem/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+    text-transform: uppercase;
+}
+
+.markdown-editor :deep(.markdown-editor__code-line-number) {
+    display: inline-block;
+    width: 2.25rem;
+    margin-right: 0.75rem;
+    user-select: none;
+    color: #6e7681;
+    text-align: right;
+}
+
+.markdown-editor :deep(.markdown-editor__code-token--comment) { color: #8b949e; }
+.markdown-editor :deep(.markdown-editor__code-token--keyword) { color: #ff7b72; }
+.markdown-editor :deep(.markdown-editor__code-token--number) { color: #79c0ff; }
+.markdown-editor :deep(.markdown-editor__code-token--string) { color: #a5d6ff; }
+.markdown-editor :deep(.markdown-editor__code-token--tag) { color: #7ee787; }
 
 .markdown-editor :deep(.ProseMirror table) {
     width: 100%;
