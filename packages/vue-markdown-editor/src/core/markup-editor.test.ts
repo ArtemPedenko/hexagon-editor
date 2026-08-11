@@ -43,7 +43,7 @@ describe('mountBasicMarkupEditor', () => {
         expect(editor.getValue()).toBe('# Updated!');
     });
 
-    it('opens search, focuses the editor and safely tears down the host', () => {
+    it('focuses the editor and safely tears down the host', () => {
         const target = document.createElement('div');
         document.body.append(target);
         const editor = mountBasicMarkupEditor({target});
@@ -51,13 +51,9 @@ describe('mountBasicMarkupEditor', () => {
         editor.focus();
         expect(target.contains(document.activeElement)).toBe(true);
 
-        editor.openSearch();
-        expect(target.querySelector('.cm-search')).not.toBeNull();
-
         editor.destroy();
         editor.destroy();
         editor.focus();
-        editor.openSearch();
         editor.setValue('ignored');
 
         expect(target.childElementCount).toBe(0);

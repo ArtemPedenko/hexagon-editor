@@ -2,14 +2,12 @@ import {defaultKeymap, history, historyKeymap, indentWithTab, redo, undo} from '
 import {markdown, markdownLanguage} from '@codemirror/lang-markdown';
 import {bracketMatching, defaultHighlightStyle, syntaxHighlighting} from '@codemirror/language';
 import {EditorState} from '@codemirror/state';
-import {highlightSelectionMatches, openSearchPanel, searchKeymap} from '@codemirror/search';
 import {EditorView, keymap, lineNumbers} from '@codemirror/view';
 
 export interface BasicMarkupEditor {
     destroy(): void;
     focus(): void;
     getValue(): string;
-    openSearch(): void;
     redo(): void;
     setValue(value: string): void;
     undo(): void;
@@ -47,7 +45,6 @@ export function mountBasicMarkupEditor({
                     indentWithTab,
                     ...defaultKeymap,
                     ...historyKeymap,
-                    ...searchKeymap,
                 ]),
                 EditorView.updateListener.of((update) => {
                     if (update.docChanged && !syncingExternalValue) {
@@ -73,11 +70,6 @@ export function mountBasicMarkupEditor({
             }
         },
         getValue: () => view.state.doc.toString(),
-        openSearch: () => {
-            if (!destroyed) {
-                openSearchPanel(view);
-            }
-        },
         redo: () => {
             if (!destroyed) {
                 redo(view);

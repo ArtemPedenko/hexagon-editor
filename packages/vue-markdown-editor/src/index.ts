@@ -151,8 +151,6 @@ export {Clipboard, isInsideCode} from './extensions/behavior/clipboard';
 export {Selection} from './extensions/behavior/selection';
 export {SelectionContext} from './extensions/behavior/selection-context';
 export type {SelectionContextOptions} from './extensions/behavior/selection-context';
-export {SearchQA} from './modules/search';
-export type {SearchCounter, SearchState} from './modules/search';
 
 /** Version of this independent Vue port. */
 export const VERSION = '0.1.0-alpha.0';

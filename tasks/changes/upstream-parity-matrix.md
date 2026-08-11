@@ -68,7 +68,7 @@
 | Upstream source | Vue target | Status |
 | --- | --- | --- |
 | `Autocomplete`, `ClicksOnEdges`, `Clipboard`, `CommandMenu`, `Cursor`, `EditorModeKeymap` | `src/extensions/behavior/*` | pending |
-| `FilePaste`, `History`, `Placeholder`, `Resizable`, `Search`, `Selection`, `SelectionContext`, `SharedState` | `src/extensions/behavior/*` | partial — `History`, document-level `Placeholder`, callback-based `FilePaste`, `Selection` node-selection decorations и Vue `SelectionContext` перенесены и подключены к DefaultPreset/visual editor; schema-driven placeholder decorations и остальные pending. |
+| `FilePaste`, `History`, `Placeholder`, `Resizable`, `Selection`, `SelectionContext`, `SharedState` | `src/extensions/behavior/*` | partial — `History`, document-level `Placeholder`, callback-based `FilePaste`, `Selection` node-selection decorations и Vue `SelectionContext` перенесены и подключены к DefaultPreset/visual editor; schema-driven placeholder decorations и остальные pending. Search is deliberately excluded. |
 | `ReactRenderer`, `WidgetDecoration` | `core/vue-renderer.ts`, `src/extensions/behavior/*` | partial |
 | `behavior/utils/*` | `src/extensions/behavior/utils/*` | pending |
 
@@ -92,7 +92,7 @@
 | Upstream source | Vue target | Status |
 | --- | --- | --- |
 | `core/*.test.ts`, extension tests, `markup/*.test.ts`, `bundle/Editor.test.ts` | Vitest tests in package | partial |
-| Browser scenarios for Markdown, actions, modes, uploads, clipboard, search, node views and accessibility | `e2e/playground.spec.ts` | partial |
+| Browser scenarios for Markdown, actions, modes, uploads, clipboard, node views and accessibility | `e2e/playground.spec.ts` | partial |
 | Desktop and narrow manual visual check | playground | pending |
 
 ## Следующий реализуемый срез

@@ -21,7 +21,6 @@ export interface MarkdownEditorExposed {
     focus(): void;
     getMode(): MarkdownEditorMode;
     getValue(): string;
-    openSearch(): Promise<void>;
     setMode(mode: MarkdownEditorMode): Promise<void>;
     setValue(value: string): void;
 }
@@ -415,13 +414,6 @@ async function setMode(nextMode: MarkdownEditorMode): Promise<void> {
     }
 }
 
-async function openSearch(): Promise<void> {
-    if (mode.value === 'wysiwyg') {
-        await setMode('markup');
-    }
-    markupEditor?.openSearch();
-}
-
 function execute(command: Parameters<BasicWysiwygEditor['run']>[0]): void {
     if (!props.readonly) {
         visualEditor?.run(command);
@@ -480,7 +472,6 @@ defineExpose<MarkdownEditorExposed>({
     focus: () => (mode.value === 'markup' ? markupEditor?.focus() : visualEditor?.focus()),
     getMode: () => mode.value,
     getValue: () => value.value,
-    openSearch,
     setMode,
     setValue,
 });

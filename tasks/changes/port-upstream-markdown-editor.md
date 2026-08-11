@@ -30,7 +30,7 @@
 2. Перенести редакторское ядро `core`, `common`, `commands`, `cm`, `pm`, `markup`, markdown-it, registries, менеджеры extensions/actions и public types. Сохранить порядок регистрации, транзакционную семантику, parser/serializer и Markdown/YFM round-trip.
 3. Перенести base, markdown, behavior, additional и YFM-расширения вертикальными срезами: сначала независимый код, затем Vue renderer/forms/node views/toolbar, затем upstream unit-тесты и Vue integration/e2e. Обязательный первый срез — полный `Lists`: schema, Markdown attrs, parser/serializer, input rules, commands, merge/collapse plugins и keymap.
 4. Заменить React view, hooks, toolbar, popups, forms и decorations Vue-компонентами и mount-адаптером ProseMirror; React и `react-dom` не должны попасть в runtime dependencies. Сохранить WYSIWYG, markup и split-view, accessibility, локали и темы upstream.
-5. Обновить exports, README, license notices и playground. Playground сделать parity-harness: одинаковые Markdown, действия и ожидаемые Markdown/DOM для списков, table, upload, clipboard, search, modes, Math, Mermaid, HTML, YFM и node views.
+5. Обновить exports, README, license notices и playground. Playground сделать parity-harness: одинаковые Markdown, действия и ожидаемые Markdown/DOM для списков, table, upload, clipboard, modes, Math, Mermaid, HTML, YFM и node views.
 
 ## Что не входит в задачу
 
