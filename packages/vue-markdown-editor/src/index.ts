@@ -111,6 +111,8 @@ export {defaultMermaidSource, insertMermaid, Mermaid, mermaidActionName, mermaid
 export type {MermaidActionContext} from './extensions/additional/mermaid';
 export {getQuoteLinkType, QuoteLink, quoteLinkActionName, quoteLinkNodeName, toggleQuoteLink} from './extensions/additional/quote-link';
 export type {QuoteLinkActionContext} from './extensions/additional/quote-link';
+export {defaultYfmHtml, insertYfmHtmlBlock, YfmHtmlBlock, yfmHtmlBlockActionName, yfmHtmlBlockNodeName} from './extensions/additional/yfm-html-block';
+export type {YfmHtmlBlockActionContext} from './extensions/additional/yfm-html-block';
 export {addImage, getImageType, Image, ImageAttr, imageNodeName} from './extensions/markdown/image';
 export type {AddImageAttrs} from './extensions/markdown/image';
 export {getMarkType, Mark, markMarkName, toggleHighlight} from './extensions/markdown/mark';

@@ -109,6 +109,19 @@ test.describe('Markdown editor playground', () => {
         await expect(diagram).toContainText('Start --> Finish');
     });
 
+    test('keeps YFM HTML source editable in the visual editor', async ({page}) => {
+        await page.goto('/');
+        await page.locator('.ProseMirror [data-yfm-html]').dblclick();
+
+        const sourceEditor = page.locator('.markdown-editor__atomic-source .cm-content');
+        await sourceEditor.click();
+        await page.keyboard.press('Control+a');
+        await page.keyboard.type('<aside>Updated YFM HTML</aside>');
+        await page.keyboard.press('Control+Enter');
+
+        await expect(page.locator('.ProseMirror [data-yfm-html]')).toContainText('<aside>Updated YFM HTML</aside>');
+    });
+
     test('does not insert another formula while editing the current formula', async ({page}) => {
         await page.goto('/');
         await page.locator('.ProseMirror [data-math-block]').dblclick();

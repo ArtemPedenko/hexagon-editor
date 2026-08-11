@@ -147,6 +147,7 @@ import {toggleFoldingHeading} from '../extensions/additional/folding-heading';
 import {configureMathMarkdown, createMathNodeSpecs, defaultMathLatex, mathSerializerNodes, mathTokenSpecs} from '../extensions/additional/math';
 import {configureMermaidMarkdown, createMermaidNodeSpec, mermaidTokenSpec, serializeMermaid} from '../extensions/additional/mermaid';
 import {configureQuoteLinkMarkdown, quoteLinkNodeSpec, quoteLinkTokenSpec, serializeQuoteLink} from '../extensions/additional/quote-link';
+import {configureYfmHtmlBlockMarkdown, createYfmHtmlBlockNodeSpec, serializeYfmHtmlBlock, yfmHtmlBlockTokenSpec} from '../extensions/additional/yfm-html-block';
 
 const basicMarks: Record<string, MarkSpec> = {
   ins: underlineMarkSpec,
@@ -265,12 +266,7 @@ const extendedMarkdownNodes: Record<string, NodeSpec> = {
     group: "block",
     toDOM: (node) => renderHtmlBlock(node.attrs.html, "data-raw-html"),
   },
-  yfm_html_block: {
-    atom: true,
-    attrs: { html: { default: "" } },
-    group: "block",
-    toDOM: (node) => renderYfmHtml(node.attrs.html),
-  },
+  yfm_html_block: createYfmHtmlBlockNodeSpec((html) => renderYfmHtml(html)),
 };
 
 /** Schema for the first WYSIWYG milestone. YFM-specific nodes are added later. */
@@ -356,10 +352,7 @@ const tableTokenSpecs: Record<string, ParseSpec> = {
   th: { block: TableNode.HeaderCell },
   thead: { block: TableNode.Head },
   tr: { block: TableNode.Row },
-  yfm_html_block: {
-    node: "yfm_html_block",
-    getAttrs: (token) => ({ html: token.content }),
-  },
+  yfm_html_block: yfmHtmlBlockTokenSpec,
 };
 
 function createExtendedMarkdownIt(markdown = new MarkdownIt("commonmark", { html: true })): MarkdownIt {
@@ -373,6 +366,7 @@ function createExtendedMarkdownIt(markdown = new MarkdownIt("commonmark", { html
   configureMathMarkdown(markdown);
   configureMermaidMarkdown(markdown);
   configureQuoteLinkMarkdown(markdown);
+  configureYfmHtmlBlockMarkdown(markdown);
   markdown.core.ruler.after("block", "folding_heading", (state) => {
     for (const [index, token] of state.tokens.entries()) {
       const inline = state.tokens[index + 1];
@@ -417,9 +411,8 @@ function createExtendedMarkdownIt(markdown = new MarkdownIt("commonmark", { html
     "directive",
     (state, startLine, endLine, silent) => {
       const start = state.getLines(startLine, startLine + 1, 0, false).trim();
-      const yfmHtml = start === ":::html";
       const match = start.match(/^:::\s*(\w+)\s*$/);
-      if (match === null) return false;
+      if (match === null || start === ":::html") return false;
       let line = startLine + 1;
       while (
         line < endLine &&
@@ -428,11 +421,7 @@ function createExtendedMarkdownIt(markdown = new MarkdownIt("commonmark", { html
         line += 1;
       if (line === endLine) return false;
       if (!silent) {
-        const token = state.push(
-          yfmHtml ? "yfm_html_block" : "directive",
-          "",
-          0,
-        );
+        const token = state.push("directive", "", 0);
         token.content = state.getLines(startLine + 1, line, 0, false).trim();
         token.info = match[1] ?? "note";
       }
@@ -544,10 +533,7 @@ const basicMarkdownSerializerNodes = {
   soft_break: serializeSoftBreak,
   ...deflistSerializerNodes,
   ...htmlSerializerNodes,
-  yfm_html_block(state, node) {
-    state.write(`:::html\n${node.attrs.html}\n:::`);
-    state.closeBlock(node);
-  },
+  yfm_html_block: serializeYfmHtmlBlock,
   quote_link: serializeQuoteLink,
   ...tableSerializerNodes,
 };

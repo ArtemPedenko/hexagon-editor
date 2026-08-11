@@ -60,7 +60,7 @@
 | `additional/Math` | `extensions/additional/math.ts`, `core/basic-editor.ts` | done | Самостоятельный extension: локальный Markdown-it tokenizer без Diplodoc, schema/parser/serializer, input rules, VS Code LaTeX paste, keymap и action contract для inline/block-формул; KaTeX renderer, локальный source editor, подсказка редактирования и отображение ошибки формулы подключены в Vue visual host. |
 | `additional/Mermaid` | `extensions/additional/mermaid.ts`, `core/basic-editor.ts` | done | Самостоятельный extension: Mermaid fence tokenizer, schema/parser/serializer, action для вставки диаграммы и unit-тест подключены к DefaultPreset. Vue visual host переиспользует атомарный source editor и optional host renderer без bundling Mermaid runtime. |
 | `additional/QuoteLink` | `extensions/additional/quote-link.ts`, `core/basic-editor.ts` | done | Самостоятельный extension: QuoteLink tokenizer, schema/parser/serializer, toggle action и input rule подключены к DefaultPreset. Visual host сохраняет текущий blockquote DOM и Markdown round-trip. Placeholder form и runtime-стили upstream пока не требуются локальному Vue host. |
-| `additional/YfmHtmlBlock` | `src/extensions/additional/*` | pending | В `basic-editor` есть часть рендера/Markdown, но отсутствуют upstream extensions/actions/views. |
+| `additional/YfmHtmlBlock` | `extensions/additional/yfm-html-block.ts`, `core/basic-editor.ts` | done | Самостоятельный extension: tokenizer `:::html`, schema/parser/serializer и action вставки подключены к DefaultPreset. Vue visual host использует atomic source editor и host-provided HTML renderer вместо Diplodoc runtime. |
 | `additional/GPT/*`, `icons/GPT*.tsx`, GPT i18n/tests | — | excluded | Явное исключение. |
 
 ## Behavior extensions
