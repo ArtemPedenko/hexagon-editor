@@ -1,0 +1,34 @@
+import katex from 'katex';
+
+import {getAdvancedMarkdownRenderers} from './optional-renderers';
+
+export function renderHtmlBlock(html: string, attribute: string): HTMLElement {
+    const element = document.createElement('div');
+    element.setAttribute(attribute, '');
+    element.innerHTML = html;
+    return element;
+}
+
+export function renderOptionalBlock(kind: 'math' | 'mermaid', source: string, display = true): HTMLElement {
+    const renderers = getAdvancedMarkdownRenderers();
+    if (kind === 'math' && renderers.math !== undefined) return renderers.math(source, display);
+    if (kind === 'mermaid' && renderers.mermaid !== undefined) return renderers.mermaid(source);
+    const element = document.createElement(kind === 'math' && !display ? 'span' : 'pre');
+    element.setAttribute(`data-${kind}${kind === 'math' ? display ? '-block' : '-inline' : ''}`, '');
+    if (kind === 'math') {
+        element.setAttribute('aria-label', 'Formula. Double-click to edit.');
+        try { element.innerHTML = katex.renderToString(source, {displayMode: display, throwOnError: true}); }
+        catch { element.setAttribute('data-math-error', ''); const fallback = document.createElement(display ? 'pre' : 'span'); fallback.className = 'markdown-editor__math-error'; fallback.textContent = source; element.replaceChildren(fallback); }
+        const hint = document.createElement('span'); hint.className = 'markdown-editor__math-hint'; hint.setAttribute('aria-hidden', 'true'); hint.textContent = 'Double-click to edit'; element.append(hint);
+    } else element.textContent = source;
+    return element;
+}
+
+export function renderYfmHtml(source: string): HTMLElement {
+    const renderer = getAdvancedMarkdownRenderers().html;
+    if (renderer !== undefined) return renderer(source);
+    const element = document.createElement('pre');
+    element.setAttribute('data-yfm-html', '');
+    element.textContent = source;
+    return element;
+}

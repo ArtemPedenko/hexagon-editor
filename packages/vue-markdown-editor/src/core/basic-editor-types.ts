@@ -1,0 +1,28 @@
+import type {Command, Plugin} from 'prosemirror-state';
+
+import type {SelectionContextOptions} from '../extensions/behavior/selection-context';
+import type {ImageObjectFit} from '../extensions/markdown/image';
+
+export interface BasicEditorCommands {
+    addMathInline: Command; addTableColumn: Command; addTableRow: Command; bold: Command; bulletList: Command; code: Command; codeBlock: Command;
+    setCodeBlockLanguage(language: string): Command; deleteTableColumn: Command; deleteTable: Command; deleteTableRow: Command; heading(level: number): Command;
+    horizontalRule: Command; insertFile(href: string, name: string): Command; insertImage(src: string, alt: string, title?: string): Command;
+    setImageDisplay(width?: number | string, objectFit?: ImageObjectFit, height?: number | null): Command; insertMathBlock: Command; insertInlineMath: Command;
+    insertTable(rows?: number, columns?: number): Command; italic: Command; liftListItem: Command; link(href: string): Command; removeLink: Command;
+    setLink(href: string, title?: string, text?: string): Command; mark: Command; orderedList: Command; paragraph: Command; quote: Command; redo: Command;
+    setColor(color: string): Command; sinkListItem: Command; splitListItem: Command; strikethrough: Command; toMathBlock: Command; toggleHeadingFolding: Command;
+    underline: Command; undo: Command;
+}
+
+export interface BasicWysiwygSelectionState {
+    bold: boolean; bulletList: boolean; code: boolean; codeBlock: boolean; codeBlockLanguage: string | undefined; formula: boolean; headingFolded: boolean;
+    headingLevel: number | undefined; image: boolean; imageObjectFit: string | undefined; italic: boolean; linkHref: string | undefined; linkText: string | undefined;
+    linkTitle: string | undefined; mark: boolean; orderedList: boolean; quote: boolean; strikethrough: boolean; underline: boolean;
+}
+
+export interface BasicWysiwygEditor { destroy(): void; focus(): void; getValue(): string; run(command: Command): boolean; setValue(value: string): void; }
+
+export interface MountBasicWysiwygEditorOptions {
+    editable?: boolean; initialValue?: string; onChange?(value: string): void; onFiles?(files: readonly File[]): void;
+    onSelectionChange?(selection: BasicWysiwygSelectionState): void; placeholder?: string; plugins?: readonly Plugin[]; selectionContext?: SelectionContextOptions; target: HTMLElement;
+}

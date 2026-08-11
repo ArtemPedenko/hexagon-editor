@@ -3,6 +3,9 @@ import {autoUpdate, computePosition, flip, offset, shift} from '@floating-ui/dom
 import {computed, h, nextTick, onBeforeUnmount, onMounted, ref, watch} from 'vue';
 import type {FunctionalComponent} from 'vue';
 
+import MarkdownEditorToolbar from './components/MarkdownEditorToolbar.vue';
+import MarkdownEditorImageForm from './components/MarkdownEditorImageForm.vue';
+import MarkdownEditorLinkForm from './components/MarkdownEditorLinkForm.vue';
 import {
     createBasicEditorCommands,
     mountBasicMarkupEditor,
@@ -88,22 +91,21 @@ const emit = defineEmits<{
 }>();
 
 const commands = createBasicEditorCommands();
+const editorToolbar = ref<InstanceType<typeof MarkdownEditorToolbar>>();
 const markupTarget = ref<HTMLElement>();
 const modeTablist = ref<HTMLElement>();
 const value = ref(props.modelValue);
 const visualTarget = ref<HTMLElement>();
 const mode = ref<MarkdownEditorMode>(props.mode);
-const imageButton = ref<HTMLElement>();
 const imageEditorVisible = ref(false);
 const imageUrl = ref('https://');
 const imageAlt = ref('');
 const imageTitle = ref('');
-const imageForm = ref<HTMLElement>();
+const imageForm = ref<InstanceType<typeof MarkdownEditorImageForm>>();
 const linkEditorVisible = ref(false);
 const linkUrl = ref('');
 const linkText = ref('');
 const linkTitle = ref('');
-const fileInput = ref<HTMLInputElement>();
 const formulaMenuVisible = ref(false);
 const uploadKind = ref<'file' | 'image'>('image');
 const toolbarState = ref<BasicWysiwygSelectionState>({
@@ -131,14 +133,11 @@ const textStyle = computed(() => toolbarState.value.headingLevel?.toString() ?? 
 const textStyleLabel = computed(() => textStyle.value === 'paragraph' ? 'Текст' : `H${textStyle.value}`);
 const htmlDirective = '::: html\n\n<div>Add HTML code here</div>\n\n:::';
 const mathBlock = '$$\nE = mc^2\n$$';
-const formulaButton = ref<HTMLElement>();
 const formulaMenu = ref<HTMLElement>();
-const headingButton = ref<HTMLElement>();
 const headingMenu = ref<HTMLElement>();
 const headingMenuVisible = ref(false);
 let stopImageFloating: (() => void) | undefined;
-const linkButton = ref<HTMLElement>();
-const linkForm = ref<HTMLElement>();
+const linkForm = ref<InstanceType<typeof MarkdownEditorLinkForm>>();
 let stopFormulaFloating: (() => void) | undefined;
 let stopHeadingFloating: (() => void) | undefined;
 let stopLinkFloating: (() => void) | undefined;
@@ -270,16 +269,16 @@ function startFloating(reference: HTMLElement | undefined, floating: HTMLElement
     onCleanup(autoUpdate(reference, floating, update));
 }
 
-async function showHeadingMenu(): Promise<void> {
+async function showHeadingMenu(reference: HTMLElement): Promise<void> {
     headingMenuVisible.value = !headingMenuVisible.value;
     stopHeadingFloating?.();
     stopHeadingFloating = undefined;
     if (!headingMenuVisible.value) return;
     await nextTick();
-    startFloating(headingButton.value, headingMenu.value, (cleanup) => { stopHeadingFloating = cleanup; });
+    startFloating(reference, headingMenu.value, (cleanup) => { stopHeadingFloating = cleanup; });
 }
 
-async function toggleLinkEditor(): Promise<void> {
+async function toggleLinkEditor(reference: HTMLElement): Promise<void> {
     linkEditorVisible.value = !linkEditorVisible.value;
     stopLinkFloating?.();
     stopLinkFloating = undefined;
@@ -288,16 +287,16 @@ async function toggleLinkEditor(): Promise<void> {
     linkText.value = toolbarState.value.linkText ?? '';
     linkTitle.value = toolbarState.value.linkTitle ?? '';
     await nextTick();
-    startFloating(linkButton.value, linkForm.value, (cleanup) => { stopLinkFloating = cleanup; });
+    startFloating(reference, linkForm.value?.element, (cleanup) => { stopLinkFloating = cleanup; });
 }
 
-async function toggleImageEditor(): Promise<void> {
+async function toggleImageEditor(reference: HTMLElement): Promise<void> {
     imageEditorVisible.value = !imageEditorVisible.value;
     stopImageFloating?.();
     stopImageFloating = undefined;
     if (!imageEditorVisible.value) return;
     await nextTick();
-    startFloating(imageButton.value, imageForm.value, (cleanup) => { stopImageFloating = cleanup; });
+    startFloating(reference, imageForm.value?.element, (cleanup) => { stopImageFloating = cleanup; });
 }
 
 async function insertHtmlDirective(): Promise<void> {
@@ -326,14 +325,14 @@ function insertInlineMath(): void {
     visualEditor?.run(commands.insertInlineMath);
 }
 
-async function toggleFormulaMenu(): Promise<void> {
+async function toggleFormulaMenu(reference: HTMLElement): Promise<void> {
     if (!toolbarState.value.formula) {
         formulaMenuVisible.value = !formulaMenuVisible.value;
         stopFormulaFloating?.();
         stopFormulaFloating = undefined;
         if (formulaMenuVisible.value) {
             await nextTick();
-            startFloating(formulaButton.value, formulaMenu.value, (cleanup) => { stopFormulaFloating = cleanup; });
+            startFloating(reference, formulaMenu.value, (cleanup) => { stopFormulaFloating = cleanup; });
         }
     }
 }
@@ -341,22 +340,22 @@ async function toggleFormulaMenu(): Promise<void> {
 function closeFloatingPanels(event: PointerEvent): void {
     const target = event.target;
     if (!(target instanceof Node)) return;
-    if (!headingButton.value?.contains(target) && !headingMenu.value?.contains(target)) {
+    if (!headingMenu.value?.contains(target)) {
         headingMenuVisible.value = false;
         stopHeadingFloating?.();
         stopHeadingFloating = undefined;
     }
-    if (!formulaButton.value?.contains(target) && !formulaMenu.value?.contains(target)) {
+    if (!formulaMenu.value?.contains(target)) {
         formulaMenuVisible.value = false;
         stopFormulaFloating?.();
         stopFormulaFloating = undefined;
     }
-    if (!linkButton.value?.contains(target) && !linkForm.value?.contains(target)) {
+    if (!linkForm.value?.element?.contains(target)) {
         linkEditorVisible.value = false;
         stopLinkFloating?.();
         stopLinkFloating = undefined;
     }
-    if (!imageButton.value?.contains(target) && !imageForm.value?.contains(target)) {
+    if (!imageForm.value?.element?.contains(target)) {
         imageEditorVisible.value = false;
         stopImageFloating?.();
         stopImageFloating = undefined;
@@ -379,9 +378,13 @@ function closePanelsOnEscape(event: KeyboardEvent): void {
     stopLinkFloating = undefined;
 }
 
-function openFilePicker(kind: 'file' | 'image'): void {
+function setUploadKind(kind: 'file' | 'image'): void {
     uploadKind.value = kind;
-    fileInput.value?.click();
+}
+
+function openImageFilePicker(): void {
+    setUploadKind('image');
+    editorToolbar.value?.openFilePicker('image');
 }
 
 async function uploadFiles(files: readonly File[]): Promise<void> {
@@ -401,16 +404,6 @@ async function uploadFiles(files: readonly File[]): Promise<void> {
             emit('upload-error', uploadError, file);
         }
     }
-}
-
-async function uploadSelectedFiles(event: Event): Promise<void> {
-    const input = event.target;
-    if (!(input instanceof HTMLInputElement) || input.files === null) {
-        return;
-    }
-
-    await uploadFiles(Array.from(input.files));
-    input.value = '';
 }
 
 function mountHosts(): void {
@@ -539,78 +532,29 @@ defineExpose<MarkdownEditorExposed>({
       <slot name="header" />
     </header>
 
-    <div v-if="mode !== 'markup' && !readonly" class="markdown-editor__toolbar" data-markdown-editor-toolbar role="toolbar" aria-label="Форматирование Markdown">
-      <button type="button" :aria-label="t('undo')" :title="t('undo')" @mousedown.prevent @click="execute(commands.undo)">↶</button>
-      <button type="button" :aria-label="t('redo')" :title="t('redo')" @mousedown.prevent @click="execute(commands.redo)">↷</button>
-      <button ref="headingButton" :aria-expanded="headingMenuVisible" :aria-label="t('heading')" :aria-pressed="toolbarState.headingLevel !== undefined" :title="t('heading')" type="button" @mousedown.prevent @click="showHeadingMenu">{{ textStyleLabel }}⌄</button>
-      <button :aria-label="t('bold')" :aria-pressed="toolbarState.bold" type="button" :title="t('bold')" @mousedown.prevent @click="execute(commands.bold)"><strong>B</strong></button>
-      <button :aria-label="t('italic')" :aria-pressed="toolbarState.italic" type="button" :title="t('italic')" @mousedown.prevent @click="execute(commands.italic)"><em>I</em></button>
-      <button :aria-pressed="toolbarState.underline" type="button" title="Подчёркивание" @mousedown.prevent @click="execute(commands.underline)"><u>U</u></button>
-      <button :aria-pressed="toolbarState.strikethrough" type="button" title="Зачёркивание" @mousedown.prevent @click="execute(commands.strikethrough)"><s>S</s></button>
-      <button v-if="toolbarPreset === 'default'" :aria-pressed="toolbarState.mark" type="button" title="Выделить" @mousedown.prevent @click="execute(commands.mark)">▣</button>
-      <button v-if="toolbarPreset === 'default'" :aria-label="t('code')" :aria-pressed="toolbarState.code" type="button" :title="t('code')" @mousedown.prevent @click="execute(commands.code)">&lt;/&gt;</button>
-      <button :aria-pressed="toolbarState.bulletList" type="button" title="Маркированный список" @mousedown.prevent @click="execute(commands.bulletList)">•≡</button>
-      <button :aria-pressed="toolbarState.orderedList" type="button" title="Нумерованный список" @mousedown.prevent @click="execute(commands.orderedList)">1≡</button>
-      <button :aria-pressed="toolbarState.quote" type="button" title="Цитата" @mousedown.prevent @click="execute(commands.quote)">❝</button>
-      <button
-        v-if="toolbarState.headingLevel !== undefined"
-        :aria-pressed="toolbarState.headingFolded"
-        type="button"
-        title="Свернуть раздел"
-        @mousedown.prevent
-        @click="execute(commands.toggleHeadingFolding)"
-      >
-        ▸
-      </button>
-      <button v-if="toolbarPreset === 'default'" :aria-pressed="toolbarState.codeBlock" type="button" title="Code block" @mousedown.prevent @click="execute(commands.codeBlock)">{ }</button>
-      <label v-if="toolbarPreset === 'default'" class="markdown-editor__code-language">
-        <select :value="toolbarState.codeBlockLanguage" aria-label="Язык кода" @change="execute(commands.setCodeBlockLanguage(($event.target as HTMLSelectElement).value))">
-          <option value="">Текст</option>
-          <option value="javascript">JavaScript</option>
-          <option value="typescript">TypeScript</option>
-          <option value="json">JSON</option>
-          <option value="html">HTML</option>
-          <option value="css">CSS</option>
-        </select>
-      </label>
-      <button ref="linkButton" :aria-expanded="linkEditorVisible" :aria-pressed="toolbarState.linkHref !== undefined" type="button" :aria-label="t('link')" :title="t('link')" @mousedown.prevent @click="toggleLinkEditor">⌁</button>
-      <label v-if="toolbarPreset === 'default'" class="markdown-editor__color" title="Цвет текста">
-        <input aria-label="Цвет текста" type="color" value="#202125" @input="execute(commands.setColor(($event.target as HTMLInputElement).value))" />
-      </label>
-      <button v-if="toolbarPreset === 'default'" ref="imageButton" :aria-expanded="imageEditorVisible" type="button" title="Изображение" @mousedown.prevent @click="toggleImageEditor">▧</button>
-      <template v-if="toolbarState.image">
-        <button type="button" title="На всю ширину" @mousedown.prevent @click="execute(commands.setImageDisplay('100%', 'contain', null))">↔</button>
-        <label class="markdown-editor__image-fit">
-          <select :value="toolbarState.imageObjectFit" aria-label="Отображение изображения" @change="execute(commands.setImageDisplay(undefined, ($event.target as HTMLSelectElement).value as 'contain' | 'cover' | 'fill' | 'none' | 'scale-down'))">
-            <option value="contain">Contain</option>
-            <option value="cover">Cover</option>
-            <option value="fill">Fill</option>
-            <option value="none">None</option>
-            <option value="scale-down">Scale down</option>
-          </select>
-        </label>
-      </template>
-      <button v-if="toolbarPreset === 'default'" type="button" title="Файл" @mousedown.prevent @click="openFilePicker('file')">⌕</button>
-      <div v-if="toolbarPreset === 'default'" class="markdown-editor__formula-control">
-        <button
-          ref="formulaButton"
-          :aria-expanded="formulaMenuVisible"
-          :aria-label="t('formula')"
-          :aria-pressed="toolbarState.formula"
-          :title="t('formula')"
-          type="button"
-          @mousedown.prevent
-          @click="toggleFormulaMenu"
-        >
-          Σ
-        </button>
-      </div>
-      <button v-if="toolbarPreset === 'default'" type="button" :aria-label="t('html')" :title="t('html')" @mousedown.prevent @click="insertHtmlDirective">&lt;/&gt;</button>
-      <button v-if="toolbarPreset === 'default'" type="button" title="Горизонтальная линия" @mousedown.prevent @click="execute(commands.horizontalRule)">―</button>
-      <button v-if="toolbarPreset === 'default'" type="button" title="Таблица 3×3" @mousedown.prevent @click="execute(commands.insertTable())">▦</button>
-      <slot name="toolbar" :commands="commands" :execute="execute" />
-      <input ref="fileInput" class="markdown-editor__file-input" multiple type="file" @change="uploadSelectedFiles" />
-    </div>
+    <MarkdownEditorToolbar
+      v-if="mode !== 'markup' && !readonly"
+      ref="editorToolbar"
+      :commands="commands"
+      :formula-menu-visible="formulaMenuVisible"
+      :heading-menu-visible="headingMenuVisible"
+      :image-editor-visible="imageEditorVisible"
+      :link-editor-visible="linkEditorVisible"
+      :state="toolbarState"
+      :text-style-label="textStyleLabel"
+      :toolbar-preset="toolbarPreset"
+      :translate="t"
+      @execute="execute"
+      @insert-html="insertHtmlDirective"
+      @open-file-picker="setUploadKind"
+      @toggle-formula-menu="toggleFormulaMenu"
+      @toggle-heading-menu="showHeadingMenu"
+      @toggle-image-editor="toggleImageEditor"
+      @toggle-link-editor="toggleLinkEditor"
+      @upload-files="uploadFiles"
+    >
+      <template #default="slotProps"><slot name="toolbar" v-bind="slotProps" /></template>
+    </MarkdownEditorToolbar>
 
     <Teleport to="body">
       <div v-if="headingMenuVisible" ref="headingMenu" class="markdown-editor__floating-menu" role="menu" :aria-label="t('heading')">
@@ -620,20 +564,32 @@ defineExpose<MarkdownEditorExposed>({
         <button role="menuitem" type="button" @click="insertInlineMath">Формула в тексте</button>
         <button role="menuitem" type="button" @click="insertMathBlock">Блок с формулой</button>
       </div>
-      <form v-if="linkEditorVisible" ref="linkForm" class="markdown-editor__link-form markdown-editor__link-form--extended" @submit.prevent="applyLink">
-        <input v-model="linkUrl" aria-label="Адрес ссылки" placeholder="https://example.com" type="url" />
-        <input v-model="linkText" aria-label="Текст ссылки" placeholder="Текст ссылки" />
-        <input v-model="linkTitle" aria-label="Заголовок ссылки" placeholder="Заголовок" />
-        <button v-if="toolbarState.linkHref !== undefined" type="button" title="Удалить ссылку" @mousedown.prevent @click="execute(commands.removeLink)">Удалить</button>
-        <button type="submit">Готово</button>
-      </form>
-      <form v-if="imageEditorVisible" ref="imageForm" class="markdown-editor__link-form markdown-editor__image-form" @submit.prevent="applyImage">
-        <input v-model="imageUrl" aria-label="Адрес изображения" type="url" required />
-        <input v-model="imageAlt" aria-label="Описание изображения" placeholder="Описание" />
-        <input v-model="imageTitle" aria-label="Заголовок изображения" placeholder="Заголовок" />
-        <button v-if="uploadFile !== undefined" type="button" title="Загрузить изображение" @mousedown.prevent @click="openFilePicker('image')">▧</button>
-        <button type="submit">Готово</button>
-      </form>
+      <MarkdownEditorLinkForm
+        v-if="linkEditorVisible"
+        ref="linkForm"
+        :has-current-link="toolbarState.linkHref !== undefined"
+        :text="linkText"
+        :title="linkTitle"
+        :url="linkUrl"
+        @apply="applyLink"
+        @remove="execute(commands.removeLink)"
+        @update:text="linkText = $event"
+        @update:title="linkTitle = $event"
+        @update:url="linkUrl = $event"
+      />
+      <MarkdownEditorImageForm
+        v-if="imageEditorVisible"
+        ref="imageForm"
+        :alt="imageAlt"
+        :can-upload="uploadFile !== undefined"
+        :title="imageTitle"
+        :url="imageUrl"
+        @apply="applyImage"
+        @open-upload="openImageFilePicker"
+        @update:alt="imageAlt = $event"
+        @update:title="imageTitle = $event"
+        @update:url="imageUrl = $event"
+      />
     </Teleport>
 
     <div class="markdown-editor__hosts" :class="{'markdown-editor__hosts--split': mode === 'split'}">
