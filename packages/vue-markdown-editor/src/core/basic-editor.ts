@@ -133,13 +133,13 @@ import {
 import {
   addTableColumn,
   addTableRow,
-  TableCellAlign,
-  TableNode,
-  deleteTableColumn,
   deleteTable,
+  deleteTableColumn,
   deleteTableRow,
   insertTable,
   setTableColumnAlignment,
+  TableCellAlign,
+  TableNode,
   tableNodeSpecs,
   tableSerializerNodes,
 } from "../extensions/markdown/table";
@@ -200,10 +200,24 @@ function renderOptionalBlock(
     "",
   );
   if (kind === "math") {
-    element.innerHTML = katex.renderToString(source, {
-      displayMode: display,
-      throwOnError: false,
-    });
+    element.setAttribute("aria-label", "Formula. Double-click to edit.");
+    try {
+      element.innerHTML = katex.renderToString(source, {
+        displayMode: display,
+        throwOnError: true,
+      });
+    } catch (error) {
+      element.setAttribute("data-math-error", "");
+      const fallback = document.createElement(display ? "pre" : "span");
+      fallback.className = "markdown-editor__math-error";
+      fallback.textContent = source;
+      element.replaceChildren(fallback);
+    }
+    const hint = document.createElement("span");
+    hint.className = "markdown-editor__math-hint";
+    hint.setAttribute("aria-hidden", "true");
+    hint.textContent = "Double-click to edit";
+    element.append(hint);
   } else {
     element.textContent = source;
   }
@@ -1545,7 +1559,10 @@ export function mountBasicWysiwygEditor({
   for (const plugin of editorState.plugins) {
     const getDecorations = plugin.props.decorations;
     if (getDecorations !== undefined) {
-      plugin.props.decorations = (state) => getDecorations(state) ?? DecorationSet.empty;
+      plugin.props.decorations = (state) => {
+        const decorations = getDecorations.call(plugin, state);
+        return decorations instanceof DecorationSet ? decorations : DecorationSet.empty;
+      };
     }
   }
   view = new EditorView(target, {

@@ -1,12 +1,11 @@
-import {setBlockType} from 'prosemirror-commands';
 import {InputRule, textblockTypeInputRule} from 'prosemirror-inputrules';
 import type MarkdownIt from 'markdown-it';
 import {Fragment} from 'prosemirror-model';
 import type {NodeSpec, NodeType} from 'prosemirror-model';
 import type {ParseSpec} from 'prosemirror-markdown';
 import type {MarkdownSerializer} from 'prosemirror-markdown';
-import {NodeSelection, Plugin, PluginKey, TextSelection} from 'prosemirror-state';
-import type {Command, EditorState} from 'prosemirror-state';
+import {EditorState, NodeSelection, Plugin, PluginKey, TextSelection} from 'prosemirror-state';
+import type {Command} from 'prosemirror-state';
 
 import type {ExtensionAuto} from '../../core/extension-builder';
 
@@ -18,6 +17,11 @@ export enum MathNode {
 export const defaultMathLatex = 'E = mc^2';
 export const mathInlineActionName = 'addMathInline';
 export const mathBlockActionName = 'toMathBlock';
+
+export interface MathActionContext {
+    dispatch?: Parameters<Command>[1];
+    state: EditorState;
+}
 const vscodeEditorDataType = 'vscode-editor-data';
 const latexModes = new Set(['tex', 'latex', 'bibtex', 'doctex', 'latex-expl3', 'pweave', 'jlweave', 'rsweave']);
 const latexPastePluginKey = new PluginKey('latex-paste');
@@ -157,7 +161,10 @@ export const insertMathBlock: Command = (state, dispatch) => {
 
 export const toMathBlock: Command = (state, dispatch) => {
     const type = state.schema.nodes[MathNode.Block];
-    return type === undefined ? false : setBlockType(type, {latex: defaultMathLatex})(state, dispatch);
+    const {$from} = state.selection;
+    if (type === undefined || !$from.parent.isTextblock) return false;
+    dispatch?.(state.tr.replaceWith($from.before(), $from.after(), type.create({latex: defaultMathLatex})).scrollIntoView());
+    return true;
 };
 
 export const moveCursorLeftOfMathInline: Command = (state, dispatch) => {
@@ -180,6 +187,18 @@ export const selectMathInlineBeforeCursor: Command = (state, dispatch) => {
     dispatch?.(state.tr.setSelection(NodeSelection.create(state.doc, $from.pos - $from.nodeBefore.nodeSize)));
     return true;
 };
+
+function isInsideMath(state: EditorState, node: MathNode): boolean {
+    if (state.selection instanceof NodeSelection && state.selection.node.type.name === node) return true;
+    for (let depth = state.selection.$from.depth; depth > 0; depth -= 1) {
+        if (state.selection.$from.node(depth).type.name === node) return true;
+    }
+    return false;
+}
+
+function isMathActionContext(value: unknown): value is MathActionContext {
+    return typeof value === 'object' && value !== null && 'state' in value && value.state instanceof EditorState;
+}
 
 function isInCode(state: EditorState, from: number, to: number): boolean {
     const code = state.schema.marks.code;
@@ -209,6 +228,22 @@ export const Math: ExtensionAuto = (builder) => {
         builder.addNodeSpec(node, () => mathNodeSpecs[node]).addMarkdownTokenParserSpec(node, () => mathTokenSpecs[node]).addNodeSerializerSpec(node, () => mathSerializerNodes[node]);
     }
     builder
+        .addAction(mathInlineActionName, () => ({
+            isActive: (context?: unknown) => isMathActionContext(context) && isInsideMath(context.state, MathNode.Inline),
+            isEnabled: (context?: unknown) => isMathActionContext(context) && insertInlineMath(context.state),
+            metadata: () => undefined,
+            run: (context?: unknown) => {
+                if (isMathActionContext(context)) insertInlineMath(context.state, context.dispatch);
+            },
+        }))
+        .addAction(mathBlockActionName, () => ({
+            isActive: (context?: unknown) => isMathActionContext(context) && isInsideMath(context.state, MathNode.Block),
+            isEnabled: (context?: unknown) => isMathActionContext(context) && toMathBlock(context.state),
+            metadata: () => undefined,
+            run: (context?: unknown) => {
+                if (isMathActionContext(context)) toMathBlock(context.state, context.dispatch);
+            },
+        }))
         .addInputRules(({schema}) => ({
             rules: [
                 textblockTypeInputRule(/^\$\$\s$/, getMathNodeType(schema, MathNode.Block)),

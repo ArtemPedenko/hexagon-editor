@@ -133,13 +133,12 @@ export const FoldingHeading: ExtensionAuto = (builder) => {
             key: foldingPluginKey,
             props: {
                 decorations: (state) => foldingPluginKey.getState(state) ?? DecorationSet.empty,
-                handleClickOn: (view, _position, node, nodePosition, event, direct) => {
-                    if (!direct || !isFoldingHeading(node)) return false;
-                    const target = event.target;
-                    if (!(target instanceof HTMLElement) || event.offsetX >= Number.parseInt(getComputedStyle(target).paddingLeft, 10) || event.offsetX >= FOLDING_GUTTER_WIDTH) return false;
-                    const $position = view.state.doc.resolve(nodePosition + 1);
-                    if ($position.parent.type.name !== 'heading') return false;
-                    return toggleFoldingHeading(view.state, view.dispatch);
+                handleClickOn: (view, _position, node, nodePosition, event) => {
+                    if (!isFoldingHeading(node)) return false;
+                    const heading = view.nodeDOM(nodePosition);
+                    if (!(heading instanceof HTMLElement) || event.clientX - heading.getBoundingClientRect().left >= FOLDING_GUTTER_WIDTH) return false;
+                    const state = view.state.apply(view.state.tr.setSelection(TextSelection.create(view.state.doc, nodePosition + 1)));
+                    return toggleFoldingHeading(state, view.dispatch);
                 },
             },
             state: {

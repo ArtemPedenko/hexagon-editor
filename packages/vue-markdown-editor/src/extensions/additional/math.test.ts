@@ -1,4 +1,4 @@
-import {EditorState, TextSelection} from 'prosemirror-state';
+import {EditorState, NodeSelection, TextSelection} from 'prosemirror-state';
 import {describe, expect, it, vi} from 'vitest';
 
 import {basicMarkdownSchema} from '../../core/basic-editor';
@@ -9,6 +9,8 @@ import {
     defaultMathLatex,
     insertInlineMath,
     Math,
+    mathBlockActionName,
+    mathInlineActionName,
     MathNode,
     moveCursorLeftOfMathInline,
     moveCursorRightOfMathInline,
@@ -67,6 +69,25 @@ describe('Math extension', () => {
 
         expect(insertInlineMath(state, (transaction) => { next = state.apply(transaction); })).toBe(true);
         expect(next.doc.firstChild?.firstChild?.attrs.latex).toBe(defaultMathLatex);
+    });
+
+    it('exposes inline and block actions through the extension registry', () => {
+        const documentNode = basicMarkdownSchema.node('doc', null, [basicMarkdownSchema.node('paragraph')]);
+        let state = EditorState.create({doc: documentNode, selection: TextSelection.create(documentNode, 1)});
+        const actions = ExtensionsManager.process((builder) => builder.use(Math), {baseSchema: basicMarkdownSchema}).actions;
+        const inline = actions.action(mathInlineActionName);
+        const block = actions.action(mathBlockActionName);
+
+        expect(inline?.isEnabled({state})).toBe(true);
+        inline?.run({state, dispatch: (transaction) => { state = state.apply(transaction); }});
+        state = EditorState.create({doc: state.doc, selection: NodeSelection.create(state.doc, 1)});
+        expect(inline?.isActive({state})).toBe(true);
+
+        const blockState = EditorState.create({doc: documentNode, selection: TextSelection.create(documentNode, 1)});
+        expect(block?.isEnabled({state: blockState})).toBe(true);
+        let next = blockState;
+        block?.run({state: blockState, dispatch: (transaction) => { next = blockState.apply(transaction); }});
+        expect(next.doc.firstChild?.type.name).toBe(MathNode.Block);
     });
 
     it('turns a VS Code LaTeX clipboard selection into math blocks', () => {

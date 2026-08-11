@@ -4,8 +4,8 @@ import {describe, expect, it, vi} from 'vitest';
 import {
     basicMarkdownCodec,
     basicMarkdownSchema,
-    createMarkdownTablePastePlugin,
     createBasicEditorCommands,
+    createMarkdownTablePastePlugin,
     getBasicWysiwygSelectionState,
     mountBasicWysiwygEditor,
 } from './basic-editor';
@@ -35,6 +35,19 @@ describe('basic Markdown extensions', () => {
             strikethrough: false,
             underline: false,
         });
+    });
+
+    it('renders a recoverable Math error with an editing hint', () => {
+        const target = document.createElement('div');
+        const editor = mountBasicWysiwygEditor({initialValue: '$\\invalid$', target});
+
+        const formula = target.querySelector<HTMLElement>('[data-math-inline]');
+        expect(formula?.hasAttribute('data-math-error')).toBe(true);
+        expect(formula?.getAttribute('aria-label')).toContain('Double-click to edit');
+        expect(formula?.querySelector('.markdown-editor__math-error')?.textContent).toBe('\\invalid');
+        expect(formula?.querySelector('.markdown-editor__math-hint')?.textContent).toBe('Double-click to edit');
+
+        editor.destroy();
     });
 
     it('parses and serializes a GFM-style table', () => {

@@ -77,6 +77,23 @@ test.describe('Markdown editor playground', () => {
         await expect(page.getByTitle('Формула')).toHaveAttribute('aria-pressed', 'false');
     });
 
+    test('shows a recoverable error for an invalid formula', async ({page}) => {
+        await page.goto('/');
+        await page.locator('.ProseMirror [data-math-inline]').dblclick();
+
+        const sourceEditor = page.locator('.markdown-editor__atomic-source .cm-content');
+        await sourceEditor.click();
+        await page.keyboard.press('End');
+        await page.keyboard.press('Shift+Home');
+        await page.keyboard.type('\\invalid');
+        await page.keyboard.press('Control+Enter');
+
+        const formula = page.locator('.ProseMirror [data-math-inline]');
+        await expect(formula).toHaveAttribute('data-math-error', '');
+        await expect(formula).toHaveAttribute('aria-label', 'Formula. Double-click to edit.');
+        await expect(formula.locator('.markdown-editor__math-error')).toHaveText('\\invalid');
+    });
+
     test('does not insert another formula while editing the current formula', async ({page}) => {
         await page.goto('/');
         await page.locator('.ProseMirror [data-math-block]').dblclick();
