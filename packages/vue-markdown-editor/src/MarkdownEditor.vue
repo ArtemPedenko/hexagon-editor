@@ -93,6 +93,12 @@ const modeTablist = ref<HTMLElement>();
 const value = ref(props.modelValue);
 const visualTarget = ref<HTMLElement>();
 const mode = ref<MarkdownEditorMode>(props.mode);
+const imageButton = ref<HTMLElement>();
+const imageEditorVisible = ref(false);
+const imageUrl = ref('https://');
+const imageAlt = ref('');
+const imageTitle = ref('');
+const imageForm = ref<HTMLElement>();
 const linkEditorVisible = ref(false);
 const linkUrl = ref('https://');
 const fileInput = ref<HTMLInputElement>();
@@ -124,6 +130,7 @@ const formulaMenu = ref<HTMLElement>();
 const headingButton = ref<HTMLElement>();
 const headingMenu = ref<HTMLElement>();
 const headingMenuVisible = ref(false);
+let stopImageFloating: (() => void) | undefined;
 const linkButton = ref<HTMLElement>();
 const linkForm = ref<HTMLElement>();
 let stopFormulaFloating: (() => void) | undefined;
@@ -214,6 +221,15 @@ function applyLink(): void {
     linkEditorVisible.value = false;
 }
 
+function applyImage(): void {
+    const src = imageUrl.value.trim();
+    if (src.length === 0) return;
+    execute(commands.insertImage(src, imageAlt.value.trim() || 'Image', imageTitle.value.trim() || undefined));
+    imageEditorVisible.value = false;
+    stopImageFloating?.();
+    stopImageFloating = undefined;
+}
+
 function applyTextStyle(style: string): void {
     if (style === 'paragraph') {
         execute(commands.paragraph);
@@ -260,6 +276,15 @@ async function toggleLinkEditor(): Promise<void> {
     if (!linkEditorVisible.value) return;
     await nextTick();
     startFloating(linkButton.value, linkForm.value, (cleanup) => { stopLinkFloating = cleanup; });
+}
+
+async function toggleImageEditor(): Promise<void> {
+    imageEditorVisible.value = !imageEditorVisible.value;
+    stopImageFloating?.();
+    stopImageFloating = undefined;
+    if (!imageEditorVisible.value) return;
+    await nextTick();
+    startFloating(imageButton.value, imageForm.value, (cleanup) => { stopImageFloating = cleanup; });
 }
 
 async function insertHtmlDirective(): Promise<void> {
@@ -318,18 +343,26 @@ function closeFloatingPanels(event: PointerEvent): void {
         stopLinkFloating?.();
         stopLinkFloating = undefined;
     }
+    if (!imageButton.value?.contains(target) && !imageForm.value?.contains(target)) {
+        imageEditorVisible.value = false;
+        stopImageFloating?.();
+        stopImageFloating = undefined;
+    }
 }
 
 function closePanelsOnEscape(event: KeyboardEvent): void {
     if (event.key !== 'Escape') return;
     headingMenuVisible.value = false;
     formulaMenuVisible.value = false;
+    imageEditorVisible.value = false;
     linkEditorVisible.value = false;
     stopHeadingFloating?.();
     stopFormulaFloating?.();
+    stopImageFloating?.();
     stopLinkFloating?.();
     stopHeadingFloating = undefined;
     stopFormulaFloating = undefined;
+    stopImageFloating = undefined;
     stopLinkFloating = undefined;
 }
 
@@ -469,6 +502,7 @@ onBeforeUnmount(() => {
     document.removeEventListener('keydown', closePanelsOnEscape);
     stopHeadingFloating?.();
     stopFormulaFloating?.();
+    stopImageFloating?.();
     stopLinkFloating?.();
 });
 
@@ -520,7 +554,7 @@ defineExpose<MarkdownEditorExposed>({
       <label v-if="toolbarPreset === 'default'" class="markdown-editor__color" title="Цвет текста">
         <input aria-label="Цвет текста" type="color" value="#202125" @input="execute(commands.setColor(($event.target as HTMLInputElement).value))" />
       </label>
-      <button v-if="toolbarPreset === 'default'" type="button" title="Изображение" @mousedown.prevent @click="openFilePicker('image')">▧</button>
+      <button v-if="toolbarPreset === 'default'" ref="imageButton" :aria-expanded="imageEditorVisible" type="button" title="Изображение" @mousedown.prevent @click="toggleImageEditor">▧</button>
       <template v-if="toolbarState.image">
         <button type="button" title="На всю ширину" @mousedown.prevent @click="execute(commands.setImageDisplay('100%', 'contain', null))">↔</button>
         <label class="markdown-editor__image-fit">
@@ -565,6 +599,13 @@ defineExpose<MarkdownEditorExposed>({
       </div>
       <form v-if="linkEditorVisible" ref="linkForm" class="markdown-editor__link-form" @submit.prevent="applyLink">
         <input v-model="linkUrl" aria-label="Адрес ссылки" type="url" />
+        <button type="submit">Готово</button>
+      </form>
+      <form v-if="imageEditorVisible" ref="imageForm" class="markdown-editor__link-form markdown-editor__image-form" @submit.prevent="applyImage">
+        <input v-model="imageUrl" aria-label="Адрес изображения" type="url" required />
+        <input v-model="imageAlt" aria-label="Описание изображения" placeholder="Описание" />
+        <input v-model="imageTitle" aria-label="Заголовок изображения" placeholder="Заголовок" />
+        <button v-if="uploadFile !== undefined" type="button" title="Загрузить изображение" @mousedown.prevent @click="openFilePicker('image')">▧</button>
         <button type="submit">Готово</button>
       </form>
     </Teleport>
@@ -656,6 +697,15 @@ defineExpose<MarkdownEditorExposed>({
     border-radius: 0.375rem;
     box-shadow: 0 0.5rem 1.25rem rgb(0 0 0 / 18%);
     background: var(--markdown-background);
+}
+
+.markdown-editor__image-form {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+}
+
+.markdown-editor__image-form input {
+    grid-column: 1 / -1;
 }
 
 .markdown-editor__color {

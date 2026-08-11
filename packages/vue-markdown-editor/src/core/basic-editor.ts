@@ -611,10 +611,10 @@ function insertFileCommand(href: string, name: string): Command {
   };
 }
 
-function insertImageCommand(src: string, alt: string): Command {
+function insertImageCommand(src: string, alt: string, title?: string): Command {
   return (state, dispatch) => {
     if (dispatch !== undefined) {
-      const image = getNodeType("image").create({ alt, src, title: null, width: '100%', 'object-fit': 'contain' });
+      const image = getNodeType("image").create({ alt, src, title: title ?? null, width: '100%', 'object-fit': 'contain' });
       dispatch(state.tr.replaceSelectionWith(image).scrollIntoView());
     }
     return true;
@@ -651,7 +651,7 @@ export interface BasicEditorCommands {
   heading(level: number): Command;
   horizontalRule: Command;
   insertFile(href: string, name: string): Command;
-  insertImage(src: string, alt: string): Command;
+  insertImage(src: string, alt: string, title?: string): Command;
   setImageDisplay(width?: number | string, objectFit?: ImageObjectFit, height?: number | null): Command;
   insertMathBlock: Command;
   insertInlineMath: Command;

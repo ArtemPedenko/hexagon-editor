@@ -2,7 +2,8 @@ import type {NodeSpec} from 'prosemirror-model';
 import type {ParseSpec} from 'prosemirror-markdown';
 import type {MarkdownSerializer} from 'prosemirror-markdown';
 import {NodeSelection} from 'prosemirror-state';
-import type {Command, EditorState} from 'prosemirror-state';
+import type {Command, EditorState, Transaction} from 'prosemirror-state';
+import {Plugin} from 'prosemirror-state';
 import type MarkdownIt from 'markdown-it';
 
 import type {ExtensionAuto} from '../../core/extension-builder';
@@ -139,5 +140,43 @@ export const Image: ExtensionAuto = (builder) => {
         .addNodeSpec(imageNodeName, () => imageNodeSpec)
         .configureMd(configureImageMarkdown)
         .addMarkdownTokenParserSpec(imageNodeName, () => imageTokenSpec)
-        .addNodeSerializerSpec(imageNodeName, () => serializeImage);
+        .addNodeSerializerSpec(imageNodeName, () => serializeImage)
+        .addPlugin(() => new Plugin({
+            props: {
+                handlePaste: (view, event) => insertPastedImage(view.state, view.dispatch, event),
+            },
+        }));
 };
+
+function insertPastedImage(state: EditorState, dispatch: (transaction: Transaction) => void, event: ClipboardEvent): boolean {
+    const src = event.clipboardData?.getData('text/plain').trim() ?? '';
+    if (!isImageUrl(src)) return false;
+    event.preventDefault();
+    const image = getImageType(state.schema).create({
+        [ImageAttr.Alt]: getImageAlt(src),
+        [ImageAttr.ObjectFit]: 'contain',
+        [ImageAttr.Src]: src,
+        [ImageAttr.Width]: '100%',
+    });
+    dispatch(state.tr.replaceSelectionWith(image).scrollIntoView());
+    return true;
+}
+
+function isImageUrl(value: string): boolean {
+    if (value.startsWith('data:image/')) return true;
+    try {
+        const {pathname, protocol} = new URL(value);
+        return (protocol === 'http:' || protocol === 'https:') && /\.(avif|gif|jpe?g|png|svg|webp)$/i.test(pathname);
+    } catch {
+        return false;
+    }
+}
+
+function getImageAlt(src: string): string {
+    try {
+        const pathname = new URL(src).pathname;
+        return pathname.slice(pathname.lastIndexOf('/') + 1) || 'Image';
+    } catch {
+        return 'Image';
+    }
+}

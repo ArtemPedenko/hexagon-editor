@@ -62,6 +62,20 @@ test.describe('Markdown editor playground', () => {
         await expect(image).not.toHaveAttribute('style', /height:/);
     });
 
+    test('inserts an image URL with alt text and title from the toolbar form', async ({page}) => {
+        await page.goto('/');
+        await page.getByTitle('Изображение').click();
+        await page.getByLabel('Адрес изображения').fill('https://example.com/landscape.jpg');
+        await page.getByLabel('Описание изображения').fill('Горный пейзаж');
+        await page.getByLabel('Заголовок изображения').fill('Горы');
+        await page.getByRole('button', {name: 'Готово'}).last().click();
+
+        const image = page.locator('.ProseMirror img[alt="Горный пейзаж"]');
+        await expect(image).toHaveAttribute('src', 'https://example.com/landscape.jpg');
+        await expect(image).toHaveAttribute('title', 'Горы');
+        await expect(image).toHaveAttribute('style', /width: 100%/);
+    });
+
     test('does not show text-selection actions for atomic Markdown blocks', async ({page}) => {
         await page.goto('/');
 
