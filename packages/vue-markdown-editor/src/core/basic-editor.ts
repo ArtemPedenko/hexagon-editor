@@ -104,6 +104,7 @@ import {
   setLink,
   toggleLink,
 } from "../extensions/markdown/link";
+import {toggleStrike} from '../extensions/markdown/strike';
 import {
   breakTokenSpecs,
   hardBreakNodeSpec,
@@ -1350,7 +1351,7 @@ export function createBasicEditorCommands(): BasicEditorCommands {
     liftListItem: liftListItem(listItem),
     sinkListItem: sinkOnlySelectedListItem(listItem),
     splitListItem: splitListItem(listItem),
-    strikethrough: toggleMark(getMarkType("strikethrough")),
+    strikethrough: toggleStrike,
     toMathBlock: insertMathBlockAndEdit,
     toggleHeadingFolding,
     underline: toggleMark(getMarkType("underline")),
@@ -1430,7 +1431,7 @@ export function getBasicWysiwygSelectionState(
     mark: hasActiveMark(state, "mark"),
     orderedList: hasAncestor(state, "ordered_list"),
     quote: hasAncestor(state, "blockquote"),
-    strikethrough: hasActiveMark(state, "strikethrough"),
+    strikethrough: hasActiveMark(state, "strike"),
     underline: hasActiveMark(state, "underline"),
   };
 }

@@ -27,7 +27,7 @@ export const linkMarkSpec: MarkSpec = {
         }),
         tag: 'a[href]',
     }],
-    toDOM: (mark) => ['a', mark.attrs],
+    toDOM: (mark) => ['a', {...mark.attrs, 'data-link-tooltip': mark.attrs[LinkAttr.Href]}, 0],
 };
 
 export const linkTokenSpec: ParseSpec = {

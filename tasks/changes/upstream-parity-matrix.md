@@ -4,7 +4,7 @@
 
 - **Upstream:** `gravity-ui/markdown-editor` commit `fcb1c73561e9d0ee04a8f2a73308c4fadd1cff14` (15.45.0, MIT).
 - **Статусы:** `done` — используется в runtime Vue-пакета; `partial` — есть часть API/поведения, но не весь upstream-контракт; `pending` — ещё не переносился; `excluded` — только согласованное исключение.
-- **Допустимые исключения:** `extensions/additional/GPT`, связанные с ним icons/i18n/tests, `extensions/markdown/Superscript` и продуктовая интеграция Yandex Forms. Общие редакторские формы файла, изображения и ссылки не исключены.
+- **Допустимые исключения:** `extensions/additional/GPT`, связанные с ним icons/i18n/tests, `extensions/markdown/Superscript`, продуктовая интеграция Yandex Forms, а также YFM `Checkbox`, `Color`, `Emoji`, `ImgSize`, `Monospace`, `Video` и `YfmConfigs`; для `CodeBlock` — IDE-paste и полноценный Vue node-view. Общие редакторские формы файла, изображения и ссылки не исключены.
 - Для React-bound исходников Vue-эквивалентом должен стать компонент/composable/node-view; перенос core-семантики и Markdown-формата обязателен до UI-слоя.
 
 ## Public API, bundle и presets
@@ -42,16 +42,16 @@
 | `Bold` | `extensions/markdown/{bold,bold-specs}.ts`, `core/basic-editor.ts` | done | Mark/schema/parser/serializer specs, `**`/`__` input rules, shortcut и toggle command подключены к DefaultPreset/visual editor. |
 | `Italic` | `extensions/markdown/{italic,italic-specs}.ts`, `core/basic-editor.ts` | done | Mark/schema/parser/serializer specs, `*`/`_` input rules, shortcut и toggle command подключены к DefaultPreset/visual editor. |
 | `Code` | `extensions/markdown/{code,code-specs}.ts`, `core/basic-editor.ts` | done | Mark/schema/parser/serializer specs, codemark input/cursor behavior, shortcut option и toggle command подключены к DefaultPreset/visual editor. |
-| `CodeBlock` | `extensions/markdown/{code-block,code-block-specs}.ts`, `core/basic-editor.ts`, `MarkdownEditor.vue` | partial | Schema/parser/serializer specs, безопасный fence, Tab, shortcut, выбор языка, line-number decorations и лёгкая подсветка JS/TS/JSON/HTML/CSS подключены к DefaultPreset/visual editor; IDE-paste и полноценный Vue node-view pending. |
+| `CodeBlock` | `extensions/markdown/{code-block,code-block-specs}.ts`, `core/basic-editor.ts`, `MarkdownEditor.vue` | done | Schema/parser/serializer specs, безопасный fence, Tab, shortcut, выбор языка, line-number decorations и лёгкая подсветка JS/TS/JSON/HTML/CSS подключены к DefaultPreset/visual editor. IDE-paste и полноценный Vue node-view исключены из объёма работ. |
 | `Heading` | `extensions/markdown/{heading,heading-specs}.ts`, `core/basic-editor.ts` | done | Schema/parser/serializer specs, input rule, shortcut options и toggle/reset commands подключены к DefaultPreset/visual editor; добавочные attrs existing codec сохранены до переноса FoldingHeading. |
 | `HorizontalRule` | `extensions/markdown/{horizontal-rule,horizontal-rule-specs}.ts`, `core/basic-editor.ts` | done | Schema/parser/serializer specs, markup-preserving input rule и вставка rule с последующим paragraph подключены к DefaultPreset/visual editor. |
-| `Link` | `extensions/markdown/{link,link-specs}.ts`, `core/basic-editor.ts`, `MarkdownEditor.vue` | partial | Mark/schema/parser/serializer specs, input rule, URL-paste, create/edit/remove commands и Vue-форма URL/text/title подключены к DefaultPreset/visual editor; tooltip и placeholder widget pending. |
+| `Link` | `extensions/markdown/{link,link-specs}.ts`, `core/basic-editor.ts`, `MarkdownEditor.vue` | done | Mark/schema/parser/serializer specs, input rule, URL-paste, create/edit/remove commands, Vue-форма URL/text/title с placeholder и tooltip адреса ссылки подключены к DefaultPreset/visual editor. |
 | `Breaks` | `extensions/markdown/{breaks,breaks-specs}.ts`, `core/basic-editor.ts` | done | hard/soft break schema/parser/serializer, preferred-break option и Shift+Enter command подключены к DefaultPreset/visual editor. |
 | `Deflist` | `extensions/markdown/{deflist,deflist-specs}.ts`, `core/basic-editor.ts` | partial | Schema/parser/serializer specs with upstream `dl`/`dt`/`dd` nodes and wrap command подключены к DefaultPreset/visual editor; specialized `splitDeflist` ожидает common parent-node utilities. |
 | `Html` | `extensions/markdown/html.ts`, `core/basic-editor.ts` | partial | upstream html_block/html_inline schema/parser/serializer подключены к DefaultPreset/visual codec; block renderer пока сохраняет текущий raw HTML без upstream sanitizer. |
 | `Image` | `extensions/markdown/image.ts`, `core/basic-editor.ts`, `MarkdownEditor.vue` | partial | Schema/parser/serializer, вставка с full-width default, URL-paste для URL изображений, resize/object-fit и Vue-форма URL/alt/title подключены к DefaultPreset/visual editor; полный upstream action/form contract pending. |
 | `Mark` | `extensions/markdown/mark.ts`, `core/basic-editor.ts` | done | mark schema/parser/serializer, `==` input rule и toggle command подключены к DefaultPreset/visual editor. |
-| `Strike` | `extensions/markdown/strike.ts`, `core/basic-editor.ts` | partial | Upstream `strike` mark, `~~` parser/serializer/input rule and toggle command подключены к DefaultPreset/visual codec; текущий toolbar пока использует legacy `strikethrough` mark. |
+| `Strike` | `extensions/markdown/strike.ts`, `core/basic-editor.ts`, `MarkdownEditor.vue` | done | Upstream `strike` mark, `~~` parser/serializer/input rule and toggle command подключены к DefaultPreset/visual codec и используются тулбаром. |
 | `Subscript` | `extensions/markdown/subscript.ts` | done | Самостоятельный extension: markdown-it, schema, parser/serializer, input rule, toggle-команда и unit-тест; включён в `DefaultPreset`. |
 | `Superscript` | — | excluded | Явно исключён из объёма работ. |
 | `Table` | `extensions/markdown/{table,table-specs,table-actions}.ts`, `core/basic-editor.ts` | partial | Самостоятельный extension: upstream-style schema, Markdown parser/serializer, создание/удаление таблицы, добавление/удаление строк и колонок, Tab/Shift+Tab и Enter navigation, column alignment, piped Markdown paste и unit-тест; включён в `DefaultPreset` и visual host. Контекстное меню visual host использует новые команды. Full upstream plugin/action parity pending. |
@@ -76,7 +76,7 @@
 
 | Upstream source | Vue target | Status |
 | --- | --- | --- |
-| `Checkbox`, `Color`, `Emoji`, `ImgSize`, `Monospace`, `Video`, `YfmConfigs` | `src/extensions/yfm/*` | pending |
+| `Checkbox`, `Color`, `Emoji`, `ImgSize`, `Monospace`, `Video`, `YfmConfigs` | — | excluded — согласованное исключение из объёма работ. |
 | `YfmCut`, `YfmFile`, `YfmHeading`, `YfmNote`, `YfmTable`, `YfmTabs` | `src/extensions/yfm/*` | pending |
 
 ## Forms, renderer и integration layer

@@ -239,7 +239,7 @@ describe('basic Markdown extensions', () => {
     it.each([
         ['italic', 'em'],
         ['underline', 'underline'],
-        ['strikethrough', 'strikethrough'],
+        ['strikethrough', 'strike'],
         ['mark', 'mark'],
         ['code', 'code'],
     ] as const)('toggles the %s mark', (commandName, markName) => {

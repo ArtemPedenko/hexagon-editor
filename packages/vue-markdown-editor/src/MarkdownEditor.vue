@@ -100,7 +100,7 @@ const imageAlt = ref('');
 const imageTitle = ref('');
 const imageForm = ref<HTMLElement>();
 const linkEditorVisible = ref(false);
-const linkUrl = ref('https://');
+const linkUrl = ref('');
 const linkText = ref('');
 const linkTitle = ref('');
 const fileInput = ref<HTMLInputElement>();
@@ -284,7 +284,7 @@ async function toggleLinkEditor(): Promise<void> {
     stopLinkFloating?.();
     stopLinkFloating = undefined;
     if (!linkEditorVisible.value) return;
-    linkUrl.value = toolbarState.value.linkHref ?? 'https://';
+    linkUrl.value = toolbarState.value.linkHref ?? '';
     linkText.value = toolbarState.value.linkText ?? '';
     linkTitle.value = toolbarState.value.linkTitle ?? '';
     await nextTick();
@@ -621,7 +621,7 @@ defineExpose<MarkdownEditorExposed>({
         <button role="menuitem" type="button" @click="insertMathBlock">Блок с формулой</button>
       </div>
       <form v-if="linkEditorVisible" ref="linkForm" class="markdown-editor__link-form markdown-editor__link-form--extended" @submit.prevent="applyLink">
-        <input v-model="linkUrl" aria-label="Адрес ссылки" type="url" />
+        <input v-model="linkUrl" aria-label="Адрес ссылки" placeholder="https://example.com" type="url" />
         <input v-model="linkText" aria-label="Текст ссылки" placeholder="Текст ссылки" />
         <input v-model="linkTitle" aria-label="Заголовок ссылки" placeholder="Заголовок" />
         <button v-if="toolbarState.linkHref !== undefined" type="button" title="Удалить ссылку" @mousedown.prevent @click="execute(commands.removeLink)">Удалить</button>
@@ -882,6 +882,29 @@ defineExpose<MarkdownEditorExposed>({
     background: #161b22;
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     line-height: 1.5;
+}
+
+.markdown-editor :deep(.ProseMirror a[data-link-tooltip]) {
+    position: relative;
+}
+
+.markdown-editor :deep(.ProseMirror a[data-link-tooltip]:hover::after),
+.markdown-editor :deep(.ProseMirror a[data-link-tooltip]:focus::after) {
+    position: absolute;
+    z-index: 3;
+    bottom: calc(100% + 0.35rem);
+    left: 0;
+    width: max-content;
+    max-width: min(24rem, 80vw);
+    padding: 0.25rem 0.4rem;
+    overflow: hidden;
+    border-radius: 0.25rem;
+    color: var(--markdown-background);
+    background: var(--markdown-text);
+    content: attr(data-link-tooltip);
+    font: 0.75rem/1.3 ui-monospace, SFMono-Regular, Menlo, monospace;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .markdown-editor :deep(.ProseMirror pre[data-language]:not([data-language=''])::before) {

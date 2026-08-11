@@ -89,6 +89,7 @@ test.describe('Markdown editor playground', () => {
         const link = page.locator('.ProseMirror a', {hasText: 'Документация'});
         await expect(link).toHaveAttribute('href', 'https://example.com/docs');
         await expect(link).toHaveAttribute('title', 'Документы');
+        await expect(link).toHaveAttribute('data-link-tooltip', 'https://example.com/docs');
         await link.click();
         await expect(page.getByTitle('Ссылка')).toHaveAttribute('aria-pressed', 'true');
         expect(errors).toEqual([]);
