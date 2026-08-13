@@ -830,8 +830,11 @@ defineExpose<MarkdownEditorExposed>({
     position: sticky;
     z-index: 1;
     top: 0;
-    padding: 0.5rem;
+    gap: 0.125rem;
+    min-height: 2.5rem;
+    padding: 0.25rem 0.375rem;
     border-bottom: 1px solid var(--markdown-muted-border);
+    background: color-mix(in srgb, var(--markdown-background) 96%, var(--markdown-text));
     flex-wrap: wrap;
 }
 
