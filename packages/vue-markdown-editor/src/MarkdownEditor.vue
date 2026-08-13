@@ -18,6 +18,7 @@ import type {
     MarkdownEditorToolbarPreset,
     MarkdownEditorTheme,
 } from './public-types';
+import type {MarkdownEditorToolbarConfig} from './toolbar';
 
 export interface MarkdownEditorExposed {
     focus(): void;
@@ -66,6 +67,8 @@ const props = withDefaults(
         placeholder?: string;
         readonly?: boolean;
         toolbarPreset?: MarkdownEditorToolbarPreset;
+        /** Overrides the preset with an ordered set of toolbar groups and items. */
+        toolbarConfig?: MarkdownEditorToolbarConfig;
         theme?: MarkdownEditorTheme;
     }>(),
     {
@@ -527,6 +530,7 @@ defineExpose<MarkdownEditorExposed>({
       :state="toolbarState"
       :text-style-label="textStyleLabel"
       :toolbar-preset="toolbarPreset"
+      :toolbar-config="toolbarConfig"
       :translate="t"
       @execute="execute"
       @insert-html="insertHtmlDirective"
@@ -625,6 +629,18 @@ defineExpose<MarkdownEditorExposed>({
 .markdown-editor__modes,
 .markdown-editor__toolbar {
     gap: 0.25rem;
+}
+
+.markdown-editor__toolbar-group {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.markdown-editor__toolbar-group + .markdown-editor__toolbar-group {
+    margin-inline-start: 0.125rem;
+    padding-inline-start: 0.375rem;
+    border-inline-start: 1px solid var(--markdown-muted-border);
 }
 
 .markdown-editor__floating-menu {

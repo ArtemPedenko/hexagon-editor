@@ -194,6 +194,27 @@ describe('MarkdownEditor', () => {
         app.unmount();
     });
 
+    it('renders custom toolbar groups in the configured order and availability', async () => {
+        const target = document.createElement('div');
+        const app = createApp(() => h(MarkdownEditor, {
+            toolbarConfig: {
+                groups: [
+                    {id: 'custom-first', items: ['italic', 'bold']},
+                    {id: 'custom-second', items: [{id: 'table', isAvailable: () => false}, 'link']},
+                ],
+            },
+        }));
+
+        document.body.append(target);
+        app.mount(target);
+        await nextTick();
+
+        expect(Array.from(target.querySelectorAll('[data-toolbar-group]')).map((group) => group.getAttribute('data-toolbar-group'))).toEqual(['custom-first', 'custom-second']);
+        expect(Array.from(target.querySelectorAll('[data-toolbar-item]')).map((button) => button.getAttribute('data-toolbar-item'))).toEqual(['italic', 'bold', 'link']);
+
+        app.unmount();
+    });
+
     it('shows the text of an HTML directive in the visual editor', async () => {
         const target = document.createElement('div');
         const app = createApp(() => h(MarkdownEditor, {modelValue: '::: html\n\n<div>Add HTML code here</div>\n\n:::'}));

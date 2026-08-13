@@ -14,6 +14,7 @@ export {default as MarkdownEditorImageForm} from './forms/MarkdownEditorImageFor
 export {default as MarkdownEditorLinkForm} from './forms/MarkdownEditorLinkForm.vue';
 export {useMarkdownEditor} from './use-markdown-editor';
 export type {UseMarkdownEditorResult} from './use-markdown-editor';
+export * from './toolbar';
 export {createListActions, Lists} from './extensions/markdown/lists';
 export type {ListActions, ListsOptions} from './extensions/markdown/lists';
 export {

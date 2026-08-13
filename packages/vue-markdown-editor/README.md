@@ -35,7 +35,7 @@ const mode = ref<'wysiwyg' | 'markup' | 'split'>('wysiwyg');
 </template>
 ```
 
-Props: `modelValue`, `mode`, `locale` (`ru` or `en`), `theme` (`light`, `dark`, or `auto`), `placeholder`, `readonly`, and `toolbarPreset`.
+Props: `modelValue`, `mode`, `locale` (`ru` or `en`), `theme` (`light`, `dark`, or `auto`), `placeholder`, `readonly`, `toolbarPreset`, and `toolbarConfig`. `toolbarConfig` overrides the preset with ordered toolbar groups and supports contextual `isAvailable` predicates; the exported `defaultToolbarConfig` and `minimalToolbarConfig` can be reused or extended.
 
 Events: `update:modelValue`, `change`, `update:mode`, and `mode-change`.
 
