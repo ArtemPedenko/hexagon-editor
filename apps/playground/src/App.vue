@@ -45,17 +45,6 @@
 	const markdown = ref(advancedMarkdownDemo);
 	const previewHtml = computed(() => renderMarkdownPreview(markdown.value));
 
-	function uploadImage(file: File): Promise<{ alt: string; url: string }> {
-		if (!file.type.startsWith('image/')) {
-			return Promise.reject(new Error('В playground можно загружать только изображения.'));
-		}
-		return new Promise((resolve, reject) => {
-			const reader = new FileReader();
-			reader.addEventListener('error', () => reject(reader.error ?? new Error('Не удалось прочитать изображение.')));
-			reader.addEventListener('load', () => resolve({ alt: file.name, url: String(reader.result) }));
-			reader.readAsDataURL(file);
-		});
-	}
 </script>
 
 <template>
@@ -88,7 +77,6 @@
         v-model:locale="locale"
         v-model:mode="editorMode"
         v-model:theme="theme"
-        :upload-file="uploadImage"
       />
       <aside class="playground__source-pane">
         <div class="playground__pane-title">Preview</div>

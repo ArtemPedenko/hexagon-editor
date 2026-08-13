@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import {ref} from 'vue';
 import type {
     BasicEditorCommands,
     BasicWysiwygEditor,
@@ -24,34 +23,17 @@ defineProps<{
 
 const emit = defineEmits<{
     execute: [command: ToolbarCommand];
-    'open-file-picker': [kind: 'file' | 'image'];
     'insert-html': [];
     'toggle-formula-menu': [reference: HTMLElement];
     'toggle-heading-menu': [reference: HTMLElement];
     'toggle-image-editor': [reference: HTMLElement];
     'toggle-link-editor': [reference: HTMLElement];
-    'upload-files': [files: File[]];
 }>();
-
-const fileInput = ref<HTMLInputElement>();
-
-function emitFiles(event: Event): void {
-    const input = event.target;
-    if (!(input instanceof HTMLInputElement) || input.files === null) return;
-    emit('upload-files', Array.from(input.files));
-    input.value = '';
-}
 
 function getButton(event: MouseEvent): HTMLElement {
     return event.currentTarget as HTMLElement;
 }
 
-function openFilePicker(kind: 'file' | 'image'): void {
-    emit('open-file-picker', kind);
-    fileInput.value?.click();
-}
-
-defineExpose({openFilePicker});
 </script>
 
 <template>
@@ -82,12 +64,10 @@ defineExpose({openFilePicker});
       <button type="button" title="На всю ширину" @mousedown.prevent @click="emit('execute', commands.setImageDisplay('100%', 'contain', null))">↔</button>
       <label class="markdown-editor__image-fit"><select :value="state.imageObjectFit" aria-label="Отображение изображения" @change="emit('execute', commands.setImageDisplay(undefined, ($event.target as HTMLSelectElement).value as 'contain' | 'cover' | 'fill' | 'none' | 'scale-down'))"><option value="contain">Contain</option><option value="cover">Cover</option><option value="fill">Fill</option><option value="none">None</option><option value="scale-down">Scale down</option></select></label>
     </template>
-    <button v-if="toolbarPreset === 'default'" type="button" title="Файл" @mousedown.prevent @click="openFilePicker('file')">⌕</button>
     <button v-if="toolbarPreset === 'default'" :aria-expanded="formulaMenuVisible" :aria-label="translate('formula')" :aria-pressed="state.formula" :title="translate('formula')" type="button" @mousedown.prevent @click="emit('toggle-formula-menu', getButton($event))">Σ</button>
     <button v-if="toolbarPreset === 'default'" type="button" :aria-label="translate('html')" :title="translate('html')" @mousedown.prevent @click="emit('insert-html')">&lt;/&gt;</button>
     <button v-if="toolbarPreset === 'default'" type="button" title="Горизонтальная линия" @mousedown.prevent @click="emit('execute', commands.horizontalRule)">―</button>
     <button v-if="toolbarPreset === 'default'" type="button" title="Таблица 3×3" @mousedown.prevent @click="emit('execute', commands.insertTable())">▦</button>
     <slot :commands="commands" :execute="(command: ToolbarCommand) => emit('execute', command)" />
-    <input ref="fileInput" class="markdown-editor__file-input" multiple type="file" @change="emitFiles">
   </div>
 </template>

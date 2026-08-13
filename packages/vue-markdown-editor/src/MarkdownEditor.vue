@@ -4,8 +4,8 @@ import {computed, h, nextTick, onBeforeUnmount, onMounted, ref, watch} from 'vue
 import type {FunctionalComponent} from 'vue';
 
 import MarkdownEditorToolbar from './components/MarkdownEditorToolbar.vue';
-import MarkdownEditorImageForm from './components/MarkdownEditorImageForm.vue';
-import MarkdownEditorLinkForm from './components/MarkdownEditorLinkForm.vue';
+import MarkdownEditorImageForm from './forms/MarkdownEditorImageForm.vue';
+import MarkdownEditorLinkForm from './forms/MarkdownEditorLinkForm.vue';
 import {
     createBasicEditorCommands,
     mountBasicMarkupEditor,
@@ -17,7 +17,6 @@ import type {
     MarkdownEditorLocale,
     MarkdownEditorToolbarPreset,
     MarkdownEditorTheme,
-    MarkdownEditorUploadResult,
 } from './public-types';
 
 export interface MarkdownEditorExposed {
@@ -68,7 +67,6 @@ const props = withDefaults(
         readonly?: boolean;
         toolbarPreset?: MarkdownEditorToolbarPreset;
         theme?: MarkdownEditorTheme;
-        uploadFile?: (file: File) => Promise<MarkdownEditorUploadResult>;
     }>(),
     {
         modelValue: '',
@@ -78,7 +76,6 @@ const props = withDefaults(
         readonly: false,
         toolbarPreset: 'default',
         theme: 'auto',
-        uploadFile: undefined,
     },
 );
 
@@ -88,12 +85,10 @@ const emit = defineEmits<{
     'mode-change': [mode: MarkdownEditorMode];
     'update:modelValue': [value: string];
     'update:mode': [mode: MarkdownEditorMode];
-    'upload-error': [error: Error, file: File];
     submit: [];
 }>();
 
 const commands = createBasicEditorCommands();
-const editorToolbar = ref<InstanceType<typeof MarkdownEditorToolbar>>();
 const markupTarget = ref<HTMLElement>();
 const modeTablist = ref<HTMLElement>();
 const value = ref(props.modelValue);
@@ -109,7 +104,6 @@ const linkUrl = ref('');
 const linkText = ref('');
 const linkTitle = ref('');
 const formulaMenuVisible = ref(false);
-const uploadKind = ref<'file' | 'image'>('image');
 const toolbarState = ref<BasicWysiwygSelectionState>({
     bold: false,
     bulletList: false,
@@ -232,10 +226,22 @@ function applyLink(): void {
     linkEditorVisible.value = false;
 }
 
+function closeLinkEditor(): void {
+    linkEditorVisible.value = false;
+    stopLinkFloating?.();
+    stopLinkFloating = undefined;
+}
+
 function applyImage(): void {
     const src = imageUrl.value.trim();
     if (src.length === 0) return;
     execute(commands.insertImage(src, imageAlt.value.trim() || 'Image', imageTitle.value.trim() || undefined));
+    imageEditorVisible.value = false;
+    stopImageFloating?.();
+    stopImageFloating = undefined;
+}
+
+function closeImageEditor(): void {
     imageEditorVisible.value = false;
     stopImageFloating?.();
     stopImageFloating = undefined;
@@ -380,34 +386,6 @@ function closePanelsOnEscape(event: KeyboardEvent): void {
     stopLinkFloating = undefined;
 }
 
-function setUploadKind(kind: 'file' | 'image'): void {
-    uploadKind.value = kind;
-}
-
-function openImageFilePicker(): void {
-    setUploadKind('image');
-    editorToolbar.value?.openFilePicker('image');
-}
-
-async function uploadFiles(files: readonly File[]): Promise<void> {
-    if (props.uploadFile === undefined) {
-        return;
-    }
-
-    for (const file of files) {
-        try {
-            const result = await props.uploadFile(file);
-            execute(uploadKind.value === 'image'
-                ? commands.insertImage(result.url, result.alt ?? file.name)
-                : commands.insertFile(result.url, result.alt ?? file.name));
-        } catch (error) {
-            const uploadError = error instanceof Error ? error : new Error('File upload failed');
-            console.error(uploadError);
-            emit('upload-error', uploadError, file);
-        }
-    }
-}
-
 function mountHosts(): void {
     if (mode.value !== 'markup' && visualTarget.value !== undefined) {
         visualEditor = mountBasicWysiwygEditor({
@@ -418,9 +396,6 @@ function mountHosts(): void {
                 return true;
             },
             onChange: (nextValue) => updateValue(nextValue, 'visual'),
-            onFiles: (files) => {
-                void uploadFiles(files);
-            },
             onSelectionChange: (nextSelection) => {
                 toolbarState.value = nextSelection;
             },
@@ -544,7 +519,6 @@ defineExpose<MarkdownEditorExposed>({
 
     <MarkdownEditorToolbar
       v-if="mode !== 'markup' && !readonly"
-      ref="editorToolbar"
       :commands="commands"
       :formula-menu-visible="formulaMenuVisible"
       :heading-menu-visible="headingMenuVisible"
@@ -556,12 +530,10 @@ defineExpose<MarkdownEditorExposed>({
       :translate="t"
       @execute="execute"
       @insert-html="insertHtmlDirective"
-      @open-file-picker="setUploadKind"
       @toggle-formula-menu="toggleFormulaMenu"
       @toggle-heading-menu="showHeadingMenu"
       @toggle-image-editor="toggleImageEditor"
       @toggle-link-editor="toggleLinkEditor"
-      @upload-files="uploadFiles"
     >
       <template #default="slotProps"><slot name="toolbar" v-bind="slotProps" /></template>
     </MarkdownEditorToolbar>
@@ -582,6 +554,7 @@ defineExpose<MarkdownEditorExposed>({
         :title="linkTitle"
         :url="linkUrl"
         @apply="applyLink"
+        @cancel="closeLinkEditor"
         @remove="execute(commands.removeLink)"
         @update:text="linkText = $event"
         @update:title="linkTitle = $event"
@@ -591,11 +564,10 @@ defineExpose<MarkdownEditorExposed>({
         v-if="imageEditorVisible"
         ref="imageForm"
         :alt="imageAlt"
-        :can-upload="uploadFile !== undefined"
         :title="imageTitle"
         :url="imageUrl"
         @apply="applyImage"
-        @open-upload="openImageFilePicker"
+        @cancel="closeImageEditor"
         @update:alt="imageAlt = $event"
         @update:title="imageTitle = $event"
         @update:url="imageUrl = $event"
@@ -653,10 +625,6 @@ defineExpose<MarkdownEditorExposed>({
 .markdown-editor__modes,
 .markdown-editor__toolbar {
     gap: 0.25rem;
-}
-
-.markdown-editor__file-input {
-    display: none;
 }
 
 .markdown-editor__floating-menu {

@@ -2,8 +2,6 @@ import type {ExtensionAuto} from '../core/extension-builder';
 import type {BaseSchemaOptions} from '../extensions/base';
 import {History} from '../extensions/behavior/history';
 import type {HistoryOptions} from '../extensions/behavior/history';
-import {FilePaste} from '../extensions/behavior/file-paste';
-import type {FilePasteOptions} from '../extensions/behavior/file-paste';
 import {Clipboard} from '../extensions/behavior/clipboard';
 import {Cursor} from '../extensions/behavior/cursor';
 import type {CursorOptions} from '../extensions/behavior/cursor';
@@ -62,7 +60,6 @@ export interface DefaultPresetOptions {
     heading?: HeadingOptions;
     link?: LinkOptions;
     italic?: ItalicOptions;
-    filePaste?: FilePasteOptions;
     history?: HistoryOptions;
     lists?: ListsOptions;
     placeholder?: PlaceholderOptions;
@@ -99,7 +96,6 @@ export const DefaultPreset: ExtensionAuto<DefaultPresetOptions> = (builder, opti
         .use(Lists, options?.lists ?? {})
         .use(History, options?.history ?? {})
         .use(Placeholder, options?.placeholder ?? {})
-        .use(FilePaste, options?.filePaste ?? {})
         .use(Clipboard)
         .use(Cursor, options?.cursor ?? {})
         .use(Selection)

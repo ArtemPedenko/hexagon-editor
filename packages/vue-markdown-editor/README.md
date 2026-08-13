@@ -35,9 +35,11 @@ const mode = ref<'wysiwyg' | 'markup' | 'split'>('wysiwyg');
 </template>
 ```
 
-Props: `modelValue`, `mode`, `locale` (`ru` or `en`), `theme` (`light`, `dark`, or `auto`), `placeholder`, `readonly`, `toolbarPreset`, and `uploadFile`.
+Props: `modelValue`, `mode`, `locale` (`ru` or `en`), `theme` (`light`, `dark`, or `auto`), `placeholder`, `readonly`, and `toolbarPreset`.
 
-Events: `update:modelValue`, `change`, `update:mode`, `mode-change`, and `upload-error`.
+Events: `update:modelValue`, `change`, `update:mode`, and `mode-change`.
+
+`MarkdownEditorLinkForm` and `MarkdownEditorImageForm` are exported for hosts that need to reuse the editor forms outside the built-in toolbar. File uploads are deliberately not part of the package API.
 
 The component ref exposes `focus()`, `getValue()`, `setValue()`, `getMode()`, and `setMode()`.
 

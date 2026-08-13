@@ -6,11 +6,12 @@ export type {
     MarkdownEditorTheme,
     MarkdownEditorOptions,
     MarkdownEditorToolbarPreset,
-    MarkdownEditorUploadResult,
 } from './public-types';
 export * from './core';
 export {default as MarkdownEditor} from './MarkdownEditor.vue';
 export type {MarkdownEditorExposed} from './MarkdownEditor.vue';
+export {default as MarkdownEditorImageForm} from './forms/MarkdownEditorImageForm.vue';
+export {default as MarkdownEditorLinkForm} from './forms/MarkdownEditorLinkForm.vue';
 export {useMarkdownEditor} from './use-markdown-editor';
 export type {UseMarkdownEditorResult} from './use-markdown-editor';
 export {createListActions, Lists} from './extensions/markdown/lists';
@@ -149,8 +150,6 @@ export {createHistoryActions, History, HistoryAction} from './extensions/behavio
 export type {HistoryActions, HistoryOptions} from './extensions/behavior/history';
 export {Placeholder} from './extensions/behavior/placeholder';
 export type {PlaceholderOptions} from './extensions/behavior/placeholder';
-export {FilePaste} from './extensions/behavior/file-paste';
-export type {FilePasteOptions} from './extensions/behavior/file-paste';
 export {Clipboard, isInsideCode} from './extensions/behavior/clipboard';
 export {createGapCursorPlugin, Cursor, GapCursorSelection, isGapCursorSelection} from './extensions/behavior/cursor';
 export type {CursorOptions} from './extensions/behavior/cursor';

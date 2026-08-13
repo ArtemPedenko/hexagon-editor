@@ -23,7 +23,7 @@ export interface BasicWysiwygSelectionState {
 export interface BasicWysiwygEditor { destroy(): void; focus(): void; getValue(): string; run(command: Command): boolean; setValue(value: string): void; }
 
 export interface MountBasicWysiwygEditorOptions {
-    editable?: boolean; initialValue?: string; onChange?(value: string): void; onFiles?(files: readonly File[]): void;
+    editable?: boolean; initialValue?: string; onChange?(value: string): void;
     onCancel?(): boolean; onSelectionChange?(selection: BasicWysiwygSelectionState): void; onSubmit?(): boolean;
     placeholder?: string; plugins?: readonly Plugin[]; selectionContext?: SelectionContextOptions; target: HTMLElement;
 }

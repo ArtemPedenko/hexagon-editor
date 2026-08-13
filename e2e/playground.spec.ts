@@ -28,18 +28,16 @@ test.describe('Markdown editor playground', () => {
         expect(errors).toEqual([]);
     });
 
-    test('uploads and resizes an image from the playground toolbar', async ({page}) => {
+    test('inserts and resizes an image from the playground toolbar', async ({page}) => {
         await page.goto('/');
-        await page.locator('.markdown-editor__file-input').setInputFiles({
-            buffer: Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="80" height="40"><rect width="80" height="40" fill="red"/></svg>'),
-            mimeType: 'image/svg+xml',
-            name: 'resize-fixture.svg',
-        });
+        await page.getByTitle('Изображение').click();
+        await page.getByLabel('Адрес изображения').fill('https://example.com/resize-fixture.svg');
+        await page.getByLabel('Описание изображения').fill('resize-fixture.svg');
+        await page.getByRole('button', {name: 'Готово'}).last().click();
 
         const image = page.locator('.ProseMirror img[alt="resize-fixture.svg"]');
         await expect(image).toBeVisible();
         await image.click();
-        await expect(image).toHaveCSS('width', /px/);
         const objectFit = page.getByLabel('Отображение изображения');
         await expect(objectFit).toHaveValue('contain');
         await objectFit.selectOption('cover');
@@ -61,6 +59,16 @@ test.describe('Markdown editor playground', () => {
         await page.getByTitle('На всю ширину').click();
         await expect(image).toHaveAttribute('style', /width: 100%/);
         await expect(image).not.toHaveAttribute('style', /height:/);
+    });
+
+    test('validates and cancels the shared image form', async ({page}) => {
+        await page.goto('/');
+        await page.getByTitle('Изображение').click();
+        await page.getByLabel('Адрес изображения').fill('not a url');
+        await page.getByRole('button', {name: 'Готово'}).last().click();
+        await expect(page.getByLabel('Адрес изображения')).toBeVisible();
+        await page.getByRole('button', {name: 'Отмена'}).click();
+        await expect(page.getByLabel('Адрес изображения')).toBeHidden();
     });
 
     test('inserts an image URL with alt text and title from the toolbar form', async ({page}) => {

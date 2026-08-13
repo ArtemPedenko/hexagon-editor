@@ -234,7 +234,6 @@ export function mountBasicWysiwygEditor({
   initialValue = "",
   onCancel,
   onChange,
-  onFiles,
   onSelectionChange,
   onSubmit,
   placeholder = "",
@@ -257,7 +256,6 @@ export function mountBasicWysiwygEditor({
       ...createBasicDefaultPresetPlugins(
         basicMarkdownSchema,
         placeholder,
-        onFiles,
         selectionContext,
         onCancel,
         onSubmit,

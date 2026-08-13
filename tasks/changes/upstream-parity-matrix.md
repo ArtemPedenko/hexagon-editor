@@ -4,7 +4,7 @@
 
 - **Upstream:** `gravity-ui/markdown-editor` commit `fcb1c73561e9d0ee04a8f2a73308c4fadd1cff14` (15.45.0, MIT).
 - **Статусы:** `done` — используется в runtime Vue-пакета; `partial` — есть часть API/поведения, но не весь upstream-контракт; `pending` — ещё не переносился; `excluded` — только согласованное исключение.
-- **Допустимые исключения:** `extensions/additional/GPT`, связанные с ним icons/i18n/tests, `extensions/markdown/Superscript`, продуктовая интеграция Yandex Forms, а также YFM `Checkbox`, `Color`, `Emoji`, `ImgSize`, `Monospace`, `Video` и `YfmConfigs`; для `CodeBlock` — IDE-paste и полноценный Vue node-view. Общие редакторские формы файла, изображения и ссылки не исключены.
+- **Допустимые исключения:** `extensions/additional/GPT`, связанные с ним icons/i18n/tests, `extensions/markdown/Superscript`, behavior-расширения `Autocomplete`, `CommandMenu` и `FilePaste`, все YFM-расширения, загрузка файлов и `FileForm`, продуктовая интеграция Yandex Forms; для `CodeBlock` — IDE-paste и полноценный Vue node-view. Общие редакторские формы изображения и ссылки не исключены.
 - Для React-bound исходников Vue-эквивалентом должен стать компонент/composable/node-view; перенос core-семантики и Markdown-формата обязателен до UI-слоя.
 
 ## Public API, bundle и presets
@@ -68,10 +68,11 @@
 | Upstream source | Vue target | Status |
 | --- | --- | --- |
 | `ClicksOnEdges`, `EditorModeKeymap` | `src/extensions/behavior/{clicks-on-edges,editor-mode-keymap}.ts` | done — клики по свободной области до/после документа создают доступный текстовый блок; Escape/Mod-Enter передаются в Vue `cancel`/`submit`, служебные клавиши можно поглотить с низким приоритетом. Покрыто unit и Chromium-сценарием. |
-| `Autocomplete`, `CommandMenu` | `src/extensions/behavior/*` | pending |
+| `Autocomplete`, `CommandMenu` | — | excluded — согласованно не переносим popup-команды, их state/actions/plugins и связанные keyboard/a11y scenarios. |
 | `Clipboard` | `src/extensions/behavior/clipboard.ts` | deferred — текущая вставка plain text и имён файлов в inline/block code остаётся подключённой к `DefaultPreset`; copy/cut, MIME `text/yfm` и дальнейшее развитие paste пока сознательно не реализуем. |
 | `Cursor` | `src/extensions/behavior/cursor.ts` | done — upstream `GapCursorSelection`, virtual paragraph widget/input materialization and configurable ProseMirror drop cursor подключены к `DefaultPreset`; создание и навигация gap selection обеспечены командами `Selection`. |
-| `FilePaste`, `History`, `Placeholder`, `Resizable`, `Selection`, `SelectionContext`, `SharedState` | `src/extensions/behavior/*` | partial — `History`, document-level `Placeholder`, callback-based `FilePaste`, `Selection` decorations, hierarchical select-all, fake-paragraph/gap-cursor commands/keymap и Vue `SelectionContext` перенесены и подключены к DefaultPreset/visual editor. Resizable supports selected image drag handles and Markdown dimension round-trip; generic node-view resizing, schema-driven placeholder decorations, `SharedState` и остальное pending. Search is deliberately excluded. |
+| `FilePaste` | — | excluded — загрузка файлов через paste/drop и host callback полностью удалена из package API и runtime preset. |
+| `History`, `Placeholder`, `Resizable`, `Selection`, `SelectionContext`, `SharedState` | `src/extensions/behavior/*` | partial — `History`, document-level `Placeholder`, `Selection` decorations, hierarchical select-all, fake-paragraph/gap-cursor commands/keymap и Vue `SelectionContext` перенесены и подключены к DefaultPreset/visual editor. Resizable supports selected image drag handles and Markdown dimension round-trip; generic node-view resizing, schema-driven placeholder decorations, `SharedState` и остальное pending. Search is deliberately excluded. |
 | `ReactRenderer`, `WidgetDecoration` | `core/vue-renderer.ts`, `src/extensions/behavior/*` | partial |
 | `behavior/utils/*` | `src/extensions/behavior/utils/*` | pending |
 
@@ -80,13 +81,14 @@
 | Upstream source | Vue target | Status |
 | --- | --- | --- |
 | `Checkbox`, `Color`, `Emoji`, `ImgSize`, `Monospace`, `Video`, `YfmConfigs` | — | excluded — согласованное исключение из объёма работ. |
-| `YfmCut`, `YfmFile`, `YfmHeading`, `YfmNote`, `YfmTable`, `YfmTabs` | `src/extensions/yfm/*` | pending |
+| `YfmCut`, `YfmFile`, `YfmHeading`, `YfmNote`, `YfmTable`, `YfmTabs` | — | excluded — согласованно не переносим оставшиеся YFM-расширения и связанные с ними views/actions/tests. |
 
 ## Forms, renderer и integration layer
 
 | Upstream source | Vue target | Status | Примечание |
 | --- | --- | --- | --- |
-| `forms/{Link,Image,FileForm,TextInput,base,components,utils}.tsx` | `src/forms/*` | pending | Перенести как Vue components; не путать с исключённой интеграцией Yandex Forms. |
+| `forms/{Link,Image,TextInput,base,components,utils}.tsx` | `src/forms/{MarkdownEditorLinkForm,MarkdownEditorImageForm}.vue` | partial | Общие публичные Vue-формы Link/Image с native URL validation, apply/cancel/remove и action binding подключены к toolbar. Общие TextInput/base primitives и полный upstream props contract ещё pending. |
+| `forms/FileForm.tsx` | — | excluded — загрузка файлов и форма файла полностью исключены из package API, toolbar, paste/drop и playground. |
 | `react-utils/*`, `markup/codemirror/react-facet.ts` | `core/vue-renderer.ts`, Vue composables | partial | Есть mount-адаптер для node/widget/context panel; нет полного parity. |
 | `bundle/*View.tsx`, `bundle/MarkupManager.ts`, `bundle/useMarkdownEditor.ts` | Vue components/composables | pending | |
 
@@ -95,13 +97,18 @@
 | Upstream source | Vue target | Status |
 | --- | --- | --- |
 | `core/*.test.ts`, extension tests, `markup/*.test.ts`, `bundle/Editor.test.ts` | Vitest tests in package | partial |
-| Browser scenarios for Markdown, actions, modes, uploads, clipboard, node views and accessibility | `e2e/playground.spec.ts` | partial |
+| Browser scenarios for Markdown, actions, modes, forms, clipboard, node views and accessibility | `e2e/playground.spec.ts` | partial |
 | Desktop and narrow manual visual check | playground | pending |
 
 ## Следующий реализуемый срез
 
-1. **Autocomplete + CommandMenu:** сначала framework-neutral state/actions/plugins, затем Vue popup/widget и keyboard/a11y scenarios.
-2. **YFM:** переносить отдельными вертикальными срезами в порядке `YfmHeading` → `YfmCut` → `YfmNote` → `YfmFile` → `YfmTable` → `YfmTabs`.
-3. **Integration parity:** upstream forms, toolbar/presets, bundle/composable API, i18n/styles и public exports; затем полный desktop/narrow acceptance pass.
+**Integration/API parity** — следующий и последний крупный этап переноса. Он включает:
+
+1. **Общие Vue-формы Link и Image — partial.** Переиспользуемые публичные компоненты с URL validation, submit/cancel/remove и action binding подключены к toolbar. Остаются общие TextInput/base primitives и сверка полного применимого upstream props contract. Загрузка файлов и `FileForm` исключены.
+2. **Toolbar, toolbar items и presets.** Заменить локальный фиксированный toolbar системой upstream-style items/groups и перенести `commonmark`, `full` и применимую часть `yfm` presets/specs. Это нужно для конфигурируемого состава действий, одинакового порядка/availability кнопок и предсказуемого подключения extensions потребителем пакета. Исключённые Autocomplete, CommandMenu и YFM extensions в эти presets не входят.
+3. **Bundle и composable API.** Довести `MarkdownEditor`, `useMarkdownEditor` и editor instance до применимого upstream-контракта: lifecycle, actions, mode switching, focus, readonly и события. Это нужно, чтобы интеграция не зависела от внутренних Vue-компонентов и пакет можно было обновлять без переписывания host-кода.
+4. **Public exports и совместимые entry points.** Сверить `index.ts`, public types и допустимые deep imports с эталонным upstream export surface, исключив React/GPT/YFM-only API. Это нужно, чтобы потребители могли импортировать extensions, actions, presets и типы через стабильные документированные точки входа.
+5. **i18n, icons и styles.** Перенести общие строки, локали, иконки, темы, focus/disabled/error states и responsive styles, относящиеся к оставшемуся UI. Это нужно для целостной локализации, accessibility и одинакового поведения package UI вне playground.
+6. **Финальная документация и acceptance.** Обновить README и parity-матрицу, расширить Chromium-сценарии для modes/forms/toolbar/public API, затем вручную проверить desktop и narrow viewport без console/page errors. Это подтверждает не только unit-контракты, но и реальную интеграцию собранного Vue-пакета.
 
 Для каждого feature-среза порядок один: upstream non-React код и unit-тесты → Vue view/form/widget → runtime preset/export → Chromium-сценарий → обновление этой матрицы.
