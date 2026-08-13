@@ -9,6 +9,27 @@ import type {MarkdownEditorExposed} from './MarkdownEditor.vue';
 import type {MarkdownEditorMode} from './public-types';
 
 describe('MarkdownEditor', () => {
+    it('exposes the common editor value API through the component ref', async () => {
+        const target = document.createElement('div');
+        const editor = ref<MarkdownEditorExposed>();
+        const app = createApp(() => h(MarkdownEditor, {modelValue: 'middle', ref: editor}));
+
+        document.body.append(target);
+        app.mount(target);
+        await nextTick();
+
+        editor.value?.prepend('first');
+        editor.value?.append('last');
+        expect(editor.value?.getValue()).toBe('first\n\nmiddle\n\nlast');
+        expect(editor.value?.isEmpty()).toBe(false);
+        editor.value?.clear();
+        expect(editor.value?.isEmpty()).toBe(true);
+        editor.value?.replace('replacement');
+        expect(editor.value?.getValue()).toBe('replacement');
+
+        app.unmount();
+    });
+
     beforeEach(() => {
         vi.stubGlobal('ResizeObserver', class {
             disconnect(): void {}

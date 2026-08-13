@@ -41,13 +41,13 @@ Events: `update:modelValue`, `change`, `update:mode`, and `mode-change`.
 
 `MarkdownEditorLinkForm` and `MarkdownEditorImageForm` are exported for hosts that need to reuse the editor forms outside the built-in toolbar. File uploads are deliberately not part of the package API.
 
-The component ref exposes `focus()`, `getValue()`, `setValue()`, `getMode()`, and `setMode()`.
+The component ref exposes `focus()`, `hasFocus()`, `getValue()`, `setValue()`/`replace()`, `clear()`, `prepend()`, `append()`, `insert()`, `isEmpty()`, `moveCursor()`, `getMode()`, and `setMode()`.
 
 ## Composable and headless API
 
 `useMarkdownEditor(options)` returns reactive `value` and `mode`, the `MarkdownEditor` instance, and `destroy()`.
 
-The instance supports `getValue()`, `setValue()`, `getMode()`, `setMode()`, `focus()`, `on()`, `off()`, and `destroy()`.
+The instance supports the same common value/cursor methods, `currentMode`, `setEditorMode()`/`changeEditorMode()`, readonly and toolbar visibility state, typed `on()`/`off()` events, and `destroy()`. The composable mirrors value, mode, readonly, and toolbar visibility as readonly Vue refs.
 
 Headless integrations can compose the exported `ZeroPreset`, `CommonMarkPreset`, `DefaultPreset`, and scoped `FullPreset`. Matching `CommonMarkSpecsPreset` and `FullSpecsPreset` entry points are provided for compatibility with upstream's split preset API; the Vue port keeps schema, parser, serializer, and runtime registrations in the same extension modules.
 

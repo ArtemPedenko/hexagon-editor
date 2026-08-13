@@ -301,6 +301,9 @@ export function mountBasicWysiwygEditor({
     destroy: () => view.destroy(),
     focus: () => view.focus(),
     getValue: () => basicMarkdownCodec.serialize(view.state.doc),
+    hasFocus: () => view.hasFocus(),
+    insert: (markup) => contentHandler.insert(markup),
+    moveCursor: (position) => contentHandler.moveCursor(position),
     run: (command) => {
       const result = command(view.state, view.dispatch, view);
       view.focus();

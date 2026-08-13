@@ -20,7 +20,7 @@ export interface BasicWysiwygSelectionState {
     linkTitle: string | undefined; mark: boolean; orderedList: boolean; quote: boolean; strikethrough: boolean; underline: boolean;
 }
 
-export interface BasicWysiwygEditor { destroy(): void; focus(): void; getValue(): string; run(command: Command): boolean; setValue(value: string): void; }
+export interface BasicWysiwygEditor { destroy(): void; focus(): void; getValue(): string; hasFocus(): boolean; insert(markup: string): void; moveCursor(position: 'start' | 'end'): void; run(command: Command): boolean; setValue(value: string): void; }
 
 export interface MountBasicWysiwygEditorOptions {
     editable?: boolean; initialValue?: string; onChange?(value: string): void;

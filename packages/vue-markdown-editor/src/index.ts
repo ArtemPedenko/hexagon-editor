@@ -3,10 +3,13 @@ export type {
     MarkdownEditorInstance,
     MarkdownEditorLocale,
     MarkdownEditorMode,
+    MarkdownEditorPreset,
+    MarkdownEditorCursorPosition,
     MarkdownEditorTheme,
     MarkdownEditorOptions,
     MarkdownEditorToolbarPreset,
 } from './public-types';
+export type {ChangeEditorModeOptions, MarkdownEditorInitialOptions} from './public-types';
 export * from './core';
 export {default as MarkdownEditor} from './MarkdownEditor.vue';
 export type {MarkdownEditorExposed} from './MarkdownEditor.vue';

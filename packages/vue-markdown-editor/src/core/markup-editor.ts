@@ -8,6 +8,9 @@ export interface BasicMarkupEditor {
     destroy(): void;
     focus(): void;
     getValue(): string;
+    hasFocus(): boolean;
+    insert(markup: string): void;
+    moveCursor(position: 'start' | 'end' | {line: number}): void;
     redo(): void;
     setValue(value: string): void;
     undo(): void;
@@ -69,6 +72,19 @@ export function mountBasicMarkupEditor({
             }
         },
         getValue: () => view.state.doc.toString(),
+        hasFocus: () => view.hasFocus,
+        insert: (markup) => {
+            if (destroyed) return;
+            view.dispatch({changes: {from: view.state.selection.main.from, to: view.state.selection.main.to, insert: markup}});
+        },
+        moveCursor: (position) => {
+            if (destroyed) return;
+            const anchor = typeof position === 'object'
+                ? view.state.doc.line(Math.min(Math.max(position.line + 1, 1), view.state.doc.lines)).from
+                : position === 'start' ? 0 : view.state.doc.length;
+            view.dispatch({selection: {anchor}, scrollIntoView: true});
+            view.focus();
+        },
         redo: () => {
             if (!destroyed) {
                 redo(view);

@@ -14,6 +14,7 @@ import {
 import type {BasicMarkupEditor, BasicWysiwygEditor, BasicWysiwygSelectionState} from './core';
 import type {
     MarkdownEditorMode,
+    MarkdownEditorCursorPosition,
     MarkdownEditorLocale,
     MarkdownEditorToolbarPreset,
     MarkdownEditorTheme,
@@ -21,9 +22,17 @@ import type {
 import type {MarkdownEditorToolbarConfig} from './toolbar';
 
 export interface MarkdownEditorExposed {
+    append(markup: string): void;
+    clear(): void;
     focus(): void;
     getMode(): MarkdownEditorMode;
     getValue(): string;
+    hasFocus(): boolean;
+    insert(markup: string): void;
+    isEmpty(): boolean;
+    moveCursor(position: MarkdownEditorCursorPosition): void;
+    prepend(markup: string): void;
+    replace(markup: string): void;
     setMode(mode: MarkdownEditorMode): Promise<void>;
     setValue(value: string): void;
 }
@@ -219,6 +228,30 @@ function setValue(nextValue: string): void {
     markupEditor?.setValue(nextValue);
     visualEditor?.setValue(nextValue);
     syncing = false;
+}
+
+function joinMarkdown(left: string, right: string): string {
+    if (left.length === 0) return right;
+    if (right.length === 0) return left;
+    return `${left}\n\n${right}`;
+}
+
+function moveCursor(position: MarkdownEditorCursorPosition): void {
+    if (mode.value === 'markup') {
+        markupEditor?.moveCursor(position);
+    } else if (mode.value === 'split' && typeof position === 'object') {
+        markupEditor?.moveCursor(position);
+    } else {
+        visualEditor?.moveCursor(typeof position === 'object' ? 'start' : position);
+    }
+}
+
+function insert(markup: string): void {
+    if (mode.value === 'markup' || (mode.value === 'split' && markupEditor?.hasFocus())) {
+        markupEditor?.insert(markup);
+    } else {
+        visualEditor?.insert(markup);
+    }
 }
 
 function applyLink(): void {
@@ -502,9 +535,17 @@ onBeforeUnmount(() => {
 });
 
 defineExpose<MarkdownEditorExposed>({
+    append: (markup) => setValue(joinMarkdown(value.value, markup)),
+    clear: () => setValue(''),
     focus: () => (mode.value === 'markup' ? markupEditor?.focus() : visualEditor?.focus()),
     getMode: () => mode.value,
     getValue: () => value.value,
+    hasFocus: () => mode.value === 'markup' ? (markupEditor?.hasFocus() ?? false) : (visualEditor?.hasFocus() ?? false),
+    insert,
+    isEmpty: () => value.value.length === 0,
+    moveCursor,
+    prepend: (markup) => setValue(joinMarkdown(markup, value.value)),
+    replace: setValue,
     setMode,
     setValue,
 });

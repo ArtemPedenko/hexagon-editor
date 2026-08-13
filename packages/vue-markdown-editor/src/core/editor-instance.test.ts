@@ -46,4 +46,60 @@ describe('MarkdownEditor', () => {
 
         expect(onFocus).toHaveBeenCalledExactlyOnceWith();
     });
+
+    it('supports the upstream common editor value operations', () => {
+        const editor = createMarkdownEditor({initial: {markup: 'middle'}});
+
+        editor.prepend('first');
+        editor.append('last');
+        editor.insert('inserted');
+        expect(editor.getValue()).toBe('first\n\nmiddle\n\nlast\n\ninserted');
+        expect(editor.isEmpty()).toBe(false);
+        editor.clear();
+        expect(editor.isEmpty()).toBe(true);
+        editor.replace('replacement');
+        expect(editor.getValue()).toBe('replacement');
+    });
+
+    it('controls mode, readonly and toolbar state with public events', () => {
+        const beforeEditorModeChange = vi.fn(({reason}) => reason !== 'settings');
+        const editor = createMarkdownEditor({beforeEditorModeChange, initial: {readonly: true, toolbarVisible: false}});
+        const modeChange = vi.fn();
+        const readonlyChange = vi.fn();
+        const toolbarChange = vi.fn();
+        editor.on('changeEditorMode', modeChange);
+        editor.on('changeReadonly', readonlyChange);
+        editor.on('changeToolbarVisibility', toolbarChange);
+
+        editor.changeEditorMode({mode: 'markup', reason: 'settings'});
+        expect(editor.currentMode).toBe('wysiwyg');
+        editor.setEditorMode('split');
+        editor.setReadonly(false);
+        editor.changeToolbarVisibility({visible: true});
+
+        expect(editor.currentMode).toBe('split');
+        expect(editor.readonly).toBe(false);
+        expect(editor.toolbarVisible).toBe(true);
+        expect(modeChange).toHaveBeenCalledExactlyOnceWith({emit: true, mode: 'split', reason: 'manually'});
+        expect(readonlyChange).toHaveBeenCalledExactlyOnceWith({readonly: false});
+        expect(toolbarChange).toHaveBeenCalledExactlyOnceWith({visible: true});
+    });
+
+    it('delegates focus state and cursor movement to the active host', () => {
+        const onMoveCursor = vi.fn();
+        const editor = createMarkdownEditor({onHasFocus: () => true, onMoveCursor});
+
+        expect(editor.hasFocus()).toBe(true);
+        editor.moveCursor({line: 3});
+        expect(onMoveCursor).toHaveBeenCalledExactlyOnceWith({line: 3});
+    });
+
+    it('exposes host-bound actions through the public action storage', () => {
+        const bold = {isActive: () => false, isEnabled: () => true, metadata: () => undefined, run: vi.fn()};
+        const editor = createMarkdownEditor({actions: {bold}});
+
+        expect(editor.actions.bold).toBe(bold);
+        editor.action('bold')?.run(undefined);
+        expect(bold.run).toHaveBeenCalledOnce();
+    });
 });
