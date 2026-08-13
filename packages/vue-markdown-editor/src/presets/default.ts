@@ -1,106 +1,13 @@
 import type {ExtensionAuto} from '../core/extension-builder';
-import type {BaseSchemaOptions} from '../extensions/base';
-import {History} from '../extensions/behavior/history';
-import type {HistoryOptions} from '../extensions/behavior/history';
-import {Clipboard} from '../extensions/behavior/clipboard';
-import {Cursor} from '../extensions/behavior/cursor';
-import type {CursorOptions} from '../extensions/behavior/cursor';
-import {Placeholder} from '../extensions/behavior/placeholder';
-import type {PlaceholderOptions} from '../extensions/behavior/placeholder';
-import {Selection} from '../extensions/behavior/selection';
-import {SelectionContext} from '../extensions/behavior/selection-context';
-import {ClicksOnEdges} from '../extensions/behavior/clicks-on-edges';
-import {EditorModeKeymap} from '../extensions/behavior/editor-mode-keymap';
-import type {EditorModeKeymapOptions} from '../extensions/behavior/editor-mode-keymap';
-import {Resizable} from '../extensions/behavior/resizable';
-import type {SelectionContextOptions} from '../extensions/behavior/selection-context';
-import {FoldingHeading} from '../extensions/additional/folding-heading';
-import {Math} from '../extensions/additional/math';
-import {Mermaid} from '../extensions/additional/mermaid';
-import {QuoteLink} from '../extensions/additional/quote-link';
-import {YfmHtmlBlock} from '../extensions/additional/yfm-html-block';
-import {Lists} from '../extensions/markdown/lists';
-import type {ListsOptions} from '../extensions/markdown/lists';
-import {Blockquote} from '../extensions/markdown/blockquote';
-import type {BlockquoteOptions} from '../extensions/markdown/blockquote';
-import {Bold} from '../extensions/markdown/bold';
-import type {BoldOptions} from '../extensions/markdown/bold';
-import {Italic} from '../extensions/markdown/italic';
-import type {ItalicOptions} from '../extensions/markdown/italic';
-import {Code} from '../extensions/markdown/code';
-import type {CodeOptions} from '../extensions/markdown/code';
-import {CodeBlock} from '../extensions/markdown/code-block';
-import type {CodeBlockOptions} from '../extensions/markdown/code-block';
-import {Heading} from '../extensions/markdown/heading';
-import type {HeadingOptions} from '../extensions/markdown/heading';
-import {HorizontalRule} from '../extensions/markdown/horizontal-rule';
-import {Link} from '../extensions/markdown/link';
-import type {LinkOptions} from '../extensions/markdown/link';
-import {Breaks} from '../extensions/markdown/breaks';
-import type {BreaksOptions} from '../extensions/markdown/breaks';
-import {Deflist} from '../extensions/markdown/deflist';
-import {Html} from '../extensions/markdown/html';
-import {Image} from '../extensions/markdown/image';
-import {Mark} from '../extensions/markdown/mark';
 import {Strike} from '../extensions/markdown/strike';
-import {Subscript} from '../extensions/markdown/subscript';
 import {Table} from '../extensions/markdown/table';
-import {Underline} from '../extensions/markdown/underline';
 
-import {ZeroPreset} from './zero';
+import {CommonMarkPreset} from './commonmark';
+import type {CommonMarkPresetOptions} from './commonmark';
 
-export interface DefaultPresetOptions {
-    baseSchema?: BaseSchemaOptions;
-    blockquote?: BlockquoteOptions;
-    breaks?: BreaksOptions;
-    bold?: BoldOptions;
-    code?: CodeOptions;
-    codeBlock?: CodeBlockOptions;
-    cursor?: CursorOptions;
-    heading?: HeadingOptions;
-    link?: LinkOptions;
-    italic?: ItalicOptions;
-    history?: HistoryOptions;
-    lists?: ListsOptions;
-    placeholder?: PlaceholderOptions;
-    selectionContext?: SelectionContextOptions;
-    editorModeKeymap?: EditorModeKeymapOptions;
-}
+export type DefaultPresetOptions = CommonMarkPresetOptions;
 
-/** First composable editor preset: zero foundation plus the fully ported Lists behavior. */
+/** Upstream default preset: CommonMark plus strikethrough and tables. */
 export const DefaultPreset: ExtensionAuto<DefaultPresetOptions> = (builder, options) => {
-    builder
-        .use(ZeroPreset, {baseSchema: options?.baseSchema})
-        .use(Blockquote, options?.blockquote ?? {})
-        .use(Bold, options?.bold ?? {})
-        .use(Italic, options?.italic ?? {})
-        .use(Code, options?.code ?? {})
-        .use(CodeBlock, options?.codeBlock ?? {})
-        .use(Heading, options?.heading ?? {})
-        .use(FoldingHeading)
-        .use(Math)
-        .use(Mermaid)
-        .use(QuoteLink)
-        .use(YfmHtmlBlock)
-        .use(HorizontalRule)
-        .use(Link, options?.link ?? {})
-        .use(Breaks, options?.breaks ?? {})
-        .use(Deflist)
-        .use(Html)
-        .use(Image)
-        .use(Mark)
-        .use(Strike)
-        .use(Subscript)
-        .use(Table)
-        .use(Underline)
-        .use(Lists, options?.lists ?? {})
-        .use(History, options?.history ?? {})
-        .use(Placeholder, options?.placeholder ?? {})
-        .use(Clipboard)
-        .use(Cursor, options?.cursor ?? {})
-        .use(Selection)
-        .use(ClicksOnEdges)
-        .use(EditorModeKeymap, options?.editorModeKeymap ?? {})
-        .use(Resizable)
-        .use(SelectionContext, options?.selectionContext ?? {});
+    builder.use(CommonMarkPreset, options).use(Strike).use(Table);
 };

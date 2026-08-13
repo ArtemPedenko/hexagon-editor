@@ -49,6 +49,8 @@ The component ref exposes `focus()`, `getValue()`, `setValue()`, `getMode()`, an
 
 The instance supports `getValue()`, `setValue()`, `getMode()`, `setMode()`, `focus()`, `on()`, `off()`, and `destroy()`.
 
+Headless integrations can compose the exported `ZeroPreset`, `CommonMarkPreset`, `DefaultPreset`, and scoped `FullPreset`. Matching `CommonMarkSpecsPreset` and `FullSpecsPreset` entry points are provided for compatibility with upstream's split preset API; the Vue port keeps schema, parser, serializer, and runtime registrations in the same extension modules.
+
 ## Supported Markdown
 
 The editor supports CommonMark blocks and marks, tables, definition lists, heading attributes and folding headings (`##+`), quote links, raw HTML, directives, Math/LaTeX (`$…$` and `$$…$$`), Mermaid fences, and YFM HTML blocks (`:::html`).

@@ -1,7 +1,7 @@
 import type {Schema} from 'prosemirror-model';
 import {Plugin} from 'prosemirror-state';
 
-import {DefaultPreset} from '../presets/default';
+import {FullPreset} from '../presets/full';
 import type {SelectionContextOptions} from '../extensions/behavior/selection-context';
 import {TableNode} from '../extensions/markdown/table';
 
@@ -9,7 +9,7 @@ import {ExtensionsManager} from './extensions-manager';
 import type {MarkdownCodec} from './markdown';
 
 export function createBasicDefaultPresetPlugins(schema: Schema, placeholder: string, selectionContext: SelectionContextOptions | undefined, onCancel?: () => boolean, onSubmit?: () => boolean): Plugin[] {
-    return ExtensionsManager.plugins((builder) => builder.use(DefaultPreset, {bold: {boldKey: 'Mod-b'}, editorModeKeymap: {ignoreKeysList: ['Tab', 'Shift-Tab'], onCancel, onSubmit}, italic: {italicKey: 'Mod-i'}, placeholder: {content: placeholder}, selectionContext}), schema);
+    return ExtensionsManager.plugins((builder) => builder.use(FullPreset, {bold: {boldKey: 'Mod-b'}, editorModeKeymap: {ignoreKeysList: ['Tab', 'Shift-Tab'], onCancel, onSubmit}, italic: {italicKey: 'Mod-i'}, placeholder: {content: placeholder}, selectionContext}), schema);
 }
 
 export function createMarkdownTablePastePlugin(codec: MarkdownCodec): Plugin {
