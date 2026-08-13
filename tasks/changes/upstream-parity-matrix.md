@@ -69,7 +69,7 @@
 | --- | --- | --- |
 | `ClicksOnEdges`, `EditorModeKeymap` | `src/extensions/behavior/{clicks-on-edges,editor-mode-keymap}.ts` | done — клики по свободной области до/после документа создают доступный текстовый блок; Escape/Mod-Enter передаются в Vue `cancel`/`submit`, служебные клавиши можно поглотить с низким приоритетом. Покрыто unit и Chromium-сценарием. |
 | `Autocomplete`, `CommandMenu` | `src/extensions/behavior/*` | pending |
-| `Clipboard` | `src/extensions/behavior/clipboard.ts` | partial — code-block/inline-code paste, including file names, is connected to `DefaultPreset`; full copy/cut, YFM MIME and parser-aware paste remain pending. |
+| `Clipboard` | `src/extensions/behavior/clipboard.ts` | deferred — текущая вставка plain text и имён файлов в inline/block code остаётся подключённой к `DefaultPreset`; copy/cut, MIME `text/yfm` и дальнейшее развитие paste пока сознательно не реализуем. |
 | `Cursor` | `src/extensions/behavior/cursor.ts` | done — upstream `GapCursorSelection`, virtual paragraph widget/input materialization and configurable ProseMirror drop cursor подключены к `DefaultPreset`; создание и навигация gap selection обеспечены командами `Selection`. |
 | `FilePaste`, `History`, `Placeholder`, `Resizable`, `Selection`, `SelectionContext`, `SharedState` | `src/extensions/behavior/*` | partial — `History`, document-level `Placeholder`, callback-based `FilePaste`, `Selection` decorations, hierarchical select-all, fake-paragraph/gap-cursor commands/keymap и Vue `SelectionContext` перенесены и подключены к DefaultPreset/visual editor. Resizable supports selected image drag handles and Markdown dimension round-trip; generic node-view resizing, schema-driven placeholder decorations, `SharedState` и остальное pending. Search is deliberately excluded. |
 | `ReactRenderer`, `WidgetDecoration` | `core/vue-renderer.ts`, `src/extensions/behavior/*` | partial |
@@ -100,9 +100,8 @@
 
 ## Следующий реализуемый срез
 
-1. **Clipboard:** довести copy/cut, `text/yfm`, HTML/plain-text parser-aware paste и selection trimming; сохранить отдельный file-paste flow.
-2. **Autocomplete + CommandMenu:** сначала framework-neutral state/actions/plugins, затем Vue popup/widget и keyboard/a11y scenarios.
-3. **YFM:** переносить отдельными вертикальными срезами в порядке `YfmHeading` → `YfmCut` → `YfmNote` → `YfmFile` → `YfmTable` → `YfmTabs`.
-4. **Integration parity:** upstream forms, toolbar/presets, bundle/composable API, i18n/styles и public exports; затем полный desktop/narrow acceptance pass.
+1. **Autocomplete + CommandMenu:** сначала framework-neutral state/actions/plugins, затем Vue popup/widget и keyboard/a11y scenarios.
+2. **YFM:** переносить отдельными вертикальными срезами в порядке `YfmHeading` → `YfmCut` → `YfmNote` → `YfmFile` → `YfmTable` → `YfmTabs`.
+3. **Integration parity:** upstream forms, toolbar/presets, bundle/composable API, i18n/styles и public exports; затем полный desktop/narrow acceptance pass.
 
 Для каждого feature-среза порядок один: upstream non-React код и unit-тесты → Vue view/form/widget → runtime preset/export → Chromium-сценарий → обновление этой матрицы.

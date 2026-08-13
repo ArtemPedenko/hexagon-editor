@@ -839,6 +839,20 @@ defineExpose<MarkdownEditorExposed>({
     cursor: text;
 }
 
+.markdown-editor :deep(.ProseMirror blockquote) {
+    margin: 1rem 0;
+    padding-inline-start: 0.75rem;
+    border-inline-start: 2px solid #5282ff;
+}
+
+.markdown-editor :deep(.ProseMirror blockquote > :first-child) {
+    margin-block-start: 0;
+}
+
+.markdown-editor :deep(.ProseMirror blockquote > :last-child) {
+    margin-block-end: 0;
+}
+
 .markdown-editor :deep(.ProseMirror pre) {
     position: relative;
     overflow: auto;

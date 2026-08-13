@@ -14,12 +14,7 @@
 		'',
 		'Этот раздел можно свернуть кнопкой в тулбаре.',
 		'',
-		'Термин',
-		': Определение из definition list',
-		'',
-		'> [Документация Gravity UI](https://gravity-ui.com){data-quotelink=true}',
-		'>',
-		'> Цитата со ссылкой на источник.',
+		'> Изменения затрагивают:',
 		'',
 		'<div data-demo-html>Raw HTML block</div>',
 		'',
@@ -64,43 +59,43 @@
 </script>
 
 <template>
-	<main class="playground">
-		<header class="playground__header">
-			<p class="playground__eyebrow">Gravity UI · Vue 3</p>
-			<h1>Markdown editor</h1>
-			<p class="playground__status">{{ editorMode }} · расширенные Markdown-функции · {{ VERSION }}</p>
-			<div class="playground__controls" aria-label="Настройки playground">
-				<label>
-					Язык
-					<select v-model="locale" aria-label="Язык редактора">
-						<option value="ru">Русский</option>
-						<option value="en">English</option>
-					</select>
-				</label>
-				<label>
-					Тема
-					<select v-model="theme" aria-label="Тема редактора">
-						<option value="auto">Auto</option>
-						<option value="light">Light</option>
-						<option value="dark">Dark</option>
-					</select>
-				</label>
-			</div>
-		</header>
-		<section class="playground__workspace" aria-label="Редактор Markdown">
-			<MarkdownEditor
-				v-model="markdown"
-				v-model:locale="locale"
-				v-model:mode="editorMode"
-				v-model:theme="theme"
-				:upload-file="uploadImage"
-			/>
-			<aside class="playground__source-pane">
-				<div class="playground__pane-title">Preview</div>
-				<!-- markdown-it is configured with html: false in renderMarkdownPreview. -->
-				<!-- eslint-disable-next-line vue/no-v-html -->
-				<div class="playground__preview" v-html="previewHtml" />
-			</aside>
-		</section>
-	</main>
+  <main class="playground">
+    <header class="playground__header">
+      <p class="playground__eyebrow">Gravity UI · Vue 3</p>
+      <h1>Markdown editor</h1>
+      <p class="playground__status">{{ editorMode }} · расширенные Markdown-функции · {{ VERSION }}</p>
+      <div class="playground__controls" aria-label="Настройки playground">
+        <label>
+          Язык
+          <select v-model="locale" aria-label="Язык редактора">
+            <option value="ru">Русский</option>
+            <option value="en">English</option>
+          </select>
+        </label>
+        <label>
+          Тема
+          <select v-model="theme" aria-label="Тема редактора">
+            <option value="auto">Auto</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+        </label>
+      </div>
+    </header>
+    <section class="playground__workspace" aria-label="Редактор Markdown">
+      <MarkdownEditor
+        v-model="markdown"
+        v-model:locale="locale"
+        v-model:mode="editorMode"
+        v-model:theme="theme"
+        :upload-file="uploadImage"
+      />
+      <aside class="playground__source-pane">
+        <div class="playground__pane-title">Preview</div>
+        <!-- markdown-it is configured with html: false in renderMarkdownPreview. -->
+        <!-- eslint-disable-next-line vue/no-v-html -->
+        <div class="playground__preview" v-html="previewHtml" />
+      </aside>
+    </section>
+  </main>
 </template>

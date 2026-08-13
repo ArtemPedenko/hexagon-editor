@@ -13,8 +13,9 @@ test.describe('Markdown editor playground', () => {
         await expect(page.getByText('расширенные Markdown-функции')).toBeVisible();
         await expect(page.locator('.ProseMirror h1#editor-demo.playground-title')).toHaveText('Vue Markdown editor');
         await expect(page.locator('.ProseMirror h2')).toHaveText('Расширенные возможности');
-        await expect(page.locator('.ProseMirror dl')).toContainText('Термин');
-        await expect(page.locator('.ProseMirror blockquote[data-quote-link]')).toContainText('Цитата со ссылкой на источник.');
+        const quote = page.locator('.ProseMirror blockquote');
+        await expect(quote).toHaveText('Изменения затрагивают:');
+        await expect(quote).toHaveCSS('border-left-color', 'rgb(82, 130, 255)');
         await expect(page.locator('.ProseMirror [data-demo-html]')).toHaveText('Raw HTML block');
         await expect(page.locator('.ProseMirror [data-directive-html]')).toHaveText('HTML directive');
         await expect(page.locator('.ProseMirror [data-math-inline]')).toBeVisible();
