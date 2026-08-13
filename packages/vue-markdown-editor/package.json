@@ -32,6 +32,10 @@
       "types": "./dist/forms/index.d.ts",
       "import": "./dist/forms.js"
     },
+    "./i18n": {
+      "types": "./dist/i18n/index.d.ts",
+      "import": "./dist/i18n.js"
+    },
     "./presets": {
       "types": "./dist/presets/index.d.ts",
       "import": "./dist/presets.js"

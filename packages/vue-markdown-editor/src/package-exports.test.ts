@@ -13,7 +13,7 @@ describe('package exports', () => {
         const manifest = JSON.parse(readFileSync(packagePath, 'utf8')) as PackageManifest;
 
         expect(Object.keys(manifest.exports)).toEqual([
-            '.', './classname', './configure', './core', './extensions', './forms',
+            '.', './classname', './configure', './core', './extensions', './forms', './i18n',
             './presets', './specs', './toolbar', './style.css',
         ]);
         expect(manifest.dependencies.react).toBeUndefined();

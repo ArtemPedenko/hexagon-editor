@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import {computed, ref} from 'vue';
+import type {MarkdownEditorLocale, MarkdownEditorTheme} from '../public-types';
+import {getMarkdownEditorMessages} from '../i18n';
 
 import MarkdownEditorForm from './MarkdownEditorForm.vue';
 import MarkdownEditorTextInput from './MarkdownEditorTextInput.vue';
@@ -12,10 +14,11 @@ const props = withDefaults(defineProps<{
     autofocus?: boolean;
     disabled?: boolean;
     hasCurrentLink?: boolean;
-    locale?: 'en' | 'ru';
+    locale?: MarkdownEditorLocale;
     readOnlyText?: boolean;
     text?: string;
     title?: string;
+    theme?: MarkdownEditorTheme;
     url?: string;
 }>(), {
     autofocus: false,
@@ -25,6 +28,7 @@ const props = withDefaults(defineProps<{
     readOnlyText: false,
     text: '',
     title: '',
+    theme: 'auto',
     url: '',
 });
 
@@ -39,15 +43,13 @@ const emit = defineEmits<{
 }>();
 
 const form = ref<InstanceType<typeof MarkdownEditorForm>>();
-const copy = computed(() => props.locale === 'en'
-    ? {apply: 'Submit', cancel: 'Cancel', remove: 'Remove', text: 'Link text', textHelp: 'Text displayed as a link.', title: 'Title', url: 'Link address', urlError: 'Enter a valid link address.'}
-    : {apply: 'Сохранить', cancel: 'Отмена', remove: 'Удалить', text: 'Текст ссылки', textHelp: 'Текст, который отображается как ссылка.', title: 'Заголовок', url: 'Адрес ссылки', urlError: 'Введите корректный адрес ссылки.'});
+const copy = computed(() => getMarkdownEditorMessages(props.locale));
 const urlError = ref('');
 
 function submit(): void {
     const url = props.url.trim();
     if (!isValidUrl(url)) {
-        urlError.value = copy.value.urlError;
+        urlError.value = copy.value.linkUrlError;
         emit('invalid', urlError.value);
         return;
     }
@@ -63,12 +65,12 @@ defineExpose({element: computed(() => form.value?.element)});
 </script>
 
 <template>
-  <MarkdownEditorForm ref="form" :disabled="disabled" @submit="submit">
-    <MarkdownEditorTextInput :model-value="url" aria-label="Адрес ссылки" :autofocus="autofocus" :disabled="disabled" :error="urlError" :label="copy.url" placeholder="https://example.com" required type="url" @update:model-value="urlError = ''; emit('update:url', $event)" />
-    <MarkdownEditorTextInput :model-value="text" aria-label="Текст ссылки" :disabled="disabled" :help="copy.textHelp" :label="copy.text" :readonly="readOnlyText" @update:model-value="emit('update:text', $event)" />
-    <MarkdownEditorTextInput :model-value="title" aria-label="Заголовок ссылки" :disabled="disabled" :label="copy.title" @update:model-value="emit('update:title', $event)" />
+  <MarkdownEditorForm ref="form" :disabled="disabled" :theme="theme" @submit="submit">
+    <MarkdownEditorTextInput :model-value="url" :aria-label="copy.linkUrl" :autofocus="autofocus" :disabled="disabled" :error="urlError" :label="copy.linkUrl" placeholder="https://example.com" required type="url" @update:model-value="urlError = ''; emit('update:url', $event)" />
+    <MarkdownEditorTextInput :model-value="text" :aria-label="copy.linkText" :disabled="disabled" :help="copy.linkTextHelp" :label="copy.linkText" :readonly="readOnlyText" @update:model-value="emit('update:text', $event)" />
+    <MarkdownEditorTextInput :model-value="title" :aria-label="copy.linkTitle" :disabled="disabled" :label="copy.linkTitle" @update:model-value="emit('update:title', $event)" />
     <template #footer>
-      <button v-if="hasCurrentLink" :disabled="disabled" type="button" @click="emit('remove')">{{ copy.remove }}</button>
+      <button v-if="hasCurrentLink" :disabled="disabled" type="button" @click="emit('remove')">{{ copy.linkRemove }}</button>
       <button type="button" @click="emit('cancel')">{{ copy.cancel }}</button>
       <button :disabled="disabled || !url.trim()" type="submit">{{ copy.apply }}</button>
     </template>

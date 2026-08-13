@@ -23,6 +23,7 @@ export default defineConfig({
                 core: resolve(import.meta.dirname, 'src/core/index.ts'),
                 extensions: resolve(import.meta.dirname, 'src/extensions/index.ts'),
                 forms: resolve(import.meta.dirname, 'src/forms/index.ts'),
+                i18n: resolve(import.meta.dirname, 'src/i18n/index.ts'),
                 index: resolve(import.meta.dirname, 'src/index.ts'),
                 presets: resolve(import.meta.dirname, 'src/presets/index.ts'),
                 specs: resolve(import.meta.dirname, 'src/extensions/specs.ts'),

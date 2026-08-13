@@ -6,6 +6,8 @@ import type {FunctionalComponent} from 'vue';
 import MarkdownEditorToolbar from './components/MarkdownEditorToolbar.vue';
 import MarkdownEditorImageForm from './forms/MarkdownEditorImageForm.vue';
 import MarkdownEditorLinkForm from './forms/MarkdownEditorLinkForm.vue';
+import {getMarkdownEditorMessages} from './i18n';
+import type {MarkdownEditorMessageKey} from './i18n';
 import {
     createBasicEditorCommands,
     mountBasicMarkupEditor,
@@ -43,22 +45,16 @@ interface SelectionPanelProps {
     visible: boolean;
 }
 
-const messages = {
-    en: {bold: 'Bold', code: 'Inline code', formula: 'Formula', heading: 'Heading level', html: 'HTML', italic: 'Italic', link: 'Link', markup: 'Markup', mode: 'Editor mode', redo: 'Redo', split: 'Split', undo: 'Undo', visual: 'Visual'},
-    ru: {bold: 'Жирный', code: 'Встроенный код', formula: 'Формула', heading: 'Уровень заголовка', html: 'HTML', italic: 'Курсив', link: 'Ссылка', markup: 'Разметка', mode: 'Режим редактора', redo: 'Повторить', split: 'Разделить', undo: 'Отменить', visual: 'Визуальный'},
-} as const;
-type TranslationKey = keyof typeof messages.en;
-
 const selectionPanel: FunctionalComponent<SelectionPanelProps> = (panelProps) => panelProps.visible
     ? h('div', {class: 'markdown-editor__selection-actions'}, [
         h('button', {
-            'aria-label': 'Жирный для выделения',
+            'aria-label': t('selectionBold'),
             onClick: panelProps.onBold,
             onMousedown: (event: MouseEvent) => event.preventDefault(),
             type: 'button',
         }, 'B'),
         h('button', {
-            'aria-label': 'Курсив для выделения',
+            'aria-label': t('selectionItalic'),
             onClick: panelProps.onItalic,
             onMousedown: (event: MouseEvent) => event.preventDefault(),
             type: 'button',
@@ -139,7 +135,7 @@ const toolbarState = ref<BasicWysiwygSelectionState>({
     underline: false,
 });
 const textStyle = computed(() => toolbarState.value.headingLevel?.toString() ?? 'paragraph');
-const textStyleLabel = computed(() => textStyle.value === 'paragraph' ? 'Текст' : `H${textStyle.value}`);
+const textStyleLabel = computed(() => textStyle.value === 'paragraph' ? t('paragraph') : `H${textStyle.value}`);
 const htmlDirective = '::: html\n\n<div>Add HTML code here</div>\n\n:::';
 const mathBlock = '$$\nE = mc^2\n$$';
 const formulaMenu = ref<HTMLElement>();
@@ -155,8 +151,8 @@ let modeChangeId = 0;
 let syncing = false;
 let visualEditor: BasicWysiwygEditor | undefined;
 
-function t(key: TranslationKey): string {
-    return messages[props.locale][key];
+function t(key: MarkdownEditorMessageKey): string {
+    return getMarkdownEditorMessages(props.locale)[key];
 }
 
 async function handleModeNavigation(event: KeyboardEvent): Promise<void> {
@@ -585,18 +581,19 @@ defineExpose<MarkdownEditorExposed>({
     </MarkdownEditorToolbar>
 
     <Teleport to="body">
-      <div v-if="headingMenuVisible" ref="headingMenu" class="markdown-editor__floating-menu" role="menu" :aria-label="t('heading')">
-        <button v-for="style in ['paragraph', '1', '2', '3', '4', '5', '6']" :key="style" :aria-checked="textStyle === style" role="menuitemradio" type="button" @click="applyTextStyle(style)">{{ style === 'paragraph' ? 'Текст' : `H${style}` }}</button>
+      <div v-if="headingMenuVisible" ref="headingMenu" class="markdown-editor__floating-menu" :data-theme="theme" role="menu" :aria-label="t('heading')">
+        <button v-for="style in ['paragraph', '1', '2', '3', '4', '5', '6']" :key="style" :aria-checked="textStyle === style" role="menuitemradio" type="button" @click="applyTextStyle(style)">{{ style === 'paragraph' ? t('paragraph') : `H${style}` }}</button>
       </div>
-      <div v-if="formulaMenuVisible" ref="formulaMenu" class="markdown-editor__floating-menu" role="menu" aria-label="Вставить формулу">
-        <button role="menuitem" type="button" @mousedown.prevent @click="insertInlineMath">Формула в тексте</button>
-        <button role="menuitem" type="button" @mousedown.prevent @click="insertMathBlock">Блок с формулой</button>
+      <div v-if="formulaMenuVisible" ref="formulaMenu" class="markdown-editor__floating-menu" :data-theme="theme" role="menu" :aria-label="t('formulaInsert')">
+        <button role="menuitem" type="button" @mousedown.prevent @click="insertInlineMath">{{ t('formulaInline') }}</button>
+        <button role="menuitem" type="button" @mousedown.prevent @click="insertMathBlock">{{ t('formulaBlock') }}</button>
       </div>
       <MarkdownEditorLinkForm
         v-if="linkEditorVisible"
         ref="linkForm"
         :has-current-link="toolbarState.linkHref !== undefined"
         :locale="locale"
+        :theme="theme"
         :text="linkText"
         :title="linkTitle"
         :url="linkUrl"
@@ -612,6 +609,7 @@ defineExpose<MarkdownEditorExposed>({
         ref="imageForm"
         :alt="imageAlt"
         :locale="locale"
+        :theme="theme"
         :title="imageTitle"
         :url="imageUrl"
         @apply="applyImage"
@@ -688,6 +686,11 @@ defineExpose<MarkdownEditorExposed>({
 }
 
 .markdown-editor__floating-menu {
+    --markdown-background: #fff;
+    --markdown-border: #d8dbe0;
+    --markdown-focus-background: #e9efff;
+    --markdown-focus-text: #1d3c93;
+    --markdown-text: #202125;
     z-index: 10;
     display: grid;
     width: max-content;
@@ -698,14 +701,25 @@ defineExpose<MarkdownEditorExposed>({
     border-radius: 0.375rem;
     box-shadow: 0 0.5rem 1.25rem rgb(0 0 0 / 18%);
     background: var(--markdown-background);
+    color: var(--markdown-text);
 }
+
+.markdown-editor__floating-menu[data-theme='dark'] { --markdown-background: #1e2024; --markdown-border: #464b55; --markdown-focus-background: #2d416e; --markdown-focus-text: #d7e2ff; --markdown-text: #f1f3f5; }
+
+@media (prefers-color-scheme: dark) { .markdown-editor__floating-menu[data-theme='auto'] { --markdown-background: #1e2024; --markdown-border: #464b55; --markdown-focus-background: #2d416e; --markdown-focus-text: #d7e2ff; --markdown-text: #f1f3f5; } }
 
 .markdown-editor__floating-menu button {
     justify-content: flex-start;
     width: 100%;
     padding-inline: 0.5rem;
     white-space: nowrap;
+    color: inherit;
+    background: transparent;
 }
+
+.markdown-editor__floating-menu button:hover { color: var(--markdown-focus-text); background: var(--markdown-focus-background); }
+.markdown-editor__floating-menu button:focus-visible { outline: 2px solid var(--markdown-focus-text); outline-offset: -2px; }
+.markdown-editor__floating-menu button[aria-checked='true'] { color: var(--markdown-focus-text); background: var(--markdown-focus-background); }
 
 .markdown-editor__link-form {
     display: flex;
@@ -1197,7 +1211,7 @@ defineExpose<MarkdownEditorExposed>({
 
 @media (max-width: 480px) {
     .markdown-editor__header { align-items: flex-start; }
-    .markdown-editor__modes, .markdown-editor__toolbar { overflow-x: auto; flex-wrap: nowrap; }
+    .markdown-editor__modes { overflow-x: auto; flex-wrap: nowrap; }
     .markdown-editor__toolbar { padding-inline: 0.25rem; }
 }
 </style>

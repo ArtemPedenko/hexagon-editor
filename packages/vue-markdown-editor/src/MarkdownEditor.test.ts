@@ -136,6 +136,8 @@ describe('MarkdownEditor', () => {
         const tablist = target.querySelector<HTMLElement>('[role="tablist"]') as HTMLElement;
         expect(tablist.getAttribute('aria-label')).toBe('Editor mode');
         expect(target.querySelector('[title="Formula"]')).not.toBeNull();
+        expect(target.querySelector('[title="Bulleted list"]')).not.toBeNull();
+        expect(target.querySelector('[data-markdown-editor-toolbar]')?.getAttribute('aria-label')).toBe('Markdown formatting');
         tablist.dispatchEvent(new KeyboardEvent('keydown', {bubbles: true, key: 'ArrowRight'}));
         await nextTick();
 

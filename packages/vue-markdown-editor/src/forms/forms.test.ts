@@ -54,4 +54,15 @@ describe('editor forms', () => {
         expect(target.querySelector<HTMLButtonElement>('button[type="submit"]')?.disabled).toBe(true);
         app.unmount();
     });
+
+    it('uses shared English messages and passes the theme to a standalone form', async () => {
+        const target = document.createElement('div');
+        const app = createApp(() => h(MarkdownEditorImageForm, {locale: 'en', theme: 'dark'}));
+        document.body.append(target); app.mount(target); await nextTick();
+
+        expect(target.querySelector('[data-theme="dark"]')).not.toBeNull();
+        expect(target.querySelector('[aria-label="Image address"]')).not.toBeNull();
+        expect(target.querySelector('button[type="submit"]')?.textContent).toBe('Submit');
+        app.unmount();
+    });
 });

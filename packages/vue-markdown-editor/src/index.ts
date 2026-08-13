@@ -13,6 +13,8 @@ export type {ChangeEditorModeOptions, MarkdownEditorInitialOptions} from './publ
 export {Lang, configure, getConfig, subscribeConfigure} from './configure';
 export type {ConfigureSubscriber, MarkdownEditorConfig} from './configure';
 export {cn} from './classname';
+export {getMarkdownEditorMessages, markdownEditorMessages} from './i18n';
+export type {MarkdownEditorMessageKey, MarkdownEditorMessages} from './i18n';
 export type {BlockClassName, ClassNameMix, ClassNameModifiers, ClassNameModifierValue, ClassNameProps} from './classname';
 export * from './core';
 export {default as MarkdownEditor} from './MarkdownEditor.vue';
