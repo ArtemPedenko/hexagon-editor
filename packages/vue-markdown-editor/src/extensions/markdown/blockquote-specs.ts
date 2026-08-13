@@ -18,7 +18,7 @@ export const blockquoteNodeSpec: NodeSpec = {
 
 export const blockquoteTokenSpec: ParseSpec = {block: blockquoteNodeName};
 
-export const serializeBlockquote: Parameters<typeof MarkdownSerializer>[0][string] = (state, node) => {
+export const serializeBlockquote: ConstructorParameters<typeof MarkdownSerializer>[0][string] = (state, node) => {
     state.wrapBlock('> ', null, node, () => state.renderContent(node));
 };
 

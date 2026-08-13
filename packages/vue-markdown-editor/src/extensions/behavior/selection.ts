@@ -1,7 +1,7 @@
 import type {Node as ProseMirrorNode} from 'prosemirror-model';
 import {selectParentNode} from 'prosemirror-commands';
 import {Plugin} from 'prosemirror-state';
-import type {EditorState, Selection, Transaction} from 'prosemirror-state';
+import type {EditorState, Selection as ProseMirrorSelection, Transaction} from 'prosemirror-state';
 import {AllSelection, NodeSelection, TextSelection} from 'prosemirror-state';
 import {Decoration, DecorationSet} from 'prosemirror-view';
 
@@ -39,7 +39,7 @@ function reselect(state: EditorState, dispatch: (transaction: Transaction) => vo
     return selectParentNode(state, dispatch);
 }
 
-function getDecorations(selection: Selection, documentNode: ProseMirrorNode): DecorationSet {
+function getDecorations(selection: ProseMirrorSelection, documentNode: ProseMirrorNode): DecorationSet {
     if (selection instanceof NodeSelection) {
         return DecorationSet.create(documentNode, [
             Decoration.node(selection.from, selection.to, {class: 'pm-node-selected'}),
@@ -56,7 +56,7 @@ function getDecorations(selection: Selection, documentNode: ProseMirrorNode): De
     return DecorationSet.empty;
 }
 
-function getTopLevelNodesFromSelection(selection: Selection, documentNode: ProseMirrorNode): Array<{node: ProseMirrorNode; pos: number}> {
+function getTopLevelNodesFromSelection(selection: ProseMirrorSelection, documentNode: ProseMirrorNode): Array<{node: ProseMirrorNode; pos: number}> {
     const nodes: Array<{node: ProseMirrorNode; pos: number}> = [];
     if (selection.empty) return nodes;
 

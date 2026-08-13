@@ -20,7 +20,7 @@ export const italicMarkSpec: MarkSpec = {
 
 export const italicTokenSpec: ParseSpec = {getAttrs: (token) => ({[ItalicAttrs.Markup]: token.markup}), mark: italicMarkName};
 
-export const serializeItalic: Parameters<typeof MarkdownSerializer>[1][string] = {
+export const serializeItalic: ConstructorParameters<typeof MarkdownSerializer>[1][string] = {
     close: getMarkup,
     expelEnclosingWhitespace: true,
     mixable: true,

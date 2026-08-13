@@ -13,9 +13,9 @@ export const codeMarkSpec: MarkSpec = {
     toDOM: () => ['code'],
 };
 
-export const codeTokenSpec: ParseSpec = {code: true, mark: codeMarkName, noCloseToken: true};
+export const codeTokenSpec: ParseSpec = {mark: codeMarkName, noCloseToken: true};
 
-export const serializeCode: Parameters<typeof MarkdownSerializer>[1][string] = {
+export const serializeCode: ConstructorParameters<typeof MarkdownSerializer>[1][string] = {
     close: (_state, _mark, parent, index) => backticksFor(parent.child(index - 1), 1),
     escape: false,
     open: (_state, _mark, parent, index) => backticksFor(parent.child(index), -1),

@@ -2,7 +2,7 @@
 
 ## Статус постановки
 
-В работе — parity-инвентаризация зафиксирована в `tasks/changes/upstream-parity-matrix.md`; перенесены foundation `ExtensionBuilder`/`ExtensionsManager`, Markdown serializer registration и базовые markdown/behavior extensions до `Table`, включая `Lists`, `Blockquote`, `Bold`, `Italic`, `Code`, `CodeBlock`, `Heading`, `HorizontalRule`, `Link`, `Breaks`, `Deflist`, `Html`, `Image`, `Mark`, `Strike`, `Subscript`, `Table` и `Underline`. `Superscript` исключён из объёма работ. Следующий срез — интеграция upstream `Table` schema/actions в visual host либо additional/YFM extensions.
+В работе — parity-инвентаризация и актуальная очередь вертикальных срезов ведутся в `tasks/changes/upstream-parity-matrix.md`. Перенесены foundation `ExtensionBuilder`/`ExtensionsManager`, Markdown serializer registration, базовые markdown/additional extensions и часть behavior-слоя. `Superscript` исключён из объёма работ.
 
 ## Решения и [Уточнить]
 

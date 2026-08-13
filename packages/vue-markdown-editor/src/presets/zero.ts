@@ -1,8 +1,9 @@
 import type {ExtensionAuto} from '../core/extension-builder';
 import {BaseInputRules, BaseKeymap, BaseSchema} from '../extensions/base';
+import type {BaseSchemaOptions} from '../extensions/base';
 
 export interface ZeroPresetOptions {
-    baseSchema?: import('../extensions/base').BaseSchemaOptions;
+    baseSchema?: BaseSchemaOptions;
 }
 
 /** Upstream zero preset adapted for the current ProseMirror-backed manager. */

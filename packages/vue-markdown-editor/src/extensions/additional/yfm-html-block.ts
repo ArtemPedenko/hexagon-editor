@@ -50,7 +50,7 @@ export const yfmHtmlBlockTokenSpec: ParseSpec = {
     node: yfmHtmlBlockNodeName,
 };
 
-export const serializeYfmHtmlBlock: Parameters<typeof MarkdownSerializer>[0][string] = (state, node) => {
+export const serializeYfmHtmlBlock: ConstructorParameters<typeof MarkdownSerializer>[0][string] = (state, node) => {
     state.write(`:::html\n${node.attrs.html}\n:::`);
     state.closeBlock(node);
 };

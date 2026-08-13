@@ -20,7 +20,7 @@ export const boldMarkSpec: MarkSpec = {
 
 export const boldTokenSpec: ParseSpec = {getAttrs: (token) => ({[BoldAttrs.Markup]: token.markup}), mark: boldMarkName};
 
-export const serializeBold: Parameters<typeof MarkdownSerializer>[1][string] = {
+export const serializeBold: ConstructorParameters<typeof MarkdownSerializer>[1][string] = {
     close: getMarkup,
     expelEnclosingWhitespace: true,
     mixable: true,

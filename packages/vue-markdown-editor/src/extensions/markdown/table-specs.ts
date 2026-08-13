@@ -41,7 +41,7 @@ function cellSpec(tag: 'th' | 'td'): NodeSpec {
         isolating: true,
         parseDOM: [{
             getAttrs: (node) => ({
-                [TableAttrs.CellAlign]: (node as Element).style.textAlign || TableCellAlign.Left,
+                [TableAttrs.CellAlign]: (node as HTMLElement).style.textAlign || TableCellAlign.Left,
             }),
             tag,
         }],
@@ -61,13 +61,13 @@ export const tableTokenSpecs: Record<TableNode, ParseSpec> = {
     [TableNode.DataCell]: {block: TableNode.DataCell, getAttrs: getCellAttrs},
 };
 
-function getCellAttrs(token: {attrs: Array<[string, string]> | null}): Record<TableAttrs, string> {
+function getCellAttrs(token: {attrs: Array<[string, string]> | null}): Partial<Record<TableAttrs, string>> {
     const style = Object.fromEntries(token.attrs ?? []).style ?? '';
     const align = style.split(';').find((rule) => rule.startsWith('text-align:'))?.split(':')[1];
     return {[TableAttrs.CellAlign]: align ?? TableCellAlign.Left};
 }
 
-export const tableSerializerNodes: Record<TableNode, Parameters<typeof MarkdownSerializer>[0][string]> = {
+export const tableSerializerNodes: Record<TableNode, ConstructorParameters<typeof MarkdownSerializer>[0][string]> = {
     [TableNode.Table]: (state, node) => {
         state.ensureNewLine();
         state.renderContent(node);
@@ -95,7 +95,7 @@ export const tableSerializerNodes: Record<TableNode, Parameters<typeof MarkdownS
     [TableNode.DataCell]: renderCell,
 };
 
-function renderCell(state: Parameters<Parameters<typeof MarkdownSerializer>[0][string]>[0], node: Parameters<Parameters<typeof MarkdownSerializer>[0][string]>[1]): void {
+function renderCell(state: Parameters<ConstructorParameters<typeof MarkdownSerializer>[0][string]>[0], node: Parameters<ConstructorParameters<typeof MarkdownSerializer>[0][string]>[1]): void {
     state.write('|');
     state.renderInline(node);
 }

@@ -561,8 +561,8 @@ defineExpose<MarkdownEditorExposed>({
         <button v-for="style in ['paragraph', '1', '2', '3', '4', '5', '6']" :key="style" :aria-checked="textStyle === style" role="menuitemradio" type="button" @click="applyTextStyle(style)">{{ style === 'paragraph' ? 'Текст' : `H${style}` }}</button>
       </div>
       <div v-if="formulaMenuVisible" ref="formulaMenu" class="markdown-editor__floating-menu" role="menu" aria-label="Вставить формулу">
-        <button role="menuitem" type="button" @click="insertInlineMath">Формула в тексте</button>
-        <button role="menuitem" type="button" @click="insertMathBlock">Блок с формулой</button>
+        <button role="menuitem" type="button" @mousedown.prevent @click="insertInlineMath">Формула в тексте</button>
+        <button role="menuitem" type="button" @mousedown.prevent @click="insertMathBlock">Блок с формулой</button>
       </div>
       <MarkdownEditorLinkForm
         v-if="linkEditorVisible"

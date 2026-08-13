@@ -1,9 +1,17 @@
 import type MarkdownIt from 'markdown-it';
-import type Token from 'markdown-it/lib/token';
+import type Token from 'markdown-it/lib/token.mjs';
 import {Mark} from 'prosemirror-model';
 import type {MarkType, Node, NodeType, Schema} from 'prosemirror-model';
 
 export type TokenAttrs = Record<string, unknown>;
+export interface LinkMatch {
+    index: number;
+    lastIndex: number;
+    raw: string;
+    schema: string;
+    text: string;
+    url: string;
+}
 export type ParserToken = {
     attrs?: TokenAttrs | ((token: Token) => TokenAttrs);
     getAttrs?: (token: Token, tokens: Token[], index: number) => TokenAttrs;
@@ -73,7 +81,7 @@ export class MarkdownParser {
     }
 
     isPunctChar(character: string): boolean { return this.#tokenizer.utils.isPunctChar(character); }
-    matchLinks(text: string) { return this.#tokenizer.linkify.match(text); }
+    matchLinks(text: string): LinkMatch[] | null { return this.#tokenizer.linkify.match(text); }
     normalizeLink(url: string): string { return this.#tokenizer.normalizeLink(url); }
     normalizeLinkText(url: string): string { return this.#tokenizer.normalizeLinkText(url); }
     validateLink(url: string): boolean { return this.#tokenizer.validateLink(url); }

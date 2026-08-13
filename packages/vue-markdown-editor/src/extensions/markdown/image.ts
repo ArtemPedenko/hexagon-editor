@@ -66,7 +66,7 @@ export const imageTokenSpec: ParseSpec = {
     node: imageNodeName,
 };
 
-export const serializeImage: Parameters<typeof MarkdownSerializer>[0][string] = (state, node) => {
+export const serializeImage: ConstructorParameters<typeof MarkdownSerializer>[0][string] = (state, node) => {
     const {attrs} = node;
     let result = `![${attrs[ImageAttr.Alt] ? state.esc(attrs[ImageAttr.Alt] as string) : ''}](${attrs[ImageAttr.Src] ? state.esc(attrs[ImageAttr.Src] as string) : ''}`;
     if (attrs[ImageAttr.Title]) result += ` ${state.quote(attrs[ImageAttr.Title] as string)}`;

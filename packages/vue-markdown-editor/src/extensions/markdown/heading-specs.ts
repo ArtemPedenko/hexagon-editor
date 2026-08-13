@@ -26,7 +26,7 @@ export const headingTokenSpec: ParseSpec = {
     getAttrs: (token) => ({[headingLevelAttr]: Number(token.tag.slice(1))}),
 };
 
-export const serializeHeading: Parameters<typeof MarkdownSerializer>[0][string] = (state, node) => {
+export const serializeHeading: ConstructorParameters<typeof MarkdownSerializer>[0][string] = (state, node) => {
     state.write(`${state.repeat('#', node.attrs[headingLevelAttr] as number)} `);
     state.renderInline(node);
     state.closeBlock(node);

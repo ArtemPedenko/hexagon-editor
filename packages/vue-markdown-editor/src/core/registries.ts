@@ -104,15 +104,15 @@ export class SerializerTokenRegistry<NodeToken, MarkToken> {
 
 /** Runtime serializer-token registry adapted from upstream `SerializerTokensRegistry`. */
 export class SerializerTokensRegistry {
-    readonly #marks: Record<string, Parameters<typeof MarkdownSerializer>[1][string]> = {};
-    readonly #nodes: Record<string, Parameters<typeof MarkdownSerializer>[0][string]> = {};
+    readonly #marks: Record<string, ConstructorParameters<typeof MarkdownSerializer>[1][string]> = {};
+    readonly #nodes: Record<string, ConstructorParameters<typeof MarkdownSerializer>[0][string]> = {};
 
-    addMark(name: string, token: Parameters<typeof MarkdownSerializer>[1][string]): this {
+    addMark(name: string, token: ConstructorParameters<typeof MarkdownSerializer>[1][string]): this {
         this.#marks[name] = token;
         return this;
     }
 
-    addNode(name: string, token: Parameters<typeof MarkdownSerializer>[0][string]): this {
+    addNode(name: string, token: ConstructorParameters<typeof MarkdownSerializer>[0][string]): this {
         this.#nodes[name] = token;
         return this;
     }

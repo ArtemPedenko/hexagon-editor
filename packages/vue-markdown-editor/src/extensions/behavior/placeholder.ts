@@ -15,7 +15,7 @@ export const Placeholder: ExtensionAuto<PlaceholderOptions> = (builder, options)
     builder.addPlugin(() => new Plugin({
         props: {
             attributes: () => options?.content === undefined || options.content.length === 0
-                ? {}
+                ? {} as Record<string, string>
                 : {'data-placeholder': options.content},
         },
     }), builder.Priority.VeryHigh);

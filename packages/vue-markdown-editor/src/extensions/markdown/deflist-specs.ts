@@ -46,7 +46,7 @@ export const deflistTokenSpecs: Record<DeflistNode, ParseSpec> = {
     [DeflistNode.Desc]: {block: DeflistNode.Desc},
 };
 
-export const deflistSerializerNodes: Record<DeflistNode, Parameters<typeof MarkdownSerializer>[0][string]> = {
+export const deflistSerializerNodes: Record<DeflistNode, ConstructorParameters<typeof MarkdownSerializer>[0][string]> = {
     [DeflistNode.List]: (state, node) => state.renderContent(node),
     [DeflistNode.Term]: (state, node) => {
         state.renderInline(node);

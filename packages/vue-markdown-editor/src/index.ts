@@ -152,6 +152,8 @@ export type {PlaceholderOptions} from './extensions/behavior/placeholder';
 export {FilePaste} from './extensions/behavior/file-paste';
 export type {FilePasteOptions} from './extensions/behavior/file-paste';
 export {Clipboard, isInsideCode} from './extensions/behavior/clipboard';
+export {createGapCursorPlugin, Cursor, GapCursorSelection, isGapCursorSelection} from './extensions/behavior/cursor';
+export type {CursorOptions} from './extensions/behavior/cursor';
 export {Selection} from './extensions/behavior/selection';
 export {Resizable} from './extensions/behavior/resizable';
 export {SelectionContext} from './extensions/behavior/selection-context';

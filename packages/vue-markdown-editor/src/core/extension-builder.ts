@@ -269,10 +269,11 @@ export class ExtensionBuilder {
                 }))].sort((left, right) => right.priority - left.priority)) {
                     const created = entry.factory(deps);
                     for (const plugin of Array.isArray(created) ? created : [created]) {
-                        if (plugin.key.startsWith('plugin$') && plugin.props.decorations === undefined) {
-                            plugin.key = `extension-plugin-${anonymousPluginIndex++}`;
+                        const mutablePlugin = plugin as Plugin & {key: string};
+                        if (mutablePlugin.key.startsWith('plugin$') && mutablePlugin.props.decorations === undefined) {
+                            mutablePlugin.key = `extension-plugin-${anonymousPluginIndex++}`;
                         }
-                        result.push(plugin);
+                        result.push(mutablePlugin);
                     }
                 }
                 return result;

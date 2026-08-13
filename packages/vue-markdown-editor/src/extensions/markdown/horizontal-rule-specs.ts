@@ -20,7 +20,7 @@ export const horizontalRuleTokenSpec: ParseSpec = {
     node: horizontalRuleNodeName,
 };
 
-export const serializeHorizontalRule: Parameters<typeof MarkdownSerializer>[0][string] = (state, node) => {
+export const serializeHorizontalRule: ConstructorParameters<typeof MarkdownSerializer>[0][string] = (state, node) => {
     state.write(node.attrs[horizontalRuleMarkupAttr] as string);
     state.closeBlock(node);
 };

@@ -1,8 +1,7 @@
 {
   "extends": "../../tsconfig.base.json",
-  "include": ["src/**/*.ts", "src/**/*.vue", "vite.config.ts"],
+  "include": ["src/**/*.ts", "src/**/*.vue", "vite.config.ts", "../../packages/vue-markdown-editor/src/**/*.d.ts"],
   "compilerOptions": {
     "noEmit": true
   }
 }
-

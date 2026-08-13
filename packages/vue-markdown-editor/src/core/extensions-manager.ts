@@ -5,9 +5,9 @@ import {
     defaultMarkdownParser,
     defaultMarkdownSerializer,
     MarkdownParser,
-    MarkdownSerializer,
     schema as defaultMarkdownSchema,
 } from 'prosemirror-markdown';
+import type {MarkdownSerializer} from 'prosemirror-markdown';
 import type {Plugin} from 'prosemirror-state';
 import type {ParseSpec} from 'prosemirror-markdown';
 
@@ -139,13 +139,13 @@ export class ExtensionsManager {
         for (const [name, token] of Object.entries(defaultMarkdownSerializer.nodes)) registry.addNode(name, token);
         for (const [name, token] of Object.entries(defaultMarkdownSerializer.marks)) registry.addMark(name, token);
         for (const [name, entry] of nodes) {
-            if (entry.toMd !== undefined) registry.addNode(name, entry.toMd as Parameters<typeof MarkdownSerializer>[0][string]);
+            if (entry.toMd !== undefined) registry.addNode(name, entry.toMd as ConstructorParameters<typeof MarkdownSerializer>[0][string]);
         }
         for (const [name, entry] of marks) {
-            if (entry.toMd !== undefined) registry.addMark(name, entry.toMd as Parameters<typeof MarkdownSerializer>[1][string]);
+            if (entry.toMd !== undefined) registry.addMark(name, entry.toMd as ConstructorParameters<typeof MarkdownSerializer>[1][string]);
         }
-        for (const [name, token] of extensionNodes) registry.addNode(name, token as Parameters<typeof MarkdownSerializer>[0][string]);
-        for (const [name, token] of extensionMarks) registry.addMark(name, token as Parameters<typeof MarkdownSerializer>[1][string]);
+        for (const [name, token] of extensionNodes) registry.addNode(name, token as ConstructorParameters<typeof MarkdownSerializer>[0][string]);
+        for (const [name, token] of extensionMarks) registry.addMark(name, token as ConstructorParameters<typeof MarkdownSerializer>[1][string]);
         return registry.createSerializer();
     }
 }

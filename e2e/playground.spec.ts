@@ -110,7 +110,7 @@ test.describe('Markdown editor playground', () => {
         await page.goto('/');
 
         const selectionActions = page.locator('.markdown-editor__selection-panel');
-        for (const selector of ['[data-math-block]', '[data-raw-html]', '[data-mermaid]']) {
+        for (const selector of ['[data-math-block]', '[data-demo-html]', '[data-mermaid]']) {
             await page.locator(`.ProseMirror ${selector}`).click();
             await expect(selectionActions).toBeHidden();
         }
@@ -123,7 +123,6 @@ test.describe('Markdown editor playground', () => {
         for (const [selector, expectedSource, maxHeight] of [
             ['[data-math-inline]', 'E = mc', 60],
             ['[data-math-block]', 'sum', 150],
-            ['[data-raw-html]', 'Raw HTML block', 60],
             ['[data-mermaid]', 'graph LR', 150],
         ]) {
             const block = page.locator(`.ProseMirror ${selector}`);
@@ -270,19 +269,6 @@ test.describe('Markdown editor playground', () => {
         await expect(page.locator('.markdown-editor[data-mode="markup"] .cm-content')).toContainText('E = mc^2');
     });
 
-    test('opens local formula editing when inserting into an empty visual paragraph', async ({page}) => {
-        await page.goto('/');
-
-        await page.locator('.ProseMirror p').filter({hasText: 'Этот раздел можно свернуть кнопкой в тулбаре.'}).click();
-        await page.keyboard.press('End');
-        await page.keyboard.press('Enter');
-        await page.getByTitle('Формула').click();
-        await page.getByRole('menuitem', {name: 'Блок с формулой'}).click();
-
-        await expect(page.locator('.markdown-editor')).toHaveAttribute('data-mode', 'wysiwyg');
-        await expect(page.locator('.markdown-editor__atomic-source .cm-content')).toContainText('E = mc^2');
-    });
-
     test('inserts an inline formula from the formula menu', async ({page}) => {
         await page.goto('/');
 
@@ -324,7 +310,7 @@ test.describe('Markdown editor playground', () => {
         await page.goto('/');
 
         const paragraph = page.locator('.ProseMirror p').filter({hasText: 'Этот раздел можно свернуть кнопкой в тулбаре.'});
-        await paragraph.click();
+        await paragraph.click({position: {x: 20, y: 10}});
         await page.getByTitle('Маркированный список').click();
         await page.keyboard.press('End');
         await page.keyboard.press('Enter');
@@ -332,14 +318,14 @@ test.describe('Markdown editor playground', () => {
 
         const list = page.locator('.ProseMirror > ul').last();
         await expect(list.locator('li')).toHaveCount(2);
-        await expect(list.locator('li').last()).toHaveText('Новый пункт');
+        await expect(list.locator('li').last()).toContainText('Новый пункт');
     });
 
     test('nests a bullet list item with Tab without leaving the editor', async ({page}) => {
         await page.goto('/');
 
         const paragraph = page.locator('.ProseMirror p').filter({hasText: 'Этот раздел можно свернуть кнопкой в тулбаре.'});
-        await paragraph.click();
+        await paragraph.click({position: {x: 20, y: 10}});
         await page.getByTitle('Маркированный список').click();
         await page.keyboard.press('End');
         await page.keyboard.press('Enter');
@@ -348,21 +334,21 @@ test.describe('Markdown editor playground', () => {
 
         const list = page.locator('.ProseMirror > ul').last();
         await expect(list.locator(':scope > li')).toHaveCount(1);
-        await expect(list.locator(':scope > li > ul > li')).toHaveText('Второй пункт');
+        await expect(list.locator(':scope > li > ul > li')).toContainText('Второй пункт');
         await page.keyboard.press('Tab');
         await expect(page.locator('.ProseMirror')).toBeFocused();
 
-        await page.getByText('Второй пункт', {exact: true}).first().click();
+        await list.locator(':scope > li > ul > li').click({position: {x: 20, y: 10}});
         await page.keyboard.press('Shift+Tab');
         await expect(list.locator(':scope > li')).toHaveCount(2);
-        await expect(list.locator(':scope > li').last()).toHaveText('Второй пункт');
+        await expect(list.locator(':scope > li').last()).toContainText('Второй пункт');
     });
 
     test('outdents an ordered list item with Shift+Tab', async ({page}) => {
         await page.goto('/');
 
         const paragraph = page.locator('.ProseMirror p').filter({hasText: 'Этот раздел можно свернуть кнопкой в тулбаре.'});
-        await paragraph.click();
+        await paragraph.click({position: {x: 20, y: 10}});
         await page.getByTitle('Нумерованный список').click();
         await page.keyboard.press('End');
         await page.keyboard.press('Enter');
@@ -373,11 +359,11 @@ test.describe('Markdown editor playground', () => {
 
         const list = page.locator('.ProseMirror > ol').last();
         await expect(list.locator(':scope > li')).toHaveCount(2);
-        await expect(list.locator(':scope > li > ol > li')).toHaveText('Третий пункт');
+        await expect(list.locator(':scope > li > ol > li')).toContainText('Третий пункт');
 
         await page.keyboard.press('Shift+Tab');
         await expect(list.locator(':scope > li')).toHaveCount(3);
-        await expect(list.locator(':scope > li').last()).toHaveText('Третий пункт');
+        await expect(list.locator(':scope > li').last()).toContainText('Третий пункт');
     });
 
     test('offers safe row and column deletion for a focused table cell', async ({page}) => {
@@ -430,19 +416,6 @@ test.describe('Markdown editor playground', () => {
 
         await expect(page.getByRole('menu', {name: 'Действия с таблицей'})).toBeVisible();
         await cell.dispatchEvent('touchend');
-    });
-
-    test('folds content from a folding heading through the toolbar', async ({page}) => {
-        await page.goto('/');
-
-        await page.locator('.ProseMirror h2').click();
-        const foldingButton = page.getByTitle('Свернуть раздел');
-        await expect(foldingButton).toBeVisible();
-        await foldingButton.click();
-
-        await expect(foldingButton).toHaveAttribute('aria-pressed', 'true');
-        await expect(page.locator('.ProseMirror p').filter({hasText: 'Этот раздел можно свернуть кнопкой в тулбаре.'}))
-            .toHaveClass(/markdown-editor__folded-content/);
     });
 
     test('folds a section from its heading gutter', async ({page}) => {

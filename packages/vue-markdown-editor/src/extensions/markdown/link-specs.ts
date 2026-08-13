@@ -35,7 +35,7 @@ export const linkTokenSpec: ParseSpec = {
     mark: linkMarkName,
 };
 
-export const serializeLink: Parameters<typeof MarkdownSerializer>[1][string] = {
+export const serializeLink: ConstructorParameters<typeof MarkdownSerializer>[1][string] = {
     close: (state, mark) => {
         if (state.inAutolink) {
             state.inAutolink = undefined;

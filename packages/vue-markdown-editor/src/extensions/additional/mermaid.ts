@@ -43,7 +43,7 @@ export const mermaidTokenSpec: ParseSpec = {
     node: mermaidNodeName,
 };
 
-export const serializeMermaid: Parameters<typeof MarkdownSerializer>[0][string] = (state, node) => {
+export const serializeMermaid: ConstructorParameters<typeof MarkdownSerializer>[0][string] = (state, node) => {
     state.write(`\`\`\`mermaid\n${node.attrs.source}\n\`\`\``);
     state.closeBlock(node);
 };

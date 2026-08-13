@@ -89,7 +89,7 @@ export const mathTokenSpecs: Record<MathNode, ParseSpec> = {
     [MathNode.Block]: {getAttrs: (token) => ({latex: token.content}), node: MathNode.Block},
 };
 
-export const mathSerializerNodes: Record<MathNode, Parameters<typeof MarkdownSerializer>[0][string]> = {
+export const mathSerializerNodes: Record<MathNode, ConstructorParameters<typeof MarkdownSerializer>[0][string]> = {
     [MathNode.Inline]: (state, node) => state.write(`$${node.attrs.latex}$`),
     [MathNode.Block]: (state, node) => { state.write(`$$\n${node.attrs.latex}\n$$`); state.closeBlock(node); },
 };
@@ -169,22 +169,25 @@ export const toMathBlock: Command = (state, dispatch) => {
 
 export const moveCursorLeftOfMathInline: Command = (state, dispatch) => {
     const {$from} = state.selection;
-    if (!$from.parent.isTextblock || $from.parentOffset === 0 || $from.nodeBefore?.type !== state.schema.nodes[MathNode.Inline]) return false;
-    dispatch?.(state.tr.setSelection(TextSelection.create(state.doc, $from.pos - $from.nodeBefore.nodeSize)));
+    const nodeBefore = $from.nodeBefore;
+    if (!$from.parent.isTextblock || $from.parentOffset === 0 || nodeBefore === null || nodeBefore.type !== state.schema.nodes[MathNode.Inline]) return false;
+    dispatch?.(state.tr.setSelection(TextSelection.create(state.doc, $from.pos - nodeBefore.nodeSize)));
     return true;
 };
 
 export const moveCursorRightOfMathInline: Command = (state, dispatch) => {
     const {$from} = state.selection;
-    if (!$from.parent.isTextblock || $from.nodeAfter?.type !== state.schema.nodes[MathNode.Inline]) return false;
-    dispatch?.(state.tr.setSelection(TextSelection.create(state.doc, $from.pos + $from.nodeAfter.nodeSize)));
+    const nodeAfter = $from.nodeAfter;
+    if (!$from.parent.isTextblock || nodeAfter === null || nodeAfter.type !== state.schema.nodes[MathNode.Inline]) return false;
+    dispatch?.(state.tr.setSelection(TextSelection.create(state.doc, $from.pos + nodeAfter.nodeSize)));
     return true;
 };
 
 export const selectMathInlineBeforeCursor: Command = (state, dispatch) => {
     const {$from} = state.selection;
-    if (!$from.parent.isTextblock || $from.nodeBefore?.type !== state.schema.nodes[MathNode.Inline]) return false;
-    dispatch?.(state.tr.setSelection(NodeSelection.create(state.doc, $from.pos - $from.nodeBefore.nodeSize)));
+    const nodeBefore = $from.nodeBefore;
+    if (!$from.parent.isTextblock || nodeBefore === null || nodeBefore.type !== state.schema.nodes[MathNode.Inline]) return false;
+    dispatch?.(state.tr.setSelection(NodeSelection.create(state.doc, $from.pos - nodeBefore.nodeSize)));
     return true;
 };
 

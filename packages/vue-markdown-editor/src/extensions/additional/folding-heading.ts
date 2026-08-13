@@ -50,15 +50,17 @@ export const toggleFoldingHeading: Command = (state, dispatch) => {
 };
 
 export const removeFoldingAtHeadingStart: Command = (state, dispatch) => {
+    if (!(state.selection instanceof TextSelection)) return false;
     const cursor = state.selection.$cursor;
-    if (cursor === null || cursor === undefined || cursor.parentOffset !== 0 || cursor.parent.type.name !== 'heading' || cursor.parent.attrs.folding === null) return false;
+    if (cursor === null || cursor.parentOffset !== 0 || cursor.parent.type.name !== 'heading' || cursor.parent.attrs.folding === null) return false;
     dispatch?.(state.tr.setNodeMarkup(cursor.before(), undefined, {...cursor.parent.attrs, folding: null}).scrollIntoView());
     return true;
 };
 
 export const openHeadingAndCreateParagraphAfter: Command = (state, dispatch) => {
+    if (!(state.selection instanceof TextSelection)) return false;
     const cursor = state.selection.$cursor;
-    if (cursor === null || cursor === undefined || cursor.parent.type.name !== 'heading' || cursor.parent.attrs.folding === null || cursor.parentOffset !== cursor.parent.content.size) return false;
+    if (cursor === null || cursor.parent.type.name !== 'heading' || cursor.parent.attrs.folding === null || cursor.parentOffset !== cursor.parent.content.size) return false;
     const next = cursor.node(1).maybeChild(cursor.indexAfter(1));
     if (next !== null && next.type.name !== 'heading') return false;
     const paragraph = state.schema.nodes.paragraph;

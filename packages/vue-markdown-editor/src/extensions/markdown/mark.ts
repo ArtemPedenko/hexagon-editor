@@ -12,7 +12,7 @@ import {createMarkdownMarkInputRule} from './bold';
 export const markMarkName = 'mark';
 export const markMarkSpec: MarkSpec = {parseDOM: [{tag: 'mark'}], toDOM: () => ['mark', 0]};
 export const markTokenSpec: ParseSpec = {mark: markMarkName};
-export const serializeMark: Parameters<typeof MarkdownSerializer>[1][string] = {close: '==', expelEnclosingWhitespace: true, mixable: true, open: '=='};
+export const serializeMark: ConstructorParameters<typeof MarkdownSerializer>[1][string] = {close: '==', expelEnclosingWhitespace: true, mixable: true, open: '=='};
 
 export function getMarkType(schema: Parameters<Command>[0]['schema']): MarkType {
     const mark = schema.marks[markMarkName];

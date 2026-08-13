@@ -21,11 +21,11 @@ export const breakTokenSpecs: Record<'hardbreak' | 'softbreak', ParseSpec> = {
     softbreak: {node: BreakNodeName.SoftBreak},
 };
 
-export const serializeHardBreak: Parameters<typeof MarkdownSerializer>[0][string] = (state, node, parent, index) => {
+export const serializeHardBreak: ConstructorParameters<typeof MarkdownSerializer>[0][string] = (state, node, parent, index) => {
     if (hasFollowingNonBreak(node.type.name, parent, index)) state.write('\\\n');
 };
 
-export const serializeSoftBreak: Parameters<typeof MarkdownSerializer>[0][string] = (state, node, parent, index) => {
+export const serializeSoftBreak: ConstructorParameters<typeof MarkdownSerializer>[0][string] = (state, node, parent, index) => {
     if (hasFollowingNonBreak(node.type.name, parent, index)) state.write('\n');
 };
 

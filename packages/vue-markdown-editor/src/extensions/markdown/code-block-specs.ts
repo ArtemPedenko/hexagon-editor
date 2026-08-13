@@ -43,7 +43,7 @@ export const codeBlockTokenSpecs: Record<'code_block' | 'fence', ParseSpec> = {
     },
 };
 
-export const serializeCodeBlock: Parameters<typeof MarkdownSerializer>[0][string] = (state, node) => {
+export const serializeCodeBlock: ConstructorParameters<typeof MarkdownSerializer>[0][string] = (state, node) => {
     const language = node.attrs[CodeBlockAttrs.Lang] as string;
     const fence = getCodeBlockFence(node.attrs[CodeBlockAttrs.Markup] as string, node.textContent);
     state.write(`${fence}${language}\n`);

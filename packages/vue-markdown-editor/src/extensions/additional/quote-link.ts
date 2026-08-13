@@ -63,7 +63,7 @@ export const quoteLinkTokenSpec: ParseSpec = {
     getAttrs: (token) => ({cite: token.attrGet('cite'), content: token.attrGet('data-content')}),
 };
 
-export const serializeQuoteLink: Parameters<typeof MarkdownSerializer>[0][string] = (state, node) => {
+export const serializeQuoteLink: ConstructorParameters<typeof MarkdownSerializer>[0][string] = (state, node) => {
     state.wrapBlock('> ', null, node, () => {
         state.write(`[${node.attrs.content}](${node.attrs.cite}){data-quotelink=true}`);
         state.write('\n\n');

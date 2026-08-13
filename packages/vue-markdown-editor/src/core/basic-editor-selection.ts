@@ -1,5 +1,5 @@
 import {NodeSelection} from 'prosemirror-state';
-import type {EditorState} from 'prosemirror-state';
+import type {Command, EditorState} from 'prosemirror-state';
 import type {Node as ProseMirrorNode, Schema} from 'prosemirror-model';
 
 import {getCurrentLink} from '../extensions/markdown/link';
@@ -46,7 +46,7 @@ export function getBasicWysiwygSelectionState(
     };
 }
 
-export function keepListFocus(command: import('prosemirror-state').Command): import('prosemirror-state').Command {
+export function keepListFocus(command: Command): Command {
     return (state, dispatch, view) => {
         if (!hasAncestor(state, 'list_item')) return false;
         command(state, dispatch, view);

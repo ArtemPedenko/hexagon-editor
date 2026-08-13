@@ -56,7 +56,7 @@ const extendedMarkdownNodes: Record<string, NodeSpec> = {
     yfm_html_block: createYfmHtmlBlockNodeSpec((html) => renderYfmHtml(html)),
 };
 
-export const basicMarkdownSchema = new Schema({
+export const basicMarkdownSchema: Schema = new Schema({
     marks: defaultMarkdownSchema.spec.marks.update('code', codeMarkSpec).update('em', italicMarkSpec).update('link', linkMarkSpec).update('strong', boldMarkSpec).append(basicMarks),
     nodes: defaultMarkdownSchema.spec.nodes
         .update('blockquote', blockquoteNodeSpec).update('code_block', codeBlockNodeSpec).update('horizontal_rule', horizontalRuleNodeSpec).update('image', imageNodeSpec).update('hard_break', hardBreakNodeSpec)

@@ -44,7 +44,7 @@ export const htmlTokenSpecs: Record<HtmlNode, ParseSpec> = {
     [HtmlNode.Inline]: {getAttrs: (token) => ({[HtmlAttr.Content]: token.content}), noCloseToken: true, node: HtmlNode.Inline},
 };
 
-export const htmlSerializerNodes: Record<HtmlNode, Parameters<typeof MarkdownSerializer>[0][string]> = {
+export const htmlSerializerNodes: Record<HtmlNode, ConstructorParameters<typeof MarkdownSerializer>[0][string]> = {
     [HtmlNode.Block]: (state, node) => {
         state.write(node.attrs[HtmlAttr.Content] as string);
         state.ensureNewLine();

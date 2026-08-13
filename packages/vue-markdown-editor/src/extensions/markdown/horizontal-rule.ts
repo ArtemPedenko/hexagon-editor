@@ -30,8 +30,9 @@ export const addHorizontalRule =
             dispatch?.(state.tr.replaceSelectionWith(horizontalRule.create()).scrollIntoView());
             return true;
         }
+        if (!(state.selection instanceof TextSelection)) return false;
         const cursor = state.selection.$cursor;
-        if (cursor === null || cursor === undefined || cursor.parent.type.spec.complex === true) return false;
+        if (cursor === null || cursor.parent.type.spec.complex === true) return false;
         if (dispatch === undefined) return true;
 
         const paragraph = state.schema.nodes.paragraph;

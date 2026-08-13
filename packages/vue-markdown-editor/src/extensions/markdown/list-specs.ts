@@ -1,5 +1,6 @@
 import type {Node, NodeSpec} from 'prosemirror-model';
 import type {ParseSpec} from 'prosemirror-markdown';
+import type {MarkdownSerializer} from 'prosemirror-markdown';
 
 export const listNodeSpecs: Record<'bullet_list' | 'list_item' | 'ordered_list', NodeSpec> = {
     list_item: {
@@ -37,7 +38,7 @@ export const listTokenSpecs: Record<'bullet_list' | 'list_item' | 'ordered_list'
     ordered_list: {block: 'ordered_list', getAttrs: (token, tokens, index) => ({markup: token.markup, order: Number(token.attrGet('start')) || 1, tight: isListTight(tokens, index)})},
 };
 
-export const listSerializerNodes = {
+export const listSerializerNodes: Partial<Record<'bullet_list' | 'list_item' | 'ordered_list', ConstructorParameters<typeof MarkdownSerializer>[0][string]>> = {
     bullet_list(state, node) {
         state.renderList(node, '  ', () => `${getListMarkup(node, ['-', '+', '*'], '*')} `);
     },
