@@ -87,7 +87,7 @@
 
 | Upstream source | Vue target | Status | Примечание |
 | --- | --- | --- | --- |
-| `forms/{Link,Image,TextInput,base,components,utils}.tsx` | `src/forms/{MarkdownEditorLinkForm,MarkdownEditorImageForm}.vue` | partial | Общие публичные Vue-формы Link/Image с native URL validation, apply/cancel/remove и action binding подключены к toolbar. Общие TextInput/base primitives и полный upstream props contract ещё pending. |
+| `forms/{Link,Image,TextInput,base,components,utils}.tsx` | `src/forms/{MarkdownEditorForm,MarkdownEditorTextInput,MarkdownEditorLinkForm,MarkdownEditorImageForm}.vue` | done | Публичные Vue primitives и формы Link/Image поддерживают URL validation/error, autofocus, disabled/readonly, ru/en labels, apply/cancel/remove, typed trimmed payloads и image dimensions; toolbar использует те же формы. Upload tabs/components исключены вместе с FileForm. |
 | `forms/FileForm.tsx` | — | excluded — загрузка файлов и форма файла полностью исключены из package API, toolbar, paste/drop и playground. |
 | `react-utils/*`, `markup/codemirror/react-facet.ts` | `core/vue-renderer.ts`, Vue composables | partial | Есть mount-адаптер для node/widget/context panel; нет полного parity. |
 | `bundle/*View.tsx`, `bundle/MarkupManager.ts`, `bundle/useMarkdownEditor.ts` | Vue components/composables | pending | |
@@ -104,7 +104,7 @@
 
 **Integration/API parity** — следующий и последний крупный этап переноса. Он включает:
 
-1. **Общие Vue-формы Link и Image — partial.** Переиспользуемые публичные компоненты с URL validation, submit/cancel/remove и action binding подключены к toolbar. Остаются общие TextInput/base primitives и сверка полного применимого upstream props contract. Загрузка файлов и `FileForm` исключены.
+1. **Общие Vue-формы Link и Image — done.** Переиспользуемые публичные формы и base/TextInput primitives поддерживают применимый upstream props/events contract, validation/error, autofocus, disabled/readonly, локали и image dimensions. Загрузка файлов и `FileForm` исключены.
 2. **Toolbar, toolbar items и editor presets — done.** Публичные item/group/config factories, action bindings и применимые `zero`, `commonmark`, `default`, `full` toolbar/editor presets подключены и экспортированы. Исключённые Autocomplete, CommandMenu и YFM extensions в presets не входят.
 3. **Bundle и composable API — done.** `MarkdownEditor`, `useMarkdownEditor` и headless instance предоставляют применимый common editor contract, lifecycle, mode switching, focus/cursor, readonly/toolbar state и typed events. Исключённые upload/search/YFM API не публикуются.
 4. **Public exports и совместимые entry points — done.** Root surface и стабильные `core/extensions/specs/presets/toolbar/forms/configure/classname` subpaths собираются с JavaScript и declarations; внутренние пути закрыты package exports. React/GPT/upload/YFM-only API отсутствуют.

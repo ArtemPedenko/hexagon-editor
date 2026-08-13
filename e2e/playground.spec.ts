@@ -33,7 +33,7 @@ test.describe('Markdown editor playground', () => {
         await page.getByTitle('Изображение').click();
         await page.getByLabel('Адрес изображения').fill('https://example.com/resize-fixture.svg');
         await page.getByLabel('Описание изображения').fill('resize-fixture.svg');
-        await page.getByRole('button', {name: 'Готово'}).last().click();
+        await page.getByRole('button', {name: 'Сохранить'}).last().click();
 
         const image = page.locator('.ProseMirror img[alt="resize-fixture.svg"]');
         await expect(image).toBeVisible();
@@ -65,7 +65,7 @@ test.describe('Markdown editor playground', () => {
         await page.goto('/');
         await page.getByTitle('Изображение').click();
         await page.getByLabel('Адрес изображения').fill('not a url');
-        await page.getByRole('button', {name: 'Готово'}).last().click();
+        await page.getByRole('button', {name: 'Сохранить'}).last().click();
         await expect(page.getByLabel('Адрес изображения')).toBeVisible();
         await page.getByRole('button', {name: 'Отмена'}).click();
         await expect(page.getByLabel('Адрес изображения')).toBeHidden();
@@ -77,7 +77,7 @@ test.describe('Markdown editor playground', () => {
         await page.getByLabel('Адрес изображения').fill('https://example.com/landscape.jpg');
         await page.getByLabel('Описание изображения').fill('Горный пейзаж');
         await page.getByLabel('Заголовок изображения').fill('Горы');
-        await page.getByRole('button', {name: 'Готово'}).last().click();
+        await page.getByRole('button', {name: 'Сохранить'}).last().click();
 
         const image = page.locator('.ProseMirror img[alt="Горный пейзаж"]');
         await expect(image).toHaveAttribute('src', 'https://example.com/landscape.jpg');
@@ -93,7 +93,7 @@ test.describe('Markdown editor playground', () => {
         await page.getByLabel('Адрес ссылки').fill('https://example.com/docs');
         await page.getByLabel('Текст ссылки').fill('Документация');
         await page.getByLabel('Заголовок ссылки').fill('Документы');
-        await page.getByRole('button', {name: 'Готово'}).last().click();
+        await page.getByRole('button', {name: 'Сохранить'}).last().click();
 
         const link = page.locator('.ProseMirror a', {hasText: 'Документация'});
         await expect(link).toHaveAttribute('href', 'https://example.com/docs');

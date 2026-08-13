@@ -1,40 +1,73 @@
 <script setup lang="ts">
-import {ref} from 'vue';
+import {computed, ref} from 'vue';
+
+import MarkdownEditorForm from './MarkdownEditorForm.vue';
+import MarkdownEditorTextInput from './MarkdownEditorTextInput.vue';
 
 defineOptions({name: 'MarkdownEditorImageForm'});
 
-defineProps<{
-    alt: string;
-    title: string;
-    url: string;
-}>();
+export interface MarkdownEditorImageSubmitParams {alt: string; height?: number; name: string; title: string; url: string; width?: number}
+
+const props = withDefaults(defineProps<{
+    alt?: string;
+    autofocus?: boolean;
+    disabled?: boolean;
+    height?: number | string;
+    locale?: 'en' | 'ru';
+    name?: string;
+    title?: string;
+    url?: string;
+    width?: number | string;
+}>(), {alt: '', autofocus: false, disabled: false, height: '', locale: 'ru', name: '', title: '', url: '', width: ''});
 
 const emit = defineEmits<{
-    apply: [];
-    cancel: [];
-    'update:alt': [value: string];
-    'update:title': [value: string];
-    'update:url': [value: string];
+    apply: [params: MarkdownEditorImageSubmitParams]; cancel: []; invalid: [message: string];
+    'update:alt': [value: string]; 'update:height': [value: string]; 'update:name': [value: string];
+    'update:title': [value: string]; 'update:url': [value: string]; 'update:width': [value: string];
 }>();
 
-const element = ref<HTMLFormElement>();
+const form = ref<InstanceType<typeof MarkdownEditorForm>>();
+const urlError = ref('');
+const copy = computed(() => props.locale === 'en'
+    ? {alt: 'Alt text', altHelp: 'Displayed if the image cannot be loaded.', apply: 'Submit', cancel: 'Cancel', height: 'Height', name: 'Image name', sizes: 'Size, px', title: 'Title', url: 'Image link', urlError: 'Enter a valid image address.', width: 'Width'}
+    : {alt: 'Альтернативный текст', altHelp: 'Отображается, если изображение не загрузилось.', apply: 'Сохранить', cancel: 'Отмена', height: 'Высота', name: 'Подпись к рисунку', sizes: 'Размер в пикселях', title: 'Заголовок', url: 'Ссылка картинки', urlError: 'Введите корректный адрес изображения.', width: 'Ширина'});
 
-defineExpose({element});
+function submit(): void {
+    const url = props.url.trim();
+    if (!isValidUrl(url)) { urlError.value = copy.value.urlError; emit('invalid', urlError.value); return; }
+    urlError.value = '';
+    const params: MarkdownEditorImageSubmitParams = {alt: props.alt.trim(), name: props.name.trim(), title: props.title.trim(), url};
+    const width = optionalDimension(props.width); const height = optionalDimension(props.height);
+    if (width !== undefined) params.width = width;
+    if (height !== undefined) params.height = height;
+    emit('apply', params);
+}
+
+function isValidUrl(value: string): boolean {
+    if (value.startsWith('data:image/')) return true;
+    try { return value.length > 0 && new URL(value).protocol.match(/^https?:$/) !== null; } catch { return false; }
+}
+function optionalDimension(value: number | string): number | undefined { const parsed = Number(value); return value === '' || !Number.isFinite(parsed) || parsed < 0 ? undefined : parsed; }
+
+defineExpose({element: computed(() => form.value?.element)});
 </script>
 
 <template>
-  <form ref="element" class="markdown-editor-form" @submit.prevent="emit('apply')">
-    <input :value="url" aria-label="Адрес изображения" placeholder="https://example.com/image.jpg" required type="url" @input="emit('update:url', ($event.target as HTMLInputElement).value)">
-    <input :value="alt" aria-label="Описание изображения" placeholder="Описание" @input="emit('update:alt', ($event.target as HTMLInputElement).value)">
-    <input :value="title" aria-label="Заголовок изображения" placeholder="Заголовок" @input="emit('update:title', ($event.target as HTMLInputElement).value)">
-    <button type="button" @click="emit('cancel')">Отмена</button>
-    <button type="submit">Готово</button>
-  </form>
+  <MarkdownEditorForm ref="form" :disabled="disabled" @submit="submit">
+    <MarkdownEditorTextInput :model-value="url" aria-label="Адрес изображения" :autofocus="autofocus" :disabled="disabled" :error="urlError" :label="copy.url" placeholder="https://example.com/image.jpg" required type="url" @update:model-value="urlError = ''; emit('update:url', $event)" />
+    <MarkdownEditorTextInput :model-value="name" :disabled="disabled" :label="copy.name" @update:model-value="emit('update:name', $event)" />
+    <MarkdownEditorTextInput :model-value="alt" aria-label="Описание изображения" :disabled="disabled" :help="copy.altHelp" :label="copy.alt" @update:model-value="emit('update:alt', $event)" />
+    <MarkdownEditorTextInput :model-value="title" aria-label="Заголовок изображения" :disabled="disabled" :label="copy.title" @update:model-value="emit('update:title', $event)" />
+    <div class="markdown-editor-form__sizes" :aria-label="copy.sizes">
+      <MarkdownEditorTextInput :model-value="width" :aria-label="copy.width" :disabled="disabled" :min="0" :placeholder="copy.width" type="number" @update:model-value="emit('update:width', $event)" />
+      <span aria-hidden="true">×</span>
+      <MarkdownEditorTextInput :model-value="height" :aria-label="copy.height" :disabled="disabled" :min="0" :placeholder="copy.height" type="number" @update:model-value="emit('update:height', $event)" />
+    </div>
+    <template #footer>
+      <button type="button" @click="emit('cancel')">{{ copy.cancel }}</button>
+      <button :disabled="disabled || !url.trim()" type="submit">{{ copy.apply }}</button>
+    </template>
+  </MarkdownEditorForm>
 </template>
 
-<style scoped>
-.markdown-editor-form { z-index: 10; display: grid; grid-template-columns: 1fr auto auto; gap: .25rem; width: min(22rem, calc(100vw - 1rem)); padding: .25rem; border: 1px solid var(--markdown-border); border-radius: .375rem; box-shadow: 0 .5rem 1.25rem rgb(0 0 0 / 18%); background: var(--markdown-background); }
-.markdown-editor-form input { grid-column: 1 / -1; min-width: 0; height: 2rem; padding: 0 .5rem; border: 1px solid var(--markdown-border); border-radius: .25rem; color: inherit; background: var(--markdown-background); font: inherit; }
-.markdown-editor-form button { min-width: 2rem; height: 2rem; padding: 0 .5rem; border: 0; border-radius: .25rem; color: var(--markdown-text); background: transparent; font: inherit; cursor: pointer; }
-.markdown-editor-form button:hover, .markdown-editor-form button:focus-visible { outline: none; color: var(--markdown-focus-text); background: var(--markdown-focus-background); }
-</style>
+<style scoped>.markdown-editor-form__sizes { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: .35rem; }</style>

@@ -1,43 +1,76 @@
 <script setup lang="ts">
-import {ref} from 'vue';
+import {computed, ref} from 'vue';
+
+import MarkdownEditorForm from './MarkdownEditorForm.vue';
+import MarkdownEditorTextInput from './MarkdownEditorTextInput.vue';
 
 defineOptions({name: 'MarkdownEditorLinkForm'});
 
-defineProps<{
+export interface MarkdownEditorLinkSubmitParams {text: string; title: string; url: string}
+
+const props = withDefaults(defineProps<{
+    autofocus?: boolean;
+    disabled?: boolean;
     hasCurrentLink?: boolean;
-    text: string;
-    title: string;
-    url: string;
-}>();
+    locale?: 'en' | 'ru';
+    readOnlyText?: boolean;
+    text?: string;
+    title?: string;
+    url?: string;
+}>(), {
+    autofocus: false,
+    disabled: false,
+    hasCurrentLink: false,
+    locale: 'ru',
+    readOnlyText: false,
+    text: '',
+    title: '',
+    url: '',
+});
 
 const emit = defineEmits<{
-    apply: [];
+    apply: [params: MarkdownEditorLinkSubmitParams];
     cancel: [];
+    invalid: [message: string];
     remove: [];
     'update:text': [value: string];
     'update:title': [value: string];
     'update:url': [value: string];
 }>();
 
-const element = ref<HTMLFormElement>();
+const form = ref<InstanceType<typeof MarkdownEditorForm>>();
+const copy = computed(() => props.locale === 'en'
+    ? {apply: 'Submit', cancel: 'Cancel', remove: 'Remove', text: 'Link text', textHelp: 'Text displayed as a link.', title: 'Title', url: 'Link address', urlError: 'Enter a valid link address.'}
+    : {apply: 'Сохранить', cancel: 'Отмена', remove: 'Удалить', text: 'Текст ссылки', textHelp: 'Текст, который отображается как ссылка.', title: 'Заголовок', url: 'Адрес ссылки', urlError: 'Введите корректный адрес ссылки.'});
+const urlError = ref('');
 
-defineExpose({element});
+function submit(): void {
+    const url = props.url.trim();
+    if (!isValidUrl(url)) {
+        urlError.value = copy.value.urlError;
+        emit('invalid', urlError.value);
+        return;
+    }
+    urlError.value = '';
+    emit('apply', {text: props.text.trim(), title: props.title.trim(), url});
+}
+
+function isValidUrl(value: string): boolean {
+    try { return value.length > 0 && new URL(value).protocol.match(/^https?:$/) !== null; } catch { return false; }
+}
+
+defineExpose({element: computed(() => form.value?.element)});
 </script>
 
 <template>
-  <form ref="element" class="markdown-editor-form" @submit.prevent="emit('apply')">
-    <input :value="url" aria-label="Адрес ссылки" placeholder="https://example.com" required type="url" @input="emit('update:url', ($event.target as HTMLInputElement).value)">
-    <input :value="text" aria-label="Текст ссылки" placeholder="Текст ссылки" @input="emit('update:text', ($event.target as HTMLInputElement).value)">
-    <input :value="title" aria-label="Заголовок ссылки" placeholder="Заголовок" @input="emit('update:title', ($event.target as HTMLInputElement).value)">
-    <button v-if="hasCurrentLink" type="button" @click="emit('remove')">Удалить</button>
-    <button type="button" @click="emit('cancel')">Отмена</button>
-    <button type="submit">Готово</button>
-  </form>
+  <MarkdownEditorForm ref="form" :disabled="disabled" @submit="submit">
+    <MarkdownEditorTextInput :model-value="url" aria-label="Адрес ссылки" :autofocus="autofocus" :disabled="disabled" :error="urlError" :label="copy.url" placeholder="https://example.com" required type="url" @update:model-value="urlError = ''; emit('update:url', $event)" />
+    <MarkdownEditorTextInput :model-value="text" aria-label="Текст ссылки" :disabled="disabled" :help="copy.textHelp" :label="copy.text" :readonly="readOnlyText" @update:model-value="emit('update:text', $event)" />
+    <MarkdownEditorTextInput :model-value="title" aria-label="Заголовок ссылки" :disabled="disabled" :label="copy.title" @update:model-value="emit('update:title', $event)" />
+    <template #footer>
+      <button v-if="hasCurrentLink" :disabled="disabled" type="button" @click="emit('remove')">{{ copy.remove }}</button>
+      <button type="button" @click="emit('cancel')">{{ copy.cancel }}</button>
+      <button :disabled="disabled || !url.trim()" type="submit">{{ copy.apply }}</button>
+    </template>
+  </MarkdownEditorForm>
 </template>
-
-<style scoped>
-.markdown-editor-form { z-index: 10; display: grid; grid-template-columns: 1fr auto auto auto; gap: .25rem; width: min(22rem, calc(100vw - 1rem)); padding: .25rem; border: 1px solid var(--markdown-border); border-radius: .375rem; box-shadow: 0 .5rem 1.25rem rgb(0 0 0 / 18%); background: var(--markdown-background); }
-.markdown-editor-form input { grid-column: 1 / -1; min-width: 0; height: 2rem; padding: 0 .5rem; border: 1px solid var(--markdown-border); border-radius: .25rem; color: inherit; background: var(--markdown-background); font: inherit; }
-.markdown-editor-form button { min-width: 2rem; height: 2rem; padding: 0 .5rem; border: 0; border-radius: .25rem; color: var(--markdown-text); background: transparent; font: inherit; cursor: pointer; }
-.markdown-editor-form button:hover, .markdown-editor-form button:focus-visible { outline: none; color: var(--markdown-focus-text); background: var(--markdown-focus-background); }
-</style>

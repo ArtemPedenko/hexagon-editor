@@ -39,7 +39,7 @@ Props: `modelValue`, `mode`, `locale` (`ru` or `en`), `theme` (`light`, `dark`, 
 
 Events: `update:modelValue`, `change`, `update:mode`, and `mode-change`.
 
-`MarkdownEditorLinkForm` and `MarkdownEditorImageForm` are exported for hosts that need to reuse the editor forms outside the built-in toolbar. File uploads are deliberately not part of the package API.
+`MarkdownEditorLinkForm` and `MarkdownEditorImageForm` are exported for hosts that need to reuse the editor forms outside the built-in toolbar. They share the exported `MarkdownEditorForm` and `MarkdownEditorTextInput` primitives, support `en`/`ru`, validation, disabled/readonly states, and typed submit payloads. The image payload includes optional width and height. File uploads are deliberately not part of the package API.
 
 The component ref exposes `focus()`, `hasFocus()`, `getValue()`, `setValue()`/`replace()`, `clear()`, `prepend()`, `append()`, `insert()`, `isEmpty()`, `moveCursor()`, `getMode()`, and `setMode()`.
 
