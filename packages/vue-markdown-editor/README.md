@@ -35,7 +35,7 @@ const mode = ref<'wysiwyg' | 'markup' | 'split'>('wysiwyg');
 </template>
 ```
 
-Props: `modelValue`, `mode`, `locale` (`ru` or `en`), `theme` (`light`, `dark`, or `auto`), `placeholder`, `readonly`, `toolbarPreset`, and `toolbarConfig`. `toolbarConfig` overrides the preset with ordered toolbar groups and supports contextual `isAvailable` predicates; the exported `defaultToolbarConfig` and `minimalToolbarConfig` can be reused or extended.
+Props: `modelValue`, `mode`, `locale` (`ru` or `en`), `theme` (`light`, `dark`, or `auto`), `placeholder`, `readonly`, `toolbarPreset`, and `toolbarConfig`. Built-in toolbar presets are `zero`, `commonmark`, `default`, `full`, and the compatibility preset `minimal`. `toolbarConfig` overrides the preset with ordered toolbar groups and supports action bindings plus contextual `isAvailable`, `isActive`, and `isEnabled` predicates. The exported preset configs and `createToolbarItem`/`createToolbarGroup`/`createToolbarConfig` factories can be reused to build integrations.
 
 Events: `update:modelValue`, `change`, `update:mode`, and `mode-change`.
 

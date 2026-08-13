@@ -106,7 +106,7 @@ describe('MarkdownEditor', () => {
 
     it('localizes labels, applies the selected theme, and supports arrow-key mode navigation', async () => {
         const target = document.createElement('div');
-        const app = createApp(() => h(MarkdownEditor, {locale: 'en', theme: 'dark'}));
+        const app = createApp(() => h(MarkdownEditor, {locale: 'en', theme: 'dark', toolbarPreset: 'full'}));
 
         document.body.append(target);
         app.mount(target);
@@ -215,6 +215,30 @@ describe('MarkdownEditor', () => {
         app.unmount();
     });
 
+    it('binds toolbar items to custom actions and their enabled state', async () => {
+        const target = document.createElement('div');
+        const run = vi.fn();
+        const app = createApp(() => h(MarkdownEditor, {
+            toolbarConfig: {groups: [{id: 'actions', items: [
+                {id: 'bold', action: {isActive: () => true, run}},
+                {id: 'italic', action: {isEnabled: () => false, run: vi.fn()}},
+            ]}]},
+        }));
+
+        document.body.append(target);
+        app.mount(target);
+        await nextTick();
+
+        const bold = target.querySelector<HTMLButtonElement>('[data-toolbar-item="bold"]')!;
+        const italic = target.querySelector<HTMLButtonElement>('[data-toolbar-item="italic"]')!;
+        expect(bold.getAttribute('aria-pressed')).toBe('true');
+        expect(italic.disabled).toBe(true);
+        bold.click();
+        expect(run).toHaveBeenCalledOnce();
+
+        app.unmount();
+    });
+
     it('shows the text of an HTML directive in the visual editor', async () => {
         const target = document.createElement('div');
         const app = createApp(() => h(MarkdownEditor, {modelValue: '::: html\n\n<div>Add HTML code here</div>\n\n:::'}));
@@ -230,7 +254,7 @@ describe('MarkdownEditor', () => {
 
     it('folds the content under a folding heading from the toolbar', async () => {
         const target = document.createElement('div');
-        const app = createApp(() => h(MarkdownEditor, {modelValue: '##+ Section\n\nHidden content'}));
+        const app = createApp(() => h(MarkdownEditor, {modelValue: '##+ Section\n\nHidden content', toolbarPreset: 'full'}));
 
         document.body.append(target);
         app.mount(target);
@@ -263,7 +287,7 @@ describe('MarkdownEditor', () => {
     it('inserts an HTML directive and switches to markup mode', async () => {
         const target = document.createElement('div');
         const editor = ref<MarkdownEditorExposed>();
-        const app = createApp(() => h(MarkdownEditor, {modelValue: 'Text', ref: editor}));
+        const app = createApp(() => h(MarkdownEditor, {modelValue: 'Text', ref: editor, toolbarPreset: 'full'}));
 
         document.body.append(target);
         app.mount(target);
@@ -282,7 +306,7 @@ describe('MarkdownEditor', () => {
     it('inserts a LaTeX block and switches to markup mode', async () => {
         const target = document.createElement('div');
         const editor = ref<MarkdownEditorExposed>();
-        const app = createApp(() => h(MarkdownEditor, {modelValue: 'Text', ref: editor}));
+        const app = createApp(() => h(MarkdownEditor, {modelValue: 'Text', ref: editor, toolbarPreset: 'full'}));
 
         document.body.append(target);
         app.mount(target);

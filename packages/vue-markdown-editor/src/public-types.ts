@@ -1,7 +1,7 @@
 /** Modes available to the consuming Vue application. */
 export type MarkdownEditorMode = 'wysiwyg' | 'markup' | 'split';
 export type MarkdownEditorLocale = 'en' | 'ru';
-export type MarkdownEditorToolbarPreset = 'default' | 'minimal';
+export type MarkdownEditorToolbarPreset = 'zero' | 'commonmark' | 'default' | 'full' | 'minimal';
 export type MarkdownEditorTheme = 'auto' | 'dark' | 'light';
 
 /**

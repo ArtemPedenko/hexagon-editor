@@ -77,6 +77,7 @@
         v-model:locale="locale"
         v-model:mode="editorMode"
         v-model:theme="theme"
+        toolbar-preset="full"
       />
       <aside class="playground__source-pane">
         <div class="playground__pane-title">Preview</div>

@@ -77,6 +77,7 @@ const props = withDefaults(
         locale: 'ru',
         placeholder: '',
         readonly: false,
+        toolbarConfig: undefined,
         toolbarPreset: 'default',
         theme: 'auto',
     },
