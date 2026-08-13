@@ -23,6 +23,21 @@ describe('basic Markdown extensions', () => {
         editor.destroy();
     });
 
+    it('forwards editor-mode keyboard shortcuts to the host', () => {
+        const target = document.createElement('div');
+        const onCancel = vi.fn(() => true);
+        const onSubmit = vi.fn(() => true);
+        const editor = mountBasicWysiwygEditor({onCancel, onSubmit, target});
+        const content = target.querySelector<HTMLElement>('.ProseMirror');
+
+        content?.dispatchEvent(new KeyboardEvent('keydown', {bubbles: true, key: 'Escape'}));
+        content?.dispatchEvent(new KeyboardEvent('keydown', {bubbles: true, ctrlKey: true, key: 'Enter'}));
+
+        expect(onCancel).toHaveBeenCalledOnce();
+        expect(onSubmit).toHaveBeenCalledOnce();
+        editor.destroy();
+    });
+
     it('does not report marks as active for ordinary text', () => {
         const state = EditorState.create({schema: basicMarkdownSchema});
 

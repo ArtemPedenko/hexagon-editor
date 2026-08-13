@@ -172,6 +172,15 @@ export type {SelectionDirection} from './extensions/behavior/selection-commands'
 export {Resizable} from './extensions/behavior/resizable';
 export {SelectionContext} from './extensions/behavior/selection-context';
 export type {SelectionContextOptions} from './extensions/behavior/selection-context';
+export {
+    addEmptyDefaultTextblockToEndOfDocumentActionName,
+    addEmptyDefaultTextblockToStartOfDocumentActionName,
+    addParagraphToEnd,
+    addParagraphToStart,
+    ClicksOnEdges,
+} from './extensions/behavior/clicks-on-edges';
+export type {ClicksOnEdgesActionContext} from './extensions/behavior/clicks-on-edges';
+export {EditorModeKeymap} from './extensions/behavior/editor-mode-keymap';
+export type {EditorModeKeymapOptions} from './extensions/behavior/editor-mode-keymap';
 
-/** Version of this independent Vue port. */
-export const VERSION = '0.1.0-alpha.0';
+export {VERSION} from './version';

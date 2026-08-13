@@ -8,8 +8,8 @@ import {TableNode} from '../extensions/markdown/table';
 import {ExtensionsManager} from './extensions-manager';
 import type {MarkdownCodec} from './markdown';
 
-export function createBasicDefaultPresetPlugins(schema: Schema, placeholder: string, onFiles: ((files: readonly File[]) => void) | undefined, selectionContext: SelectionContextOptions | undefined): Plugin[] {
-    return ExtensionsManager.plugins((builder) => builder.use(DefaultPreset, {bold: {boldKey: 'Mod-b'}, filePaste: {onFiles}, italic: {italicKey: 'Mod-i'}, placeholder: {content: placeholder}, selectionContext}), schema);
+export function createBasicDefaultPresetPlugins(schema: Schema, placeholder: string, onFiles: ((files: readonly File[]) => void) | undefined, selectionContext: SelectionContextOptions | undefined, onCancel?: () => boolean, onSubmit?: () => boolean): Plugin[] {
+    return ExtensionsManager.plugins((builder) => builder.use(DefaultPreset, {bold: {boldKey: 'Mod-b'}, editorModeKeymap: {ignoreKeysList: ['Tab', 'Shift-Tab'], onCancel, onSubmit}, filePaste: {onFiles}, italic: {italicKey: 'Mod-i'}, placeholder: {content: placeholder}, selectionContext}), schema);
 }
 
 export function createMarkdownTablePastePlugin(codec: MarkdownCodec): Plugin {

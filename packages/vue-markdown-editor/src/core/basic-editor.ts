@@ -232,9 +232,11 @@ export function getBasicWysiwygSelectionState(
 export function mountBasicWysiwygEditor({
   editable = true,
   initialValue = "",
+  onCancel,
   onChange,
   onFiles,
   onSelectionChange,
+  onSubmit,
   placeholder = "",
   plugins = [],
   selectionContext,
@@ -257,6 +259,8 @@ export function mountBasicWysiwygEditor({
         placeholder,
         onFiles,
         selectionContext,
+        onCancel,
+        onSubmit,
       ),
       keymap({
         "Mod-[": commands.liftListItem,

@@ -24,5 +24,6 @@ export interface BasicWysiwygEditor { destroy(): void; focus(): void; getValue()
 
 export interface MountBasicWysiwygEditorOptions {
     editable?: boolean; initialValue?: string; onChange?(value: string): void; onFiles?(files: readonly File[]): void;
-    onSelectionChange?(selection: BasicWysiwygSelectionState): void; placeholder?: string; plugins?: readonly Plugin[]; selectionContext?: SelectionContextOptions; target: HTMLElement;
+    onCancel?(): boolean; onSelectionChange?(selection: BasicWysiwygSelectionState): void; onSubmit?(): boolean;
+    placeholder?: string; plugins?: readonly Plugin[]; selectionContext?: SelectionContextOptions; target: HTMLElement;
 }

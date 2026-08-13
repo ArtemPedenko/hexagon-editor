@@ -83,11 +83,13 @@ const props = withDefaults(
 );
 
 const emit = defineEmits<{
+    cancel: [];
     change: [value: string];
     'mode-change': [mode: MarkdownEditorMode];
     'update:modelValue': [value: string];
     'update:mode': [mode: MarkdownEditorMode];
     'upload-error': [error: Error, file: File];
+    submit: [];
 }>();
 
 const commands = createBasicEditorCommands();
@@ -411,12 +413,20 @@ function mountHosts(): void {
         visualEditor = mountBasicWysiwygEditor({
             editable: !props.readonly,
             initialValue: value.value,
+            onCancel: () => {
+                emit('cancel');
+                return true;
+            },
             onChange: (nextValue) => updateValue(nextValue, 'visual'),
             onFiles: (files) => {
                 void uploadFiles(files);
             },
             onSelectionChange: (nextSelection) => {
                 toolbarState.value = nextSelection;
+            },
+            onSubmit: () => {
+                emit('submit');
+                return true;
             },
             placeholder: props.placeholder,
             selectionContext: {

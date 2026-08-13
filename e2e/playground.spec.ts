@@ -130,6 +130,29 @@ test.describe('Markdown editor playground', () => {
         await expect(page.locator('.ProseMirror .g-md-gapcursor')).toHaveCount(0);
     });
 
+    test('creates editable paragraphs by clicking the free space at document edges', async ({page}) => {
+        const errors: string[] = [];
+        page.on('console', (message) => {
+            if (message.type() === 'error') errors.push(message.text());
+        });
+        page.on('pageerror', (error) => errors.push(error.message));
+        await page.goto('/');
+
+        const editor = page.locator('.ProseMirror');
+        const initialChildren = await editor.locator(':scope > *').count();
+        await editor.click({position: {x: 4, y: 4}});
+        await page.keyboard.type('Before document');
+        await expect(editor.locator(':scope > p').first()).toHaveText('Before document');
+
+        const bounds = await editor.boundingBox();
+        if (bounds === null) throw new Error('Visual editor is not measurable');
+        await editor.click({position: {x: 4, y: bounds.height - 4}});
+        await page.keyboard.type('After document');
+        await expect(editor.locator(':scope > p').last()).toHaveText('After document');
+        await expect(editor.locator(':scope > *')).toHaveCount(initialChildren + 2);
+        expect(errors).toEqual([]);
+    });
+
     test('edits only an atomic block as Markdown after a double click', async ({page}) => {
         await page.goto('/');
 

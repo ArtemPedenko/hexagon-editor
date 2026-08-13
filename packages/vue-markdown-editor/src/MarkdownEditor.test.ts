@@ -85,6 +85,25 @@ describe('MarkdownEditor', () => {
         app.unmount();
     });
 
+    it('emits cancel and submit from visual editor shortcuts', async () => {
+        const cancel = vi.fn();
+        const submit = vi.fn();
+        const target = document.createElement('div');
+        const app = createApp(() => h(MarkdownEditor, {onCancel: cancel, onSubmit: submit}));
+
+        document.body.append(target);
+        app.mount(target);
+        await nextTick();
+
+        const content = target.querySelector<HTMLElement>('.ProseMirror');
+        content?.dispatchEvent(new KeyboardEvent('keydown', {bubbles: true, key: 'Escape'}));
+        content?.dispatchEvent(new KeyboardEvent('keydown', {bubbles: true, ctrlKey: true, key: 'Enter'}));
+
+        expect(cancel).toHaveBeenCalledOnce();
+        expect(submit).toHaveBeenCalledOnce();
+        app.unmount();
+    });
+
     it('localizes labels, applies the selected theme, and supports arrow-key mode navigation', async () => {
         const target = document.createElement('div');
         const app = createApp(() => h(MarkdownEditor, {locale: 'en', theme: 'dark'}));

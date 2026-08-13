@@ -11,6 +11,9 @@ import {Placeholder} from '../extensions/behavior/placeholder';
 import type {PlaceholderOptions} from '../extensions/behavior/placeholder';
 import {Selection} from '../extensions/behavior/selection';
 import {SelectionContext} from '../extensions/behavior/selection-context';
+import {ClicksOnEdges} from '../extensions/behavior/clicks-on-edges';
+import {EditorModeKeymap} from '../extensions/behavior/editor-mode-keymap';
+import type {EditorModeKeymapOptions} from '../extensions/behavior/editor-mode-keymap';
 import {Resizable} from '../extensions/behavior/resizable';
 import type {SelectionContextOptions} from '../extensions/behavior/selection-context';
 import {FoldingHeading} from '../extensions/additional/folding-heading';
@@ -64,6 +67,7 @@ export interface DefaultPresetOptions {
     lists?: ListsOptions;
     placeholder?: PlaceholderOptions;
     selectionContext?: SelectionContextOptions;
+    editorModeKeymap?: EditorModeKeymapOptions;
 }
 
 /** First composable editor preset: zero foundation plus the fully ported Lists behavior. */
@@ -99,6 +103,8 @@ export const DefaultPreset: ExtensionAuto<DefaultPresetOptions> = (builder, opti
         .use(Clipboard)
         .use(Cursor, options?.cursor ?? {})
         .use(Selection)
+        .use(ClicksOnEdges)
+        .use(EditorModeKeymap, options?.editorModeKeymap ?? {})
         .use(Resizable)
         .use(SelectionContext, options?.selectionContext ?? {});
 };

@@ -12,7 +12,7 @@ describe('DefaultPreset', () => {
             {baseSchema: basicMarkdownSchema},
         );
 
-        expect(result.plugins).toHaveLength(46);
+        expect(result.plugins).toHaveLength(48);
         expect(result.schema.nodes.list_item).toBeDefined();
     });
 });
