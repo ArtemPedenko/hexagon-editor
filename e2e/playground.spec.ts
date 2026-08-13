@@ -116,6 +116,20 @@ test.describe('Markdown editor playground', () => {
         }
     });
 
+    test('types a paragraph at a virtual cursor between atomic blocks', async ({page}) => {
+        await page.goto('/');
+
+        const formula = page.locator('.ProseMirror [data-math-block]');
+        await formula.click();
+        await page.keyboard.press('ArrowDown');
+        await expect(page.locator('.ProseMirror .g-md-gapcursor')).toBeVisible();
+        await page.keyboard.type('Текст между блоками');
+
+        const paragraph = page.locator('.ProseMirror p', {hasText: 'Текст между блоками'});
+        await expect(paragraph).toBeVisible();
+        await expect(page.locator('.ProseMirror .g-md-gapcursor')).toHaveCount(0);
+    });
+
     test('edits only an atomic block as Markdown after a double click', async ({page}) => {
         await page.goto('/');
 

@@ -69,8 +69,8 @@
 | --- | --- | --- |
 | `Autocomplete`, `ClicksOnEdges`, `CommandMenu`, `EditorModeKeymap` | `src/extensions/behavior/*` | pending |
 | `Clipboard` | `src/extensions/behavior/clipboard.ts` | partial — code-block/inline-code paste, including file names, is connected to `DefaultPreset`; full copy/cut, YFM MIME and parser-aware paste remain pending. |
-| `Cursor` | `src/extensions/behavior/cursor.ts` | partial — upstream `GapCursorSelection`, virtual paragraph widget/input materialization and configurable ProseMirror drop cursor подключены к `DefaultPreset`; создание и навигация gap selection ожидают upstream-команды `Selection`. |
-| `FilePaste`, `History`, `Placeholder`, `Resizable`, `Selection`, `SelectionContext`, `SharedState` | `src/extensions/behavior/*` | partial — `History`, document-level `Placeholder`, callback-based `FilePaste`, базовые `Selection` decorations и Vue `SelectionContext` перенесены и подключены к DefaultPreset/visual editor. Для `Selection` ещё нужны upstream fake-paragraph/gap-cursor commands и keymap. Resizable supports selected image drag handles and Markdown dimension round-trip; generic node-view resizing, schema-driven placeholder decorations, `SharedState` и остальное pending. Search is deliberately excluded. |
+| `Cursor` | `src/extensions/behavior/cursor.ts` | done — upstream `GapCursorSelection`, virtual paragraph widget/input materialization and configurable ProseMirror drop cursor подключены к `DefaultPreset`; создание и навигация gap selection обеспечены командами `Selection`. |
+| `FilePaste`, `History`, `Placeholder`, `Resizable`, `Selection`, `SelectionContext`, `SharedState` | `src/extensions/behavior/*` | partial — `History`, document-level `Placeholder`, callback-based `FilePaste`, `Selection` decorations, hierarchical select-all, fake-paragraph/gap-cursor commands/keymap и Vue `SelectionContext` перенесены и подключены к DefaultPreset/visual editor. Resizable supports selected image drag handles and Markdown dimension round-trip; generic node-view resizing, schema-driven placeholder decorations, `SharedState` и остальное pending. Search is deliberately excluded. |
 | `ReactRenderer`, `WidgetDecoration` | `core/vue-renderer.ts`, `src/extensions/behavior/*` | partial |
 | `behavior/utils/*` | `src/extensions/behavior/utils/*` | pending |
 
@@ -99,11 +99,10 @@
 
 ## Следующий реализуемый срез
 
-1. **Selection/Cursor:** перенести upstream fake-paragraph/gap-cursor commands и keymap, подключить создание и навигацию `GapCursorSelection`, затем добавить Chromium-сценарий ввода между атомарными блоками.
-2. **ClicksOnEdges + EditorModeKeymap:** перенести плагины и клавиатурные переходы, проверить границы документа и смену режимов с клавиатуры.
-3. **Clipboard:** довести copy/cut, `text/yfm`, HTML/plain-text parser-aware paste и selection trimming; сохранить отдельный file-paste flow.
-4. **Autocomplete + CommandMenu:** сначала framework-neutral state/actions/plugins, затем Vue popup/widget и keyboard/a11y scenarios.
-5. **YFM:** переносить отдельными вертикальными срезами в порядке `YfmHeading` → `YfmCut` → `YfmNote` → `YfmFile` → `YfmTable` → `YfmTabs`.
-6. **Integration parity:** upstream forms, toolbar/presets, bundle/composable API, i18n/styles и public exports; затем полный desktop/narrow acceptance pass.
+1. **ClicksOnEdges + EditorModeKeymap:** перенести плагины и клавиатурные переходы, проверить границы документа и смену режимов с клавиатуры.
+2. **Clipboard:** довести copy/cut, `text/yfm`, HTML/plain-text parser-aware paste и selection trimming; сохранить отдельный file-paste flow.
+3. **Autocomplete + CommandMenu:** сначала framework-neutral state/actions/plugins, затем Vue popup/widget и keyboard/a11y scenarios.
+4. **YFM:** переносить отдельными вертикальными срезами в порядке `YfmHeading` → `YfmCut` → `YfmNote` → `YfmFile` → `YfmTable` → `YfmTabs`.
+5. **Integration parity:** upstream forms, toolbar/presets, bundle/composable API, i18n/styles и public exports; затем полный desktop/narrow acceptance pass.
 
 Для каждого feature-среза порядок один: upstream non-React код и unit-тесты → Vue view/form/widget → runtime preset/export → Chromium-сценарий → обновление этой матрицы.

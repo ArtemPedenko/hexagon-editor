@@ -1,11 +1,13 @@
 import type {Node as ProseMirrorNode} from 'prosemirror-model';
 import {selectParentNode} from 'prosemirror-commands';
+import {keydownHandler} from 'prosemirror-keymap';
 import {Plugin} from 'prosemirror-state';
 import type {EditorState, Selection as ProseMirrorSelection, Transaction} from 'prosemirror-state';
 import {AllSelection, NodeSelection, TextSelection} from 'prosemirror-state';
 import {Decoration, DecorationSet} from 'prosemirror-view';
 
 import type {ExtensionAuto} from '../../core/extension-builder';
+import {arrowDown, arrowLeft, arrowRight, arrowUp, gapCursorBackspace, hierarchicalSelectAll} from './selection-commands';
 
 /**
  * Marks selected top-level nodes and allows opt-in direct node selection.
@@ -14,6 +16,14 @@ import type {ExtensionAuto} from '../../core/extension-builder';
 export const Selection: ExtensionAuto = (builder) => {
     builder.addPlugin(() => new Plugin({
         props: {
+            handleKeyDown: keydownHandler({
+                ArrowDown: arrowDown,
+                ArrowLeft: arrowLeft,
+                ArrowRight: arrowRight,
+                ArrowUp: arrowUp,
+                Backspace: gapCursorBackspace,
+                'Mod-a': hierarchicalSelectAll,
+            }),
             decorations: (state) => getDecorations(state.selection, state.doc),
             handleClickOn: (view, _pos, node, nodePos, _event, direct) => {
                 if (!direct || node.type.spec.allowSelection !== true) return false;

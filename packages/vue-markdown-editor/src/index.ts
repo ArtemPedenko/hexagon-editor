@@ -155,6 +155,20 @@ export {Clipboard, isInsideCode} from './extensions/behavior/clipboard';
 export {createGapCursorPlugin, Cursor, GapCursorSelection, isGapCursorSelection} from './extensions/behavior/cursor';
 export type {CursorOptions} from './extensions/behavior/cursor';
 export {Selection} from './extensions/behavior/selection';
+export {
+    arrowDown,
+    arrowLeft,
+    arrowRight,
+    arrowUp,
+    createFakeParagraph,
+    findFakeParaPosClosestToPos,
+    findFakeParaPosForCodeBlock,
+    findFakeParaPosForNodeSelection,
+    findFakeParaPosForTextSelection,
+    gapCursorBackspace,
+    hierarchicalSelectAll,
+} from './extensions/behavior/selection-commands';
+export type {SelectionDirection} from './extensions/behavior/selection-commands';
 export {Resizable} from './extensions/behavior/resizable';
 export {SelectionContext} from './extensions/behavior/selection-context';
 export type {SelectionContextOptions} from './extensions/behavior/selection-context';
