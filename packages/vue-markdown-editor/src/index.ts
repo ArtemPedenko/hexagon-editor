@@ -10,6 +10,10 @@ export type {
     MarkdownEditorToolbarPreset,
 } from './public-types';
 export type {ChangeEditorModeOptions, MarkdownEditorInitialOptions} from './public-types';
+export {Lang, configure, getConfig, subscribeConfigure} from './configure';
+export type {ConfigureSubscriber, MarkdownEditorConfig} from './configure';
+export {cn} from './classname';
+export type {BlockClassName, ClassNameMix, ClassNameModifiers, ClassNameModifierValue, ClassNameProps} from './classname';
 export * from './core';
 export {default as MarkdownEditor} from './MarkdownEditor.vue';
 export type {MarkdownEditorExposed} from './MarkdownEditor.vue';

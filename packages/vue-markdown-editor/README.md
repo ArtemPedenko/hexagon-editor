@@ -51,6 +51,12 @@ The instance supports the same common value/cursor methods, `currentMode`, `setE
 
 Headless integrations can compose the exported `ZeroPreset`, `CommonMarkPreset`, `DefaultPreset`, and scoped `FullPreset`. Matching `CommonMarkSpecsPreset` and `FullSpecsPreset` entry points are provided for compatibility with upstream's split preset API; the Vue port keeps schema, parser, serializer, and runtime registrations in the same extension modules.
 
+## Stable entry points
+
+The root entry exports the complete supported public API. Focused integrations may use the documented subpaths: `./core`, `./extensions`, `./specs`, `./presets`, `./toolbar`, `./forms`, `./configure`, and `./classname`. Other internal source paths are not part of the compatibility contract.
+
+`configure({lang, renderers})` sets process-wide defaults and optional host renderers. `cn(block)` provides the upstream-compatible `g-md-` BEM classname convention without a React dependency.
+
 ## Supported Markdown
 
 The editor supports CommonMark blocks and marks, tables, definition lists, heading attributes and folding headings (`##+`), quote links, raw HTML, directives, Math/LaTeX (`$…$` and `$$…$$`), Mermaid fences, and YFM HTML blocks (`:::html`).

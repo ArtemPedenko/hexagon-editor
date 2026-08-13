@@ -12,6 +12,38 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
+    "./classname": {
+      "types": "./dist/classname.d.ts",
+      "import": "./dist/classname.js"
+    },
+    "./configure": {
+      "types": "./dist/configure.d.ts",
+      "import": "./dist/configure.js"
+    },
+    "./core": {
+      "types": "./dist/core/index.d.ts",
+      "import": "./dist/core.js"
+    },
+    "./extensions": {
+      "types": "./dist/extensions/index.d.ts",
+      "import": "./dist/extensions.js"
+    },
+    "./forms": {
+      "types": "./dist/forms/index.d.ts",
+      "import": "./dist/forms.js"
+    },
+    "./presets": {
+      "types": "./dist/presets/index.d.ts",
+      "import": "./dist/presets.js"
+    },
+    "./specs": {
+      "types": "./dist/extensions/specs.d.ts",
+      "import": "./dist/specs.js"
+    },
+    "./toolbar": {
+      "types": "./dist/toolbar/index.d.ts",
+      "import": "./dist/toolbar.js"
+    },
     "./style.css": "./dist/index.css"
   },
   "files": [
