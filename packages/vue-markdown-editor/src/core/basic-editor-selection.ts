@@ -55,7 +55,7 @@ export function getBasicWysiwygSelectionState(
         headingFolded: $from.parent.type.name === 'heading' && $from.parent.attrs.folding === true,
         headingLevel: $from.parent.type.name === 'heading' ? Number($from.parent.attrs.level) : undefined,
         image: image !== undefined, imageObjectFit: image?.attrs['object-fit'] as string | undefined,
-        italic: hasActiveMark(state, schema, 'em'), linkHref: currentLink?.href, linkText: currentLink?.text, linkTitle: currentLink?.title ?? undefined,
+        italic: hasActiveMark(state, schema, 'em'), linkHref: currentLink?.href, linkOpenInNewWindow: currentLink?.openInNewWindow ?? false, linkText: currentLink?.text, linkTitle: currentLink?.title ?? undefined,
         listIndentEnabled, listOutdentEnabled,
         mark: hasActiveMark(state, schema, 'mark'), orderedList: listType === 'ordered_list', quote: hasAncestor(state, 'blockquote'),
         strikethrough: hasActiveMark(state, schema, 'strike'), underline: hasActiveMark(state, schema, 'underline'),

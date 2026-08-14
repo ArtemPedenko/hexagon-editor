@@ -232,6 +232,33 @@ describe('MarkdownEditor', () => {
         app.unmount();
     });
 
+    it('prefills the link form with the selected text', async () => {
+        const target = document.createElement('div');
+        const app = createApp(() => h(MarkdownEditor, {modelValue: 'Ordinary selected text'}));
+
+        document.body.append(target);
+        app.mount(target);
+        await nextTick();
+
+        const text = target.querySelector('.ProseMirror p')?.firstChild;
+        expect(text).toBeInstanceOf(Text);
+        target.querySelector<HTMLElement>('.ProseMirror')?.focus();
+        const selection = window.getSelection();
+        const range = document.createRange();
+        range.setStart(text as Text, 9);
+        range.setEnd(text as Text, 17);
+        selection?.removeAllRanges();
+        selection?.addRange(range);
+        document.dispatchEvent(new Event('selectionchange'));
+        await nextTick();
+
+        target.querySelector<HTMLButtonElement>('[title="Ссылка"]')?.click();
+        await nextTick();
+        expect(document.body.querySelector<HTMLInputElement>('[aria-label="Текст ссылки"]')?.value).toBe('selected');
+
+        app.unmount();
+    });
+
     it('supports a minimal toolbar preset and an empty-editor placeholder', async () => {
         const target = document.createElement('div');
         const app = createApp(() => h(MarkdownEditor, {

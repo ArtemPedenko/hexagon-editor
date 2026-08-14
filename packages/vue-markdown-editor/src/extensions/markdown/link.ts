@@ -9,7 +9,7 @@ import type {ExtensionAuto} from '../../core/extension-builder';
 
 import {LinkAttr, linkMarkName, LinkSpecs} from './link-specs';
 
-export {LinkAttr, LinkSpecs, linkMarkName, linkMarkSpec, linkTokenSpec, serializeLink} from './link-specs';
+export {configureLinkMarkdown, LinkAttr, LinkSpecs, linkMarkName, linkMarkSpec, linkTokenSpec, serializeLink} from './link-specs';
 
 export interface LinkOptions {
     linkKey?: string | null;
@@ -34,7 +34,7 @@ export const toggleLink =
 
 /** Updates an existing link, or creates one for the selected text. */
 export const setLink =
-    (href: string, title?: string, text?: string): Command =>
+    (href: string, title?: string, text?: string, openInNewWindow = false): Command =>
     (state, dispatch) => {
         const link = getLinkType(state.schema);
         const range = getLinkRange(state, link);
@@ -47,7 +47,12 @@ export const setLink =
             transaction = transaction.insertText(content, from, to);
         }
         const end = from + content.length;
-        transaction = transaction.removeMark(from, end, link).addMark(from, end, link.create({[LinkAttr.Href]: href, [LinkAttr.Title]: title ?? null}));
+        transaction = transaction.removeMark(from, end, link).addMark(from, end, link.create({
+            [LinkAttr.Href]: href,
+            [LinkAttr.Rel]: openInNewWindow ? 'noopener noreferrer' : null,
+            [LinkAttr.Target]: openInNewWindow ? '_blank' : null,
+            [LinkAttr.Title]: title ?? null,
+        }));
         dispatch?.(transaction.scrollIntoView());
         return true;
     };
@@ -59,11 +64,12 @@ export const removeCurrentLink: Command = (state, dispatch) => {
     return true;
 };
 
-export function getCurrentLink(state: EditorState): {href: string; text: string; title: string | null} | undefined {
+export function getCurrentLink(state: EditorState): {href: string; openInNewWindow: boolean; text: string; title: string | null} | undefined {
     const range = getLinkRange(state, getLinkType(state.schema));
     if (range === undefined) return undefined;
     return {
         href: range.mark.attrs[LinkAttr.Href] as string,
+        openInNewWindow: range.mark.attrs[LinkAttr.Target] === '_blank',
         text: state.doc.textBetween(range.from, range.to),
         title: range.mark.attrs[LinkAttr.Title] as string | null,
     };
@@ -106,23 +112,20 @@ function isHttpUrl(value: string): boolean {
 
 function getLinkRange(state: EditorState, link: MarkType): {from: number; mark: ReturnType<MarkType['create']>; to: number} | undefined {
     const {$from} = state.selection;
-    if (!state.selection.empty) {
-        const selectedMark = link.isInSet($from.marks()) ?? link.isInSet($from.nodeAfter?.marks ?? []);
-        if (selectedMark !== undefined) return {from: state.selection.from, mark: selectedMark, to: state.selection.to};
-    }
     const mark = link.isInSet($from.marks()) ?? link.isInSet($from.nodeBefore?.marks ?? []) ?? link.isInSet($from.nodeAfter?.marks ?? []);
     if (mark === undefined) return undefined;
     const parentStart = $from.start();
     const children: Array<{nodeSize: number; offset: number; marks: readonly ReturnType<MarkType['create']>[]}> = [];
     $from.parent.forEach((node, offset) => children.push({marks: node.marks, nodeSize: node.nodeSize, offset}));
+    const hasSameLink = (marks: readonly ReturnType<MarkType['create']>[]): boolean => marks.some((candidate) => candidate.eq(mark));
     const cursor = state.selection.from;
-    const index = children.findIndex(({marks, nodeSize, offset}) => parentStart + offset <= cursor && cursor <= parentStart + offset + nodeSize && mark.isInSet(marks) !== undefined);
-    const currentIndex = index === -1 ? children.findIndex(({marks}) => mark.isInSet(marks) !== undefined) : index;
+    const index = children.findIndex(({marks, nodeSize, offset}) => parentStart + offset <= cursor && cursor <= parentStart + offset + nodeSize && hasSameLink(marks));
+    const currentIndex = index === -1 ? children.findIndex(({marks}) => hasSameLink(marks)) : index;
     if (currentIndex === -1) return undefined;
     let first = currentIndex;
     let last = currentIndex;
-    while (first > 0 && mark.isInSet(children[first - 1]?.marks ?? []) !== undefined) first -= 1;
-    while (last < children.length - 1 && mark.isInSet(children[last + 1]?.marks ?? []) !== undefined) last += 1;
+    while (first > 0 && hasSameLink(children[first - 1]?.marks ?? [])) first -= 1;
+    while (last < children.length - 1 && hasSameLink(children[last + 1]?.marks ?? [])) last += 1;
     return {
         from: parentStart + (children[first]?.offset ?? 0),
         mark,

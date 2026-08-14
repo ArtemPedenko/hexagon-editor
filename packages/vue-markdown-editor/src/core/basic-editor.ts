@@ -196,7 +196,7 @@ export function createBasicEditorCommands(): BasicEditorCommands {
     italic: toggleItalic,
     link: (href) => toggleLink(href),
     removeLink: removeCurrentLink,
-    setLink: (href, title, text) => setLink(href, title, text),
+    setLink: (href, title, text, openInNewWindow) => setLink(href, title, text, openInNewWindow),
     mark: toggleMark(getBasicMarkType(basicMarkdownSchema, "mark")),
     orderedList: toList(getBasicNodeType(basicMarkdownSchema, "ordered_list")),
     paragraph: setBlockType(getBasicNodeType(basicMarkdownSchema, "paragraph")),

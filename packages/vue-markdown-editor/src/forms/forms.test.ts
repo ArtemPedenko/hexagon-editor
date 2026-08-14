@@ -11,7 +11,7 @@ describe('editor forms', () => {
         const apply = vi.fn();
         const invalid = vi.fn();
         const app = createApp(() => h(MarkdownEditorLinkForm, {
-            locale: 'en', text: ' Docs ', title: ' Help ', url: url.value,
+            locale: 'en', openInNewWindow: true, text: ' Docs ', title: ' Help ', url: url.value,
             onApply: apply, onInvalid: invalid, 'onUpdate:url': (value: string) => { url.value = value; },
         }));
         document.body.append(target); app.mount(target); await nextTick();
@@ -22,7 +22,7 @@ describe('editor forms', () => {
         expect(target.querySelector('[aria-invalid="true"]')).not.toBeNull();
         url.value = ' https://example.com/docs '; await nextTick();
         target.querySelector<HTMLButtonElement>('button[type="submit"]')?.click();
-        expect(apply).toHaveBeenCalledWith({text: 'Docs', title: 'Help', url: 'https://example.com/docs'});
+        expect(apply).toHaveBeenCalledWith({openInNewWindow: true, text: 'Docs', title: 'Help', url: 'https://example.com/docs'});
         app.unmount();
     });
 

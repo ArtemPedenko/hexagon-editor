@@ -9,14 +9,14 @@ export interface BasicEditorCommands {
     horizontalRule: Command; insertFile(href: string, name: string): Command; insertImage(src: string, alt: string, title?: string): Command;
     setImageDisplay(width?: number | string, objectFit?: ImageObjectFit, height?: number | null): Command; insertMathBlock: Command; insertInlineMath: Command;
     insertTable(rows?: number, columns?: number): Command; italic: Command; liftListItem: Command; link(href: string): Command; removeLink: Command;
-    setLink(href: string, title?: string, text?: string): Command; mark: Command; orderedList: Command; paragraph: Command; quote: Command; redo: Command;
+    setLink(href: string, title?: string, text?: string, openInNewWindow?: boolean): Command; mark: Command; orderedList: Command; paragraph: Command; quote: Command; redo: Command;
     setColor(color: string): Command; sinkListItem: Command; splitListItem: Command; strikethrough: Command; toMathBlock: Command; toggleHeadingFolding: Command;
     underline: Command; undo: Command;
 }
 
 export interface BasicWysiwygSelectionState {
     bold: boolean; bulletList: boolean; code: boolean; codeBlock: boolean; codeBlockLanguage: string | undefined; formula: boolean; headingFolded: boolean;
-    headingLevel: number | undefined; image: boolean; imageObjectFit: string | undefined; italic: boolean; linkHref: string | undefined; linkText: string | undefined;
+    headingLevel: number | undefined; image: boolean; imageObjectFit: string | undefined; italic: boolean; linkHref: string | undefined; linkOpenInNewWindow: boolean; linkText: string | undefined;
     linkTitle: string | undefined; listIndentEnabled: boolean; listOutdentEnabled: boolean; mark: boolean; orderedList: boolean; quote: boolean; strikethrough: boolean; underline: boolean;
 }
 

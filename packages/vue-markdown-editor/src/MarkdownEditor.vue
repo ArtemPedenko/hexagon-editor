@@ -91,6 +91,7 @@ const listMenuVisible = ref(false);
 const linkUrl = ref('');
 const linkText = ref('');
 const linkTitle = ref('');
+const linkOpenInNewWindow = ref(false);
 const formulaMenuVisible = ref(false);
 const toolbarState = ref<BasicWysiwygSelectionState>({
     bold: false,
@@ -104,6 +105,7 @@ const toolbarState = ref<BasicWysiwygSelectionState>({
     image: false,
     imageObjectFit: undefined,
     linkHref: undefined,
+    linkOpenInNewWindow: false,
     linkText: undefined,
     linkTitle: undefined,
     listIndentEnabled: false,
@@ -132,6 +134,7 @@ let stopListFloating: (() => void) | undefined;
 let markupEditor: BasicMarkupEditor | undefined;
 let modeChangeId = 0;
 let syncing = false;
+let suppressNextLinkAutoOpen = false;
 let visualEditor: BasicWysiwygEditor | undefined;
 
 function t(key: MarkdownEditorMessageKey): string {
@@ -160,6 +163,7 @@ function destroyHosts(): void {
         image: false,
         imageObjectFit: undefined,
         linkHref: undefined,
+        linkOpenInNewWindow: false,
         linkText: undefined,
         linkTitle: undefined,
         listIndentEnabled: false,
@@ -234,7 +238,8 @@ function applyLink(): void {
         return;
     }
 
-    execute(commands.setLink(linkUrl.value.trim(), linkTitle.value.trim() || undefined, linkText.value.trim() || undefined));
+    suppressNextLinkAutoOpen = true;
+    execute(commands.setLink(linkUrl.value.trim(), linkTitle.value.trim() || undefined, linkText.value.trim() || undefined, linkOpenInNewWindow.value));
     linkEditorVisible.value = false;
 }
 
@@ -304,10 +309,41 @@ async function toggleLinkEditor(reference: HTMLElement): Promise<void> {
     stopLinkFloating = undefined;
     if (!linkEditorVisible.value) return;
     linkUrl.value = toolbarState.value.linkHref ?? '';
-    linkText.value = toolbarState.value.linkText ?? '';
+    linkText.value = toolbarState.value.linkText ?? window.getSelection()?.toString().trim() ?? '';
     linkTitle.value = toolbarState.value.linkTitle ?? '';
+    linkOpenInNewWindow.value = toolbarState.value.linkOpenInNewWindow;
     await nextTick();
     startFloating(reference, linkForm.value?.element, (cleanup) => { stopLinkFloating = cleanup; });
+}
+
+async function showLinkEditorAtCursor(reference?: HTMLElement): Promise<void> {
+    const href = toolbarState.value.linkHref;
+    if (href === undefined && reference === undefined) {
+        closeLinkEditor();
+        return;
+    }
+
+    linkUrl.value = reference?.getAttribute('href') ?? href ?? '';
+    linkText.value = reference?.textContent ?? toolbarState.value.linkText ?? '';
+    linkTitle.value = reference?.getAttribute('title') ?? toolbarState.value.linkTitle ?? '';
+    linkOpenInNewWindow.value = reference?.getAttribute('target') === '_blank' || toolbarState.value.linkOpenInNewWindow;
+    linkEditorVisible.value = true;
+    await nextTick();
+    const anchorNode = window.getSelection()?.anchorNode;
+    const anchorElement = anchorNode instanceof Element ? anchorNode : anchorNode?.parentElement;
+    const link = reference ?? anchorElement?.closest<HTMLElement>('a');
+    if (link === undefined || link === null) return;
+    stopLinkFloating?.();
+    startFloating(link, linkForm.value?.element, (cleanup) => { stopLinkFloating = cleanup; });
+}
+
+function handleEditorClick(event: MouseEvent): void {
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    const link = target.closest<HTMLElement>('.ProseMirror a');
+    if (link === null) return;
+    event.preventDefault();
+    void showLinkEditorAtCursor(link);
 }
 
 async function toggleListMenu(reference: HTMLElement): Promise<void> {
@@ -434,6 +470,11 @@ function mountHosts(): void {
             onChange: (nextValue) => updateValue(nextValue, 'visual'),
             onSelectionChange: (nextSelection) => {
                 toolbarState.value = nextSelection;
+                if (suppressNextLinkAutoOpen) {
+                    suppressNextLinkAutoOpen = false;
+                } else {
+                    void showLinkEditorAtCursor();
+                }
             },
             onSubmit: () => {
                 emit('submit');
@@ -554,7 +595,7 @@ defineExpose<MarkdownEditorExposed>({
 </script>
 
 <template>
-  <section class="markdown-editor" :data-mode="mode" :data-theme="theme">
+  <section class="markdown-editor" :data-mode="mode" :data-theme="theme" @click="handleEditorClick">
     <header class="markdown-editor__header">
       <MarkdownEditorModeTabs :mode="mode" :set-mode="setMode" :translate="t" />
       <slot name="header" />
@@ -606,6 +647,7 @@ defineExpose<MarkdownEditorExposed>({
         ref="linkForm"
         :has-current-link="toolbarState.linkHref !== undefined"
         :locale="locale"
+        :open-in-new-window="linkOpenInNewWindow"
         :theme="theme"
         :text="linkText"
         :title="linkTitle"
@@ -616,6 +658,7 @@ defineExpose<MarkdownEditorExposed>({
         @update:text="linkText = $event"
         @update:title="linkTitle = $event"
         @update:url="linkUrl = $event"
+        @update:open-in-new-window="linkOpenInNewWindow = $event"
       />
       <MarkdownEditorImageForm
         v-if="imageEditorVisible"

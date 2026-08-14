@@ -77,6 +77,29 @@ describe('Link extension', () => {
         expect(removed.doc.firstChild?.firstChild?.marks).toHaveLength(0);
     });
 
+    it('preserves surrounding text when an editing selection extends past the link', () => {
+        const link = basicMarkdownSchema.marks.link.create({[LinkAttr.Href]: 'http://localhost:5173/', [LinkAttr.Title]: '3213123'});
+        const documentNode = basicMarkdownSchema.node('doc', null, [
+            basicMarkdownSchema.node('paragraph', null, [
+                basicMarkdownSchema.text('123123  '),
+                basicMarkdownSchema.text('qwe', [link]),
+                basicMarkdownSchema.text(' trailing'),
+            ]),
+        ]);
+        const state = EditorState.create({
+            doc: documentNode,
+            selection: TextSelection.create(documentNode, 10, 16),
+        });
+        let updated = state;
+
+        expect(getCurrentLink(state)?.text).toBe('qwe');
+
+        expect(setLink('http://localhost:5173/', '3213123', 'changed')(state, (transaction) => {
+            updated = state.apply(transaction);
+        })).toBe(true);
+        expect(updated.doc.textContent).toBe('123123  changed trailing');
+    });
+
     it('reads a link when the cursor is inside its text', () => {
         const documentNode = basicMarkdownSchema.node('doc', null, [
             basicMarkdownSchema.node('paragraph', null, basicMarkdownSchema.text('localhost', [
@@ -87,9 +110,21 @@ describe('Link extension', () => {
 
         expect(getCurrentLink(state)).toEqual({
             href: 'http://localhost:5173/',
+            openInNewWindow: false,
             text: 'localhost',
             title: null,
         });
+    });
+
+    it('round-trips safe new-window attributes', () => {
+        const result = ExtensionsManager.process((builder) => builder.use(Link), {baseSchema: basicMarkdownSchema});
+        const markdown = '[site](https://example.com) {target="_blank" rel="noopener noreferrer"}';
+        const parsed = result.textParser.parse(markdown);
+        const link = parsed.firstChild?.firstChild?.marks[0];
+
+        expect(link?.attrs[LinkAttr.Target]).toBe('_blank');
+        expect(link?.attrs[LinkAttr.Rel]).toBe('noopener noreferrer');
+        expect(result.serializer.serialize(parsed)).toBe(`${markdown}\n`);
     });
 
     it('turns a pasted HTTP URL into a link', () => {

@@ -8,13 +8,14 @@ import MarkdownEditorTextInput from './MarkdownEditorTextInput.vue';
 
 defineOptions({name: 'MarkdownEditorLinkForm'});
 
-export interface MarkdownEditorLinkSubmitParams {text: string; title: string; url: string}
+export interface MarkdownEditorLinkSubmitParams {openInNewWindow: boolean; text: string; title: string; url: string}
 
 const props = withDefaults(defineProps<{
     autofocus?: boolean;
     disabled?: boolean;
     hasCurrentLink?: boolean;
     locale?: MarkdownEditorLocale;
+    openInNewWindow?: boolean;
     readOnlyText?: boolean;
     text?: string;
     title?: string;
@@ -25,6 +26,7 @@ const props = withDefaults(defineProps<{
     disabled: false,
     hasCurrentLink: false,
     locale: 'ru',
+    openInNewWindow: false,
     readOnlyText: false,
     text: '',
     title: '',
@@ -40,6 +42,7 @@ const emit = defineEmits<{
     'update:text': [value: string];
     'update:title': [value: string];
     'update:url': [value: string];
+    'update:openInNewWindow': [value: boolean];
 }>();
 
 const form = ref<InstanceType<typeof MarkdownEditorForm>>();
@@ -54,7 +57,7 @@ function submit(): void {
         return;
     }
     urlError.value = '';
-    emit('apply', {text: props.text.trim(), title: props.title.trim(), url});
+    emit('apply', {openInNewWindow: props.openInNewWindow, text: props.text.trim(), title: props.title.trim(), url});
 }
 
 function isValidUrl(value: string): boolean {
@@ -69,6 +72,7 @@ defineExpose({element: computed(() => form.value?.element)});
     <MarkdownEditorTextInput :model-value="url" :aria-label="copy.linkUrl" :autofocus="autofocus" :disabled="disabled" :error="urlError" :label="copy.linkUrl" placeholder="https://example.com" required type="url" @update:model-value="urlError = ''; emit('update:url', $event)" />
     <MarkdownEditorTextInput :model-value="text" :aria-label="copy.linkText" :disabled="disabled" :help="copy.linkTextHelp" :label="copy.linkText" :readonly="readOnlyText" @update:model-value="emit('update:text', $event)" />
     <MarkdownEditorTextInput :model-value="title" :aria-label="copy.linkTitle" :disabled="disabled" :label="copy.linkTitle" @update:model-value="emit('update:title', $event)" />
+    <label class="markdown-editor__form-checkbox"><input :checked="openInNewWindow" :disabled="disabled" type="checkbox" @change="emit('update:openInNewWindow', ($event.target as HTMLInputElement).checked)">{{ copy.linkNewWindow }}</label>
     <template #footer>
       <button v-if="hasCurrentLink" :disabled="disabled" type="button" @click="emit('remove')">{{ copy.linkRemove }}</button>
       <button type="button" @click="emit('cancel')">{{ copy.cancel }}</button>
@@ -76,3 +80,8 @@ defineExpose({element: computed(() => form.value?.element)});
     </template>
   </MarkdownEditorForm>
 </template>
+
+<style scoped>
+.markdown-editor__form-checkbox { display: flex; align-items: center; gap: .5rem; cursor: pointer; }
+.markdown-editor__form-checkbox input { width: 1rem; height: 1rem; margin: 0; accent-color: #5282ff; }
+</style>

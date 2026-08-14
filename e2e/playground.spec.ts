@@ -93,15 +93,57 @@ test.describe('Markdown editor playground', () => {
         await page.getByLabel('Адрес ссылки').fill('https://example.com/docs');
         await page.getByLabel('Текст ссылки').fill('Документация');
         await page.getByLabel('Заголовок ссылки').fill('Документы');
+        await page.getByLabel('Открывать в новом окне').check();
         await page.getByRole('button', {name: 'Сохранить'}).last().click();
 
         const link = page.locator('.ProseMirror a', {hasText: 'Документация'});
         await expect(link).toHaveAttribute('href', 'https://example.com/docs');
         await expect(link).toHaveAttribute('title', 'Документы');
+        await expect(link).toHaveAttribute('target', '_blank');
+        await expect(link).toHaveAttribute('rel', 'noopener noreferrer');
         await expect(link).toHaveAttribute('data-link-tooltip', 'https://example.com/docs');
         await link.click();
+        await expect(page.getByLabel('Адрес ссылки')).toBeVisible();
+        await expect(page.getByLabel('Открывать в новом окне')).toBeChecked();
         await expect(page.getByTitle('Ссылка')).toHaveAttribute('aria-pressed', 'true');
         expect(errors).toEqual([]);
+    });
+
+    test('prefills link text from the visual editor selection', async ({page}) => {
+        await page.goto('/');
+        const paragraph = page.locator('.ProseMirror p').filter({hasText: 'Этот раздел можно свернуть кнопкой в тулбаре.'});
+        await paragraph.evaluate((element) => {
+            const text = element.firstChild;
+            if (!(text instanceof Text)) throw new Error('Expected paragraph text');
+            const start = text.data.indexOf('раздел');
+            const range = document.createRange();
+            range.setStart(text, start);
+            range.setEnd(text, start + 'раздел'.length);
+            const selection = window.getSelection();
+            selection?.removeAllRanges();
+            selection?.addRange(range);
+            document.dispatchEvent(new Event('selectionchange'));
+        });
+
+        await page.getByTitle('Ссылка').click();
+        await expect(page.getByLabel('Текст ссылки')).toHaveValue('раздел');
+    });
+
+    test('edits link text without deleting the surrounding paragraph', async ({page}) => {
+        await page.goto('/');
+        await page.getByRole('tab', {name: 'Разметка'}).click();
+        const markup = page.locator('.cm-content');
+        await markup.click();
+        await page.keyboard.press('ControlOrMeta+A');
+        await page.keyboard.type('123123  [qwe](http://localhost:5173/ "3213123")');
+        await page.getByRole('tab', {name: 'Визуальный'}).click();
+
+        await page.locator('.ProseMirror a', {hasText: 'qwe'}).click();
+        await page.getByLabel('Текст ссылки').fill('changed');
+        await page.getByRole('button', {name: 'Сохранить'}).last().click();
+
+        await expect(page.locator('.ProseMirror p')).toHaveText('123123  changed');
+        await expect(page.locator('.ProseMirror a')).toHaveText('changed');
     });
 
     test('sets a language and shows line numbers for a code block', async ({page}) => {

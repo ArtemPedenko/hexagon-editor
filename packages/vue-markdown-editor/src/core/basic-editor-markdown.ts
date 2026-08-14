@@ -21,7 +21,7 @@ import {htmlNodeSpecs, htmlSerializerNodes, htmlTokenSpecs} from '../extensions/
 import {horizontalRuleNodeSpec, horizontalRuleTokenSpec, serializeHorizontalRule} from '../extensions/markdown/horizontal-rule';
 import {configureImageMarkdown, imageNodeSpec, imageTokenSpec, serializeImage} from '../extensions/markdown/image';
 import {italicMarkSpec, italicTokenSpec, serializeItalic} from '../extensions/markdown/italic';
-import {linkMarkSpec, linkTokenSpec, serializeLink} from '../extensions/markdown/link';
+import {configureLinkMarkdown, linkMarkSpec, linkTokenSpec, serializeLink} from '../extensions/markdown/link';
 import {listNodeSpecs, listSerializerNodes, listTokenSpecs} from '../extensions/markdown/list-specs';
 import {markTokenSpec} from '../extensions/markdown/mark';
 import {serializeStrike, strikeMarkSpec, strikeTokenSpec} from '../extensions/markdown/strike';
@@ -74,7 +74,7 @@ const tableTokenSpecs: Record<string, ParseSpec> = {
 
 export function createExtendedMarkdownIt(markdown = new MarkdownIt('commonmark', {html: true})): MarkdownIt {
     markdown.enable('table').use(deflist).use(markPlugin).enable('strikethrough').use(subPlugin).use(insPlugin);
-    configureMathMarkdown(markdown); configureMermaidMarkdown(markdown); configureQuoteLinkMarkdown(markdown); configureYfmHtmlBlockMarkdown(markdown); configureImageMarkdown(markdown);
+    configureMathMarkdown(markdown); configureMermaidMarkdown(markdown); configureQuoteLinkMarkdown(markdown); configureYfmHtmlBlockMarkdown(markdown); configureImageMarkdown(markdown); configureLinkMarkdown(markdown);
     markdown.core.ruler.after('block', 'folding_heading', (state) => {
         for (const [index, token] of state.tokens.entries()) {
             const inline = state.tokens[index + 1]; const close = state.tokens[index + 2];
