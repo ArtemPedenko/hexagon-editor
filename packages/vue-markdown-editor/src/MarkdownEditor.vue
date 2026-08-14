@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import {autoUpdate, computePosition, flip, offset, shift} from '@floating-ui/dom';
 import {computed, nextTick, onBeforeUnmount, onMounted, ref, watch} from 'vue';
 
+import MarkdownEditorFloatingMenus from './components/MarkdownEditorFloatingMenus.vue';
 import MarkdownEditorSelectionActions from './components/MarkdownEditorSelectionActions.vue';
 import MarkdownEditorToolbar from './components/MarkdownEditorToolbar.vue';
-import ToolbarIcon from './components/MarkdownEditorToolbarIcon.vue';
+import {useFloatingPanel} from './composables/useFloatingPanel';
+import {joinMarkdown, useMarkdownEditorValue} from './composables/useMarkdownEditorValue';
 import MarkdownEditorImageForm from './forms/MarkdownEditorImageForm.vue';
 import MarkdownEditorLinkForm from './forms/MarkdownEditorLinkForm.vue';
 import {getMarkdownEditorMessages} from './i18n';
@@ -77,22 +78,16 @@ const emit = defineEmits<{
 }>();
 
 const commands = createBasicEditorCommands();
-const codeMenuVisible = ref(false);
 const markupTarget = ref<HTMLElement>();
-const value = ref(props.modelValue);
 const visualTarget = ref<HTMLElement>();
 const mode = ref<MarkdownEditorMode>(props.mode);
-const imageEditorVisible = ref(false);
 const imageUrl = ref('https://');
 const imageAlt = ref('');
 const imageTitle = ref('');
 const imageForm = ref<InstanceType<typeof MarkdownEditorImageForm>>();
-const linkEditorVisible = ref(false);
-const listMenuVisible = ref(false);
 const linkUrl = ref('');
 const linkText = ref('');
 const linkOpenInNewWindow = ref(false);
-const formulaMenuVisible = ref(false);
 const toolbarState = ref<BasicWysiwygSelectionState>({
     bold: false,
     bulletList: false,
@@ -120,35 +115,31 @@ const toolbarState = ref<BasicWysiwygSelectionState>({
 const textStyle = computed(() => toolbarState.value.headingLevel?.toString() ?? 'paragraph');
 const textStyleLabel = computed(() => textStyle.value === 'paragraph' ? 'H' : `H${textStyle.value}`);
 const mathBlock = '$$\nE = mc^2\n$$';
-const formulaMenu = ref<HTMLElement>();
-const codeMenu = ref<HTMLElement>();
-const headingMenu = ref<HTMLElement>();
-const headingMenuVisible = ref(false);
-const listMenu = ref<HTMLElement>();
-const modeMenu = ref<HTMLElement>();
-const modeMenuVisible = ref(false);
-const editorModes: MarkdownEditorMode[] = ['wysiwyg', 'markup', 'split'];
-let stopImageFloating: (() => void) | undefined;
 const linkForm = ref<InstanceType<typeof MarkdownEditorLinkForm>>();
-let stopFormulaFloating: (() => void) | undefined;
-let stopCodeFloating: (() => void) | undefined;
-let stopHeadingFloating: (() => void) | undefined;
-let stopLinkFloating: (() => void) | undefined;
-let stopListFloating: (() => void) | undefined;
-let stopModeFloating: (() => void) | undefined;
+const floatingMenus = ref<InstanceType<typeof MarkdownEditorFloatingMenus>>();
+const codePanel = useFloatingPanel(() => floatingMenus.value?.getElement('code'));
+const formulaPanel = useFloatingPanel(() => floatingMenus.value?.getElement('formula'));
+const headingPanel = useFloatingPanel(() => floatingMenus.value?.getElement('heading'));
+const imagePanel = useFloatingPanel(() => imageForm.value?.element);
+const linkPanel = useFloatingPanel(() => linkForm.value?.element);
+const listPanel = useFloatingPanel(() => floatingMenus.value?.getElement('list'));
+const modePanel = useFloatingPanel(() => floatingMenus.value?.getElement('mode'));
 let markupEditor: BasicMarkupEditor | undefined;
 let modeChangeId = 0;
-let syncing = false;
 let suppressNextLinkAutoOpen = false;
 let visualEditor: BasicWysiwygEditor | undefined;
+const {setExternalValue, setValue, updateFromHost: updateValue, value} = useMarkdownEditorValue({
+    getMarkupHost: () => markupEditor,
+    getVisualHost: () => visualEditor,
+    initialValue: props.modelValue,
+    onChange: (nextValue) => {
+        emit('update:modelValue', nextValue);
+        emit('change', nextValue);
+    },
+});
 
 function t(key: MarkdownEditorMessageKey): string {
     return getMarkdownEditorMessages(props.locale)[key];
-}
-
-function headingMenuLabel(style: string): string {
-    if (style === 'paragraph') return t('paragraph');
-    return props.locale === 'ru' ? `Заголовок ${style}` : `Heading ${style}`;
 }
 
 function destroyHosts(): void {
@@ -182,44 +173,6 @@ function destroyHosts(): void {
     };
 }
 
-function updateValue(nextValue: string, source: 'markup' | 'visual'): void {
-    if (nextValue === value.value || syncing) {
-        return;
-    }
-
-    value.value = nextValue;
-    emit('update:modelValue', nextValue);
-    emit('change', nextValue);
-    syncing = true;
-    if (source !== 'markup') {
-        markupEditor?.setValue(nextValue);
-    }
-    if (source !== 'visual') {
-        visualEditor?.setValue(nextValue);
-    }
-    syncing = false;
-}
-
-function setValue(nextValue: string): void {
-    if (nextValue === value.value) {
-        return;
-    }
-
-    value.value = nextValue;
-    emit('update:modelValue', nextValue);
-    emit('change', nextValue);
-    syncing = true;
-    markupEditor?.setValue(nextValue);
-    visualEditor?.setValue(nextValue);
-    syncing = false;
-}
-
-function joinMarkdown(left: string, right: string): string {
-    if (left.length === 0) return right;
-    if (right.length === 0) return left;
-    return `${left}\n\n${right}`;
-}
-
 function moveCursor(position: MarkdownEditorCursorPosition): void {
     if (mode.value === 'markup') {
         markupEditor?.moveCursor(position);
@@ -246,28 +199,22 @@ function applyLink(): void {
     suppressNextLinkAutoOpen = true;
     const text = linkText.value.trim() || linkUrl.value.trim();
     execute(commands.setLink(linkUrl.value.trim(), text, text, linkOpenInNewWindow.value));
-    linkEditorVisible.value = false;
+    linkPanel.close();
 }
 
 function closeLinkEditor(): void {
-    linkEditorVisible.value = false;
-    stopLinkFloating?.();
-    stopLinkFloating = undefined;
+    linkPanel.close();
 }
 
 function applyImage(): void {
     const src = imageUrl.value.trim();
     if (src.length === 0) return;
     execute(commands.insertImage(src, imageAlt.value.trim() || 'Image', imageTitle.value.trim() || undefined));
-    imageEditorVisible.value = false;
-    stopImageFloating?.();
-    stopImageFloating = undefined;
+    imagePanel.close();
 }
 
 function closeImageEditor(): void {
-    imageEditorVisible.value = false;
-    stopImageFloating?.();
-    stopImageFloating = undefined;
+    imagePanel.close();
 }
 
 function applyTextStyle(style: string): void {
@@ -277,64 +224,31 @@ function applyTextStyle(style: string): void {
         execute(commands.heading(Number(style)));
     }
 
-    headingMenuVisible.value = false;
-}
-
-function startFloating(reference: HTMLElement | undefined, floating: HTMLElement | undefined, onCleanup: (cleanup: (() => void) | undefined) => void): void {
-    if (reference === undefined || floating === undefined) return;
-    const editor = reference.closest<HTMLElement>('.markdown-editor');
-    if (editor !== null) {
-        const editorStyles = getComputedStyle(editor);
-        for (const name of ['--markdown-background', '--markdown-border', '--markdown-focus-background', '--markdown-focus-text', '--markdown-text']) {
-            floating.style.setProperty(name, editorStyles.getPropertyValue(name));
-        }
-    }
-    const update = async (): Promise<void> => {
-        const {x, y} = await computePosition(reference, floating, {
-            middleware: [offset(6), flip({padding: 8}), shift({padding: 8})],
-            placement: 'bottom-start',
-            strategy: 'fixed',
-        });
-        Object.assign(floating.style, {left: `${x}px`, position: 'fixed', top: `${y}px`});
-    };
-    onCleanup(autoUpdate(reference, floating, update));
+    headingPanel.close();
 }
 
 async function showHeadingMenu(reference: HTMLElement): Promise<void> {
-    headingMenuVisible.value = !headingMenuVisible.value;
-    stopHeadingFloating?.();
-    stopHeadingFloating = undefined;
-    if (!headingMenuVisible.value) return;
-    await nextTick();
-    startFloating(reference, headingMenu.value, (cleanup) => { stopHeadingFloating = cleanup; });
+    await headingPanel.toggle(reference);
 }
 
 async function toggleCodeMenu(reference: HTMLElement): Promise<void> {
-    codeMenuVisible.value = !codeMenuVisible.value;
-    stopCodeFloating?.();
-    stopCodeFloating = undefined;
-    if (!codeMenuVisible.value) return;
-    await nextTick();
-    startFloating(reference, codeMenu.value, (cleanup) => { stopCodeFloating = cleanup; });
+    await codePanel.toggle(reference);
 }
 
 function executeCodeCommand(command: Parameters<BasicWysiwygEditor['run']>[0]): void {
     execute(command);
-    codeMenuVisible.value = false;
-    stopCodeFloating?.();
-    stopCodeFloating = undefined;
+    codePanel.close();
 }
 
 async function toggleLinkEditor(reference: HTMLElement): Promise<void> {
-    linkEditorVisible.value = !linkEditorVisible.value;
-    stopLinkFloating?.();
-    stopLinkFloating = undefined;
-    if (!linkEditorVisible.value) return;
+    if (linkPanel.visible.value) {
+        linkPanel.close();
+        return;
+    }
     linkUrl.value = toolbarState.value.linkHref ?? '';
     linkText.value = toolbarState.value.linkText ?? window.getSelection()?.toString().trim() ?? '';
     linkOpenInNewWindow.value = toolbarState.value.linkOpenInNewWindow;
-    await nextTick();
-    startFloating(reference, linkForm.value?.element, (cleanup) => { stopLinkFloating = cleanup; });
+    await linkPanel.open(reference);
 }
 
 async function showLinkEditorAtCursor(reference?: HTMLElement): Promise<void> {
@@ -347,14 +261,11 @@ async function showLinkEditorAtCursor(reference?: HTMLElement): Promise<void> {
     linkUrl.value = reference?.getAttribute('href') ?? href ?? '';
     linkText.value = reference?.textContent ?? toolbarState.value.linkText ?? '';
     linkOpenInNewWindow.value = reference?.getAttribute('target') === '_blank' || toolbarState.value.linkOpenInNewWindow;
-    linkEditorVisible.value = true;
-    await nextTick();
     const anchorNode = window.getSelection()?.anchorNode;
     const anchorElement = anchorNode instanceof Element ? anchorNode : anchorNode?.parentElement;
     const link = reference ?? anchorElement?.closest<HTMLElement>('a');
     if (link === undefined || link === null) return;
-    stopLinkFloating?.();
-    startFloating(link, linkForm.value?.element, (cleanup) => { stopLinkFloating = cleanup; });
+    await linkPanel.open(link);
 }
 
 function handleEditorClick(event: MouseEvent): void {
@@ -368,43 +279,24 @@ function handleEditorClick(event: MouseEvent): void {
 }
 
 async function toggleListMenu(reference: HTMLElement): Promise<void> {
-    listMenuVisible.value = !listMenuVisible.value;
-    stopListFloating?.();
-    stopListFloating = undefined;
-    if (!listMenuVisible.value) return;
-    await nextTick();
-    startFloating(reference, listMenu.value, (cleanup) => { stopListFloating = cleanup; });
+    await listPanel.toggle(reference);
 }
 
 function executeListCommand(command: Parameters<BasicWysiwygEditor['run']>[0]): void {
     execute(command);
-    listMenuVisible.value = false;
-    stopListFloating?.();
-    stopListFloating = undefined;
+    listPanel.close();
 }
 
 async function toggleImageEditor(reference: HTMLElement): Promise<void> {
-    imageEditorVisible.value = !imageEditorVisible.value;
-    stopImageFloating?.();
-    stopImageFloating = undefined;
-    if (!imageEditorVisible.value) return;
-    await nextTick();
-    startFloating(reference, imageForm.value?.element, (cleanup) => { stopImageFloating = cleanup; });
+    await imagePanel.toggle(reference);
 }
 
 async function toggleModeMenu(reference: HTMLElement): Promise<void> {
-    modeMenuVisible.value = !modeMenuVisible.value;
-    stopModeFloating?.();
-    stopModeFloating = undefined;
-    if (!modeMenuVisible.value) return;
-    await nextTick();
-    startFloating(reference, modeMenu.value, (cleanup) => { stopModeFloating = cleanup; });
+    await modePanel.toggle(reference);
 }
 
 async function selectEditorMode(nextMode: MarkdownEditorMode): Promise<void> {
-    modeMenuVisible.value = false;
-    stopModeFloating?.();
-    stopModeFloating = undefined;
+    modePanel.close();
     await setMode(nextMode);
 }
 
@@ -413,7 +305,7 @@ function insertHtmlDirective(): void {
 }
 
 async function insertMathBlock(): Promise<void> {
-    formulaMenuVisible.value = false;
+    formulaPanel.close();
     if (toolbarState.value.formula) {
         return;
     }
@@ -428,85 +320,27 @@ async function insertMathBlock(): Promise<void> {
 }
 
 function insertInlineMath(): void {
-    formulaMenuVisible.value = false;
+    formulaPanel.close();
     visualEditor?.run(commands.insertInlineMath);
 }
 
 async function toggleFormulaMenu(reference: HTMLElement): Promise<void> {
     if (!toolbarState.value.formula) {
-        formulaMenuVisible.value = !formulaMenuVisible.value;
-        stopFormulaFloating?.();
-        stopFormulaFloating = undefined;
-        if (formulaMenuVisible.value) {
-            await nextTick();
-            startFloating(reference, formulaMenu.value, (cleanup) => { stopFormulaFloating = cleanup; });
-        }
+        await formulaPanel.toggle(reference);
     }
 }
 
 function closeFloatingPanels(event: PointerEvent): void {
     const target = event.target;
     if (!(target instanceof Node)) return;
-    if (!headingMenu.value?.contains(target)) {
-        headingMenuVisible.value = false;
-        stopHeadingFloating?.();
-        stopHeadingFloating = undefined;
-    }
-    if (!codeMenu.value?.contains(target)) {
-        codeMenuVisible.value = false;
-        stopCodeFloating?.();
-        stopCodeFloating = undefined;
-    }
-    if (!formulaMenu.value?.contains(target)) {
-        formulaMenuVisible.value = false;
-        stopFormulaFloating?.();
-        stopFormulaFloating = undefined;
-    }
-    if (!linkForm.value?.element?.contains(target)) {
-        linkEditorVisible.value = false;
-        stopLinkFloating?.();
-        stopLinkFloating = undefined;
-    }
-    if (!listMenu.value?.contains(target)) {
-        listMenuVisible.value = false;
-        stopListFloating?.();
-        stopListFloating = undefined;
-    }
-    if (!imageForm.value?.element?.contains(target)) {
-        imageEditorVisible.value = false;
-        stopImageFloating?.();
-        stopImageFloating = undefined;
-    }
-    if (!modeMenu.value?.contains(target)) {
-        modeMenuVisible.value = false;
-        stopModeFloating?.();
-        stopModeFloating = undefined;
+    for (const panel of [headingPanel, codePanel, formulaPanel, linkPanel, listPanel, imagePanel, modePanel]) {
+        if (!panel.contains(target)) panel.close();
     }
 }
 
 function closePanelsOnEscape(event: KeyboardEvent): void {
     if (event.key !== 'Escape') return;
-    headingMenuVisible.value = false;
-    codeMenuVisible.value = false;
-    formulaMenuVisible.value = false;
-    imageEditorVisible.value = false;
-    linkEditorVisible.value = false;
-    listMenuVisible.value = false;
-    modeMenuVisible.value = false;
-    stopHeadingFloating?.();
-    stopCodeFloating?.();
-    stopFormulaFloating?.();
-    stopImageFloating?.();
-    stopLinkFloating?.();
-    stopListFloating?.();
-    stopModeFloating?.();
-    stopHeadingFloating = undefined;
-    stopCodeFloating = undefined;
-    stopFormulaFloating = undefined;
-    stopImageFloating = undefined;
-    stopLinkFloating = undefined;
-    stopListFloating = undefined;
-    stopModeFloating = undefined;
+    for (const panel of [headingPanel, codePanel, formulaPanel, linkPanel, listPanel, imagePanel, modePanel]) panel.close();
 }
 
 function mountHosts(): void {
@@ -589,11 +423,7 @@ watch(
             return;
         }
 
-        value.value = nextValue;
-        syncing = true;
-        markupEditor?.setValue(nextValue);
-        visualEditor?.setValue(nextValue);
-        syncing = false;
+        setExternalValue(nextValue);
     },
 );
 
@@ -632,13 +462,6 @@ onBeforeUnmount(() => {
     destroyHosts();
     document.removeEventListener('pointerdown', closeFloatingPanels);
     document.removeEventListener('keydown', closePanelsOnEscape);
-    stopHeadingFloating?.();
-    stopCodeFloating?.();
-    stopFormulaFloating?.();
-    stopImageFloating?.();
-    stopLinkFloating?.();
-    stopListFloating?.();
-    stopModeFloating?.();
 });
 
 defineExpose<MarkdownEditorExposed>({
@@ -667,14 +490,14 @@ defineExpose<MarkdownEditorExposed>({
     <MarkdownEditorToolbar
       v-if="!readonly"
       :commands="commands"
-      :code-menu-visible="codeMenuVisible"
-      :formula-menu-visible="formulaMenuVisible"
-      :heading-menu-visible="headingMenuVisible"
-      :image-editor-visible="imageEditorVisible"
-      :link-editor-visible="linkEditorVisible"
-      :list-menu-visible="listMenuVisible"
+      :code-menu-visible="codePanel.visible.value"
+      :formula-menu-visible="formulaPanel.visible.value"
+      :heading-menu-visible="headingPanel.visible.value"
+      :image-editor-visible="imagePanel.visible.value"
+      :link-editor-visible="linkPanel.visible.value"
+      :list-menu-visible="listPanel.visible.value"
       :mode="mode"
-      :mode-menu-visible="modeMenuVisible"
+      :mode-menu-visible="modePanel.visible.value"
       :state="toolbarState"
       :text-style-label="textStyleLabel"
       :toolbar-preset="toolbarPreset"
@@ -694,33 +517,31 @@ defineExpose<MarkdownEditorExposed>({
     </MarkdownEditorToolbar>
 
     <Teleport to="body">
-      <div v-if="codeMenuVisible" ref="codeMenu" class="markdown-editor__floating-menu" :data-theme="theme" role="menu" :aria-label="t('code')">
-        <button :aria-checked="toolbarState.code" role="menuitemradio" type="button" @mousedown.prevent @click="executeCodeCommand(commands.code)"><ToolbarIcon name="code" /><span>{{ t('code') }}</span></button>
-        <button :aria-checked="toolbarState.codeBlock" role="menuitemradio" type="button" @mousedown.prevent @click="executeCodeCommand(commands.codeBlock)"><span class="markdown-editor__floating-menu-icon">{ }</span><span>{{ t('codeBlock') }}</span></button>
-      </div>
-      <div v-if="headingMenuVisible" ref="headingMenu" class="markdown-editor__floating-menu" :data-theme="theme" role="menu" :aria-label="t('heading')">
-        <button v-for="style in ['paragraph', '1', '2', '3', '4', '5', '6']" :key="style" :aria-checked="textStyle === style" role="menuitemradio" type="button" @click="applyTextStyle(style)">
-          <span class="markdown-editor__floating-menu-icon">{{ style === 'paragraph' ? 'T' : `H${style}` }}</span>
-          <span>{{ headingMenuLabel(style) }}</span>
-        </button>
-      </div>
-      <div v-if="formulaMenuVisible" ref="formulaMenu" class="markdown-editor__floating-menu" :data-theme="theme" role="menu" :aria-label="t('formulaInsert')">
-        <button role="menuitem" type="button" @mousedown.prevent @click="insertInlineMath"><span class="markdown-editor__floating-menu-icon">ƒ</span><span>{{ t('formulaInline') }}</span></button>
-        <button role="menuitem" type="button" @mousedown.prevent @click="insertMathBlock"><span class="markdown-editor__floating-menu-icon">∑</span><span>{{ t('formulaBlock') }}</span></button>
-      </div>
-      <div v-if="listMenuVisible" ref="listMenu" class="markdown-editor__floating-menu markdown-editor__floating-menu--list" :data-theme="theme" role="menu" :aria-label="t('bulletList')">
-        <button :aria-checked="toolbarState.bulletList" role="menuitemradio" type="button" @mousedown.prevent @click="executeListCommand(commands.bulletList)"><ToolbarIcon name="bulletList" /><span>{{ t('bulletList') }}</span></button>
-        <button :aria-checked="toolbarState.orderedList" role="menuitemradio" type="button" @mousedown.prevent @click="executeListCommand(commands.orderedList)"><ToolbarIcon name="orderedList" /><span>{{ t('orderedList') }}</span></button>
-        <button :disabled="!toolbarState.listIndentEnabled" role="menuitem" type="button" @mousedown.prevent @click="executeListCommand(commands.sinkListItem)"><span class="markdown-editor__floating-menu-icon">→</span><span>{{ t('listIndent') }}</span><kbd>Tab</kbd></button>
-        <button :disabled="!toolbarState.listOutdentEnabled" role="menuitem" type="button" @mousedown.prevent @click="executeListCommand(commands.liftListItem)"><span class="markdown-editor__floating-menu-icon">←</span><span>{{ t('listOutdent') }}</span><kbd>⇧ Tab</kbd></button>
-      </div>
-      <div v-if="modeMenuVisible" ref="modeMenu" class="markdown-editor__floating-menu" :data-theme="theme" role="menu" :aria-label="t('mode')">
-        <button v-for="editorMode in editorModes" :key="editorMode" :aria-checked="mode === editorMode" role="menuitemradio" type="button" @click="selectEditorMode(editorMode)">
-          <span>{{ t(editorMode === 'wysiwyg' ? 'visual' : editorMode) }}</span>
-        </button>
-      </div>
+      <MarkdownEditorFloatingMenus
+        ref="floatingMenus"
+        :code-visible="codePanel.visible.value"
+        :formula-visible="formulaPanel.visible.value"
+        :heading-visible="headingPanel.visible.value"
+        :list-visible="listPanel.visible.value"
+        :mode="mode"
+        :mode-visible="modePanel.visible.value"
+        :state="toolbarState"
+        :text-style="textStyle"
+        :theme="theme"
+        :translate="t"
+        @bullet-list="executeListCommand(commands.bulletList)"
+        @code-block="executeCodeCommand(commands.codeBlock)"
+        @indent-list="executeListCommand(commands.sinkListItem)"
+        @inline-code="executeCodeCommand(commands.code)"
+        @inline-formula="insertInlineMath"
+        @math-block="insertMathBlock"
+        @ordered-list="executeListCommand(commands.orderedList)"
+        @outdent-list="executeListCommand(commands.liftListItem)"
+        @select-mode="selectEditorMode"
+        @select-text-style="applyTextStyle"
+      />
       <MarkdownEditorLinkForm
-        v-if="linkEditorVisible"
+        v-if="linkPanel.visible.value"
         ref="linkForm"
         :has-current-link="toolbarState.linkHref !== undefined"
         :locale="locale"
@@ -736,7 +557,7 @@ defineExpose<MarkdownEditorExposed>({
         @update:open-in-new-window="linkOpenInNewWindow = $event"
       />
       <MarkdownEditorImageForm
-        v-if="imageEditorVisible"
+        v-if="imagePanel.visible.value"
         ref="imageForm"
         :alt="imageAlt"
         :locale="locale"
