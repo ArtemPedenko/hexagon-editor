@@ -248,6 +248,31 @@ describe('basic Markdown extensions', () => {
         expect(nextState.doc.firstChild?.attrs.latex).toBe('E = mc^2');
     });
 
+    it('replaces an empty paragraph with HTML and inserts HTML after a non-empty paragraph', () => {
+        const commands = createBasicEditorCommands();
+        const emptyState = EditorState.create({schema: basicMarkdownSchema});
+        let replacedState = emptyState;
+        commands.insertHtml(emptyState, (transaction) => {
+            replacedState = emptyState.apply(transaction);
+        });
+
+        expect(replacedState.doc.childCount).toBe(1);
+        expect(replacedState.doc.firstChild?.type.name).toBe('directive');
+
+        const document = basicMarkdownSchema.node('doc', null, [
+            basicMarkdownSchema.node('paragraph', null, basicMarkdownSchema.text('Text')),
+        ]);
+        const textState = EditorState.create({doc: document, selection: TextSelection.create(document, 2)});
+        let insertedState = textState;
+        commands.insertHtml(textState, (transaction) => {
+            insertedState = textState.apply(transaction);
+        });
+
+        expect(insertedState.doc.childCount).toBe(2);
+        expect(insertedState.doc.child(0).textContent).toBe('Text');
+        expect(insertedState.doc.child(1).type.name).toBe('directive');
+    });
+
     it('changes a list item nesting level', () => {
         const document = basicMarkdownCodec.parse('* Первый пункт\n  * Второй пункт');
         let secondItemPosition = 0;

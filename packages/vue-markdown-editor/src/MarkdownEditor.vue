@@ -120,7 +120,6 @@ const toolbarState = ref<BasicWysiwygSelectionState>({
 });
 const textStyle = computed(() => toolbarState.value.headingLevel?.toString() ?? 'paragraph');
 const textStyleLabel = computed(() => textStyle.value === 'paragraph' ? 'H' : `H${textStyle.value}`);
-const htmlDirective = '::: html\n\n<div>Add HTML code here</div>\n\n:::';
 const mathBlock = '$$\nE = mc^2\n$$';
 const formulaMenu = ref<HTMLElement>();
 const codeMenu = ref<HTMLElement>();
@@ -390,10 +389,8 @@ async function toggleImageEditor(reference: HTMLElement): Promise<void> {
     startFloating(reference, imageForm.value?.element, (cleanup) => { stopImageFloating = cleanup; });
 }
 
-async function insertHtmlDirective(): Promise<void> {
-    setValue(value.value.length === 0 ? htmlDirective : `${value.value}\n\n${htmlDirective}`);
-    await setMode('markup');
-    markupEditor?.focus();
+function insertHtmlDirective(): void {
+    visualEditor?.run(commands.insertHtml);
 }
 
 async function insertMathBlock(): Promise<void> {

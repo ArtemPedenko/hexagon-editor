@@ -367,7 +367,7 @@ describe('MarkdownEditor', () => {
         app.unmount();
     });
 
-    it('inserts an HTML directive and switches to markup mode', async () => {
+    it('inserts an HTML directive after the current block and opens its local editor', async () => {
         const target = document.createElement('div');
         const editor = ref<MarkdownEditorExposed>();
         const app = createApp(() => h(MarkdownEditor, {modelValue: 'Text', ref: editor, toolbarPreset: 'full'}));
@@ -380,8 +380,9 @@ describe('MarkdownEditor', () => {
         await nextTick();
         await nextTick();
 
-        expect(editor.value?.getMode()).toBe('markup');
-        expect(editor.value?.getValue()).toContain('::: html\n\n<div>Add HTML code here</div>\n\n:::');
+        expect(editor.value?.getMode()).toBe('wysiwyg');
+        expect(editor.value?.getValue()).toContain('::: html\n<div>Add HTML code here</div>\n:::');
+        expect(target.querySelector('.markdown-editor__atomic-source')?.textContent).toContain('<div>Add HTML code here</div>');
 
         app.unmount();
     });

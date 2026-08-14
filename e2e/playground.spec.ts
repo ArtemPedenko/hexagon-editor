@@ -157,6 +157,30 @@ test.describe('Markdown editor playground', () => {
         await expect(page.locator('[data-markdown-editor-toolbar] [data-toolbar-item="code-language"]')).toHaveCount(0);
     });
 
+    test('inserts HTML after the current visual block and opens its local editor', async ({page}) => {
+        await page.goto('/');
+        const paragraph = page.locator('.ProseMirror p').filter({hasText: 'Этот раздел можно свернуть кнопкой в тулбаре.'});
+        await paragraph.evaluate((element) => {
+            const text = element.firstChild;
+            if (!(text instanceof Text)) throw new Error('Expected paragraph text');
+            const range = document.createRange();
+            range.setStart(text, text.length);
+            range.collapse(true);
+            const selection = window.getSelection();
+            selection?.removeAllRanges();
+            selection?.addRange(range);
+            document.dispatchEvent(new Event('selectionchange'));
+        });
+        await page.getByRole('button', {name: 'HTML'}).click();
+
+        await expect(page.locator('.markdown-editor')).toHaveAttribute('data-mode', 'wysiwyg');
+        const sourceEditor = page.locator('.markdown-editor__atomic-source .cm-content');
+        await expect(sourceEditor).toBeVisible();
+        await expect(sourceEditor).toContainText('<div>Add HTML code here</div>');
+        const insertedAfterParagraph = await paragraph.evaluate((element) => element.nextElementSibling?.classList.contains('markdown-editor__atomic-source'));
+        expect(insertedAfterParagraph).toBe(true);
+    });
+
     test('keeps the cursor stable while syntax tokens are completed', async ({page}) => {
         await page.goto('/');
         const code = page.locator('.ProseMirror pre[data-language="typescript"] code');

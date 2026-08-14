@@ -6,7 +6,7 @@ import type {ImageObjectFit} from '../extensions/markdown/image';
 export interface BasicEditorCommands {
     addMathInline: Command; addTableColumn: Command; addTableRow: Command; bold: Command; bulletList: Command; code: Command; codeBlock: Command;
     setCodeBlockLanguage(language: string): Command; deleteTableColumn: Command; deleteTable: Command; deleteTableRow: Command; heading(level: number): Command;
-    horizontalRule: Command; insertFile(href: string, name: string): Command; insertImage(src: string, alt: string, title?: string): Command;
+    horizontalRule: Command; insertFile(href: string, name: string): Command; insertHtml: Command; insertImage(src: string, alt: string, title?: string): Command;
     setImageDisplay(width?: number | string, objectFit?: ImageObjectFit, height?: number | null): Command; insertMathBlock: Command; insertInlineMath: Command;
     insertMermaid: Command; insertTable(rows?: number, columns?: number): Command; italic: Command; liftListItem: Command; link(href: string): Command; removeLink: Command;
     setLink(href: string, title?: string, text?: string, openInNewWindow?: boolean): Command; mark: Command; orderedList: Command; paragraph: Command; quote: Command; redo: Command;

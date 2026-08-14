@@ -169,6 +169,25 @@ function insertInlineMathAndEdit(state: EditorState, dispatch?: (transaction: Tr
   return true;
 }
 
+function insertHtmlAndEdit(state: EditorState, dispatch?: (transaction: Transaction) => void): boolean {
+  const {$from, empty} = state.selection;
+  if (!empty || !$from.parent.isTextblock) return false;
+  const node = getBasicNodeType(basicMarkdownSchema, "directive").create({
+    content: "<div>Add HTML code here</div>",
+    name: "html",
+  });
+  const replaceCurrentBlock = $from.parent.content.size === 0;
+  const position = replaceCurrentBlock ? $from.before() : $from.after();
+  if (dispatch !== undefined) {
+    const transaction = replaceCurrentBlock
+      ? state.tr.replaceWith(position, $from.after(), node)
+      : state.tr.insert(position, node);
+    transaction.setMeta(atomicSourcePluginKey, transaction.mapping.map(position, -1)).scrollIntoView();
+    dispatch(transaction);
+  }
+  return true;
+}
+
 /** Framework-agnostic commands consumed later by the Vue toolbar and shortcuts. */
 export function createBasicEditorCommands(): BasicEditorCommands {
   const historyActions = createHistoryActions();
@@ -189,6 +208,7 @@ export function createBasicEditorCommands(): BasicEditorCommands {
     heading: toHeading,
     horizontalRule: addHorizontalRule(getBasicNodeType(basicMarkdownSchema, "horizontal_rule")),
     insertFile: (href, name) => insertFileCommand(basicMarkdownSchema, href, name),
+    insertHtml: insertHtmlAndEdit,
     insertImage: (src, alt, title) => insertImageCommand(basicMarkdownSchema, src, alt, title),
     setImageDisplay: setImageDisplayCommand,
     insertMathBlock: insertMathBlockAndEdit,
