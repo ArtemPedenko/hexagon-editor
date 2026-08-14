@@ -77,6 +77,7 @@ const emit = defineEmits<{
 }>();
 
 const commands = createBasicEditorCommands();
+const codeMenuVisible = ref(false);
 const markupTarget = ref<HTMLElement>();
 const value = ref(props.modelValue);
 const visualTarget = ref<HTMLElement>();
@@ -120,12 +121,14 @@ const textStyleLabel = computed(() => textStyle.value === 'paragraph' ? 'H' : `H
 const htmlDirective = '::: html\n\n<div>Add HTML code here</div>\n\n:::';
 const mathBlock = '$$\nE = mc^2\n$$';
 const formulaMenu = ref<HTMLElement>();
+const codeMenu = ref<HTMLElement>();
 const headingMenu = ref<HTMLElement>();
 const headingMenuVisible = ref(false);
 const listMenu = ref<HTMLElement>();
 let stopImageFloating: (() => void) | undefined;
 const linkForm = ref<InstanceType<typeof MarkdownEditorLinkForm>>();
 let stopFormulaFloating: (() => void) | undefined;
+let stopCodeFloating: (() => void) | undefined;
 let stopHeadingFloating: (() => void) | undefined;
 let stopLinkFloating: (() => void) | undefined;
 let stopListFloating: (() => void) | undefined;
@@ -301,6 +304,22 @@ async function showHeadingMenu(reference: HTMLElement): Promise<void> {
     startFloating(reference, headingMenu.value, (cleanup) => { stopHeadingFloating = cleanup; });
 }
 
+async function toggleCodeMenu(reference: HTMLElement): Promise<void> {
+    codeMenuVisible.value = !codeMenuVisible.value;
+    stopCodeFloating?.();
+    stopCodeFloating = undefined;
+    if (!codeMenuVisible.value) return;
+    await nextTick();
+    startFloating(reference, codeMenu.value, (cleanup) => { stopCodeFloating = cleanup; });
+}
+
+function executeCodeCommand(command: Parameters<BasicWysiwygEditor['run']>[0]): void {
+    execute(command);
+    codeMenuVisible.value = false;
+    stopCodeFloating?.();
+    stopCodeFloating = undefined;
+}
+
 async function toggleLinkEditor(reference: HTMLElement): Promise<void> {
     linkEditorVisible.value = !linkEditorVisible.value;
     stopLinkFloating?.();
@@ -414,6 +433,11 @@ function closeFloatingPanels(event: PointerEvent): void {
         stopHeadingFloating?.();
         stopHeadingFloating = undefined;
     }
+    if (!codeMenu.value?.contains(target)) {
+        codeMenuVisible.value = false;
+        stopCodeFloating?.();
+        stopCodeFloating = undefined;
+    }
     if (!formulaMenu.value?.contains(target)) {
         formulaMenuVisible.value = false;
         stopFormulaFloating?.();
@@ -439,16 +463,19 @@ function closeFloatingPanels(event: PointerEvent): void {
 function closePanelsOnEscape(event: KeyboardEvent): void {
     if (event.key !== 'Escape') return;
     headingMenuVisible.value = false;
+    codeMenuVisible.value = false;
     formulaMenuVisible.value = false;
     imageEditorVisible.value = false;
     linkEditorVisible.value = false;
     listMenuVisible.value = false;
     stopHeadingFloating?.();
+    stopCodeFloating?.();
     stopFormulaFloating?.();
     stopImageFloating?.();
     stopLinkFloating?.();
     stopListFloating?.();
     stopHeadingFloating = undefined;
+    stopCodeFloating = undefined;
     stopFormulaFloating = undefined;
     stopImageFloating = undefined;
     stopLinkFloating = undefined;
@@ -568,6 +595,7 @@ onBeforeUnmount(() => {
     document.removeEventListener('pointerdown', closeFloatingPanels);
     document.removeEventListener('keydown', closePanelsOnEscape);
     stopHeadingFloating?.();
+    stopCodeFloating?.();
     stopFormulaFloating?.();
     stopImageFloating?.();
     stopLinkFloating?.();
@@ -601,6 +629,7 @@ defineExpose<MarkdownEditorExposed>({
     <MarkdownEditorToolbar
       v-if="mode !== 'markup' && !readonly"
       :commands="commands"
+      :code-menu-visible="codeMenuVisible"
       :formula-menu-visible="formulaMenuVisible"
       :heading-menu-visible="headingMenuVisible"
       :image-editor-visible="imageEditorVisible"
@@ -614,6 +643,7 @@ defineExpose<MarkdownEditorExposed>({
       @execute="execute"
       @insert-html="insertHtmlDirective"
       @toggle-formula-menu="toggleFormulaMenu"
+      @toggle-code-menu="toggleCodeMenu"
       @toggle-heading-menu="showHeadingMenu"
       @toggle-image-editor="toggleImageEditor"
       @toggle-link-editor="toggleLinkEditor"
@@ -623,6 +653,10 @@ defineExpose<MarkdownEditorExposed>({
     </MarkdownEditorToolbar>
 
     <Teleport to="body">
+      <div v-if="codeMenuVisible" ref="codeMenu" class="markdown-editor__floating-menu" :data-theme="theme" role="menu" :aria-label="t('code')">
+        <button :aria-checked="toolbarState.code" role="menuitemradio" type="button" @mousedown.prevent @click="executeCodeCommand(commands.code)"><ToolbarIcon name="code" /><span>{{ t('code') }}</span></button>
+        <button :aria-checked="toolbarState.codeBlock" role="menuitemradio" type="button" @mousedown.prevent @click="executeCodeCommand(commands.codeBlock)"><span class="markdown-editor__floating-menu-icon">{ }</span><span>{{ t('codeBlock') }}</span></button>
+      </div>
       <div v-if="headingMenuVisible" ref="headingMenu" class="markdown-editor__floating-menu" :data-theme="theme" role="menu" :aria-label="t('heading')">
         <button v-for="style in ['paragraph', '1', '2', '3', '4', '5', '6']" :key="style" :aria-checked="textStyle === style" role="menuitemradio" type="button" @click="applyTextStyle(style)">
           <span class="markdown-editor__floating-menu-icon">{{ style === 'paragraph' ? 'T' : `H${style}` }}</span>

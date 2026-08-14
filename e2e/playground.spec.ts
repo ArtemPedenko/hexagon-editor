@@ -157,6 +157,35 @@ test.describe('Markdown editor playground', () => {
         await expect(page.locator('[data-markdown-editor-toolbar] [data-toolbar-item="code-language"]')).toHaveCount(0);
     });
 
+    test('groups inline and block code actions in one toolbar popover', async ({page}) => {
+        await page.goto('/');
+        const paragraph = page.locator('.ProseMirror p').filter({hasText: 'Этот раздел можно свернуть кнопкой в тулбаре.'});
+        await paragraph.evaluate((element) => {
+            const text = element.firstChild;
+            if (!(text instanceof Text)) throw new Error('Expected paragraph text');
+            const start = text.data.indexOf('раздел');
+            const range = document.createRange();
+            range.setStart(text, start);
+            range.setEnd(text, start + 'раздел'.length);
+            const selection = window.getSelection();
+            selection?.removeAllRanges();
+            selection?.addRange(range);
+            document.dispatchEvent(new Event('selectionchange'));
+        });
+
+        await page.getByTitle('Встроенный код').click();
+        await expect(page.getByRole('menuitemradio', {name: 'Встроенный код'})).toBeVisible();
+        await expect(page.getByRole('menuitemradio', {name: 'Блок кода'})).toBeVisible();
+        await page.getByRole('menuitemradio', {name: 'Встроенный код'}).click();
+        await expect(paragraph.locator('code')).toHaveText('раздел');
+
+        await paragraph.click();
+        await page.getByTitle('Встроенный код').click();
+        await page.getByRole('menuitemradio', {name: 'Блок кода'}).click();
+        await expect(page.locator('.ProseMirror pre[data-markup]').filter({hasText: 'Этот раздел можно свернуть кнопкой в тулбаре.'})).toBeVisible();
+        await expect(page.locator('[data-markdown-editor-toolbar] [data-toolbar-item="code-block"]')).toHaveCount(0);
+    });
+
     test('does not show text-selection actions for atomic Markdown blocks', async ({page}) => {
         await page.goto('/');
 
