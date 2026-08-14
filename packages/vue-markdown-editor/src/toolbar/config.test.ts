@@ -43,7 +43,7 @@ describe('toolbar config', () => {
 
     it('applies contextual and consumer availability', () => {
         expect(isToolbarItemAvailable({id: 'fold-heading'}, state)).toBe(false);
-        expect(isToolbarItemAvailable({id: 'code-language'}, state)).toBe(true);
+        expect(isToolbarItemAvailable({id: 'code-language'}, state)).toBe(false);
         expect(isToolbarItemAvailable({id: 'bold', isAvailable: () => false}, state)).toBe(false);
         expect(isToolbarItemAvailable(normalizeToolbarItem('bold'), state)).toBe(true);
     });

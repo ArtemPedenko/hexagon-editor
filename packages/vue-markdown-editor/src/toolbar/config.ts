@@ -74,7 +74,7 @@ export const commonmarkToolbarConfig = createToolbarConfig([
 export const defaultToolbarConfig = createToolbarConfig([
     createToolbarGroup('history', ['undo', 'redo']),
     createToolbarGroup('text', ['bold', 'italic', 'strike']),
-    createToolbarGroup('blocks', ['heading', 'bullet-list', 'ordered-list', 'link', 'quote', 'code', 'code-block', 'code-language']),
+    createToolbarGroup('blocks', ['heading', 'bullet-list', 'ordered-list', 'link', 'quote', 'code', 'code-block']),
     createToolbarGroup('hidden', ['horizontal-rule']),
 ]);
 
@@ -82,7 +82,7 @@ export const defaultToolbarConfig = createToolbarConfig([
 export const fullToolbarConfig = createToolbarConfig([
     createToolbarGroup('history', ['undo', 'redo']),
     createToolbarGroup('text', ['heading', 'bold', 'italic', 'underline', 'strike', 'mark', 'code']),
-    createToolbarGroup('blocks', ['bullet-list', 'ordered-list', 'quote', 'fold-heading', 'code-block', 'code-language']),
+    createToolbarGroup('blocks', ['bullet-list', 'ordered-list', 'quote', 'fold-heading', 'code-block']),
     createToolbarGroup('links', ['color', 'link', 'image', 'image-width', 'image-fit']),
     createToolbarGroup('insert', ['formula', 'html', 'horizontal-rule', 'table']),
 ]);
@@ -129,7 +129,9 @@ export function isToolbarItemAvailable(
     toolbarItem: MarkdownEditorToolbarItem,
     state: Readonly<BasicWysiwygSelectionState>,
 ): boolean {
-    const contextAvailable = toolbarItem.id === 'fold-heading'
+    const contextAvailable = toolbarItem.id === 'code-language'
+        ? false
+        : toolbarItem.id === 'fold-heading'
         ? state.headingLevel !== undefined
         : toolbarItem.id === 'image-width' || toolbarItem.id === 'image-fit'
             ? state.image

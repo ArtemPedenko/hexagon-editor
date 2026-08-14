@@ -63,6 +63,7 @@ function createCodeBlockDisplayPlugin(): Plugin {
                     const source = node.textContent;
                     const language = node.attrs[CodeBlockAttrs.Lang] as string;
                     let line = 1;
+                    decorations.push(createLanguageDecoration(position, language));
                     decorations.push(createLineNumberDecoration(position + 1, line));
                     for (const [offset, character] of source.split('').entries()) {
                         if (character !== '\n') continue;
@@ -78,6 +79,29 @@ function createCodeBlockDisplayPlugin(): Plugin {
             },
         },
     });
+}
+
+function createLanguageDecoration(position: number, language: string): Decoration {
+    return Decoration.widget(position + 1, (view) => {
+        const select = document.createElement('select');
+        select.className = 'markdown-editor__code-language';
+        select.contentEditable = 'false';
+        select.setAttribute('aria-label', 'Code language');
+        for (const [value, label] of [['', 'Text'], ['javascript', 'JavaScript'], ['typescript', 'TypeScript'], ['json', 'JSON'], ['html', 'HTML'], ['css', 'CSS']]) {
+            select.add(new Option(label, value));
+        }
+        select.value = language;
+        select.addEventListener('change', () => {
+            const node = view.state.doc.nodeAt(position);
+            if (node?.type.name !== codeBlockNodeName) return;
+            view.dispatch(view.state.tr.setNodeMarkup(position, undefined, {
+                ...node.attrs,
+                [CodeBlockAttrs.Lang]: select.value,
+            }));
+            view.focus();
+        });
+        return select;
+    }, {key: `code-language-${position}-${language}`, side: -2, stopEvent: () => true});
 }
 
 function createLineNumberDecoration(position: number, line: number): Decoration {
