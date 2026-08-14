@@ -1,7 +1,7 @@
 import type {MarkdownEditorLocale} from '../public-types';
 
 const en = {
-    apply: 'Submit', bold: 'Bold', bulletList: 'Bulleted list', cancel: 'Cancel', code: 'Inline code', codeBlock: 'Code block', codeLanguage: 'Code language',
+    apply: 'Submit', bold: 'Bold', bulletList: 'Bulleted list', cancel: 'Cancel', code: 'Inline code', codeBlock: 'Code block', codeLanguage: 'Code language', doubleClickToEdit: 'Double-click to edit',
     color: 'Text color', foldHeading: 'Collapse section', formula: 'Formula', formulaBlock: 'Formula block', formulaInline: 'Inline formula', formulaInsert: 'Insert formula',
     heading: 'Heading level', horizontalRule: 'Horizontal rule', html: 'HTML', image: 'Image', imageAlt: 'Alt text', imageAltAria: 'Image description', imageAltHelp: 'Displayed if the image cannot be loaded.',
     imageFit: 'Image display', imageHeight: 'Height', imageName: 'Image name', imageSizes: 'Size, px', imageTitle: 'Image title', imageUrl: 'Image link',
@@ -13,7 +13,7 @@ const en = {
 } as const;
 
 const ru: Record<keyof typeof en, string> = {
-    apply: 'Сохранить', bold: 'Жирный', bulletList: 'Маркированный список', cancel: 'Отмена', code: 'Встроенный код', codeBlock: 'Блок кода', codeLanguage: 'Язык кода',
+    apply: 'Сохранить', bold: 'Жирный', bulletList: 'Маркированный список', cancel: 'Отмена', code: 'Встроенный код', codeBlock: 'Блок кода', codeLanguage: 'Язык кода', doubleClickToEdit: 'Дважды нажмите, чтобы редактировать',
     color: 'Цвет текста', foldHeading: 'Свернуть раздел', formula: 'Формула', formulaBlock: 'Блок с формулой', formulaInline: 'Формула в тексте', formulaInsert: 'Вставить формулу',
     heading: 'Уровень заголовка', horizontalRule: 'Горизонтальная линия', html: 'HTML', image: 'Изображение', imageAlt: 'Альтернативный текст', imageAltAria: 'Описание изображения', imageAltHelp: 'Отображается, если изображение не загрузилось.',
     imageFit: 'Отображение изображения', imageHeight: 'Высота', imageName: 'Подпись к рисунку', imageSizes: 'Размер в пикселях', imageTitle: 'Заголовок изображения', imageUrl: 'Ссылка картинки',

@@ -90,9 +90,10 @@ describe('basic Markdown extensions', () => {
 
         const formula = target.querySelector<HTMLElement>('[data-math-inline]');
         expect(formula?.hasAttribute('data-math-error')).toBe(true);
-        expect(formula?.getAttribute('aria-label')).toContain('Double-click to edit');
+        expect(formula?.getAttribute('aria-label')).toBe('Formula. Double-click to edit.');
+        expect(formula?.title).toBe('Double-click to edit');
         expect(formula?.querySelector('.markdown-editor__math-error')?.textContent).toBe('\\invalid');
-        expect(formula?.querySelector('.markdown-editor__math-hint')?.textContent).toBe('Double-click to edit');
+        expect(formula?.querySelector('.markdown-editor__math-hint')).toBeNull();
 
         editor.destroy();
     });

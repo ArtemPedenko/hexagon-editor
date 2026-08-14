@@ -1,6 +1,9 @@
 import katex from 'katex';
 import type {Mermaid} from 'mermaid';
 
+import {getMarkdownEditorMessages} from '../i18n';
+import type {MarkdownEditorLocale} from '../public-types';
+
 import {getAdvancedMarkdownRenderers} from './optional-renderers';
 
 let mermaidDiagramId = 0;
@@ -20,12 +23,23 @@ export function renderOptionalBlock(kind: 'math' | 'mermaid', source: string, di
     const element = document.createElement(kind === 'math' && !display ? 'span' : 'pre');
     element.setAttribute(`data-${kind}${kind === 'math' ? display ? '-block' : '-inline' : ''}`, '');
     if (kind === 'math') {
-        element.setAttribute('aria-label', 'Formula. Double-click to edit.');
         try { element.innerHTML = katex.renderToString(source, {displayMode: display, throwOnError: true}); }
         catch { element.setAttribute('data-math-error', ''); const fallback = document.createElement(display ? 'pre' : 'span'); fallback.className = 'markdown-editor__math-error'; fallback.textContent = source; element.replaceChildren(fallback); }
-        const hint = document.createElement('span'); hint.className = 'markdown-editor__math-hint'; hint.setAttribute('aria-hidden', 'true'); hint.textContent = 'Double-click to edit'; element.append(hint);
+        localizeMathElement(element, 'en');
     }
     return element;
+}
+
+function localizeMathElement(element: HTMLElement, locale: MarkdownEditorLocale): void {
+    const messages = getMarkdownEditorMessages(locale);
+    element.title = messages.doubleClickToEdit;
+    element.setAttribute('aria-label', `${messages.formula}. ${messages.doubleClickToEdit}.`);
+}
+
+export function localizeRenderedMath(root: ParentNode, locale: MarkdownEditorLocale): void {
+    for (const element of root.querySelectorAll<HTMLElement>('[data-math-inline], [data-math-block]')) {
+        localizeMathElement(element, locale);
+    }
 }
 
 function renderMermaid(source: string): HTMLElement {

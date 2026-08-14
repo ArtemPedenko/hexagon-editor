@@ -336,7 +336,9 @@ test.describe('Markdown editor playground', () => {
 
         const formula = page.locator('.ProseMirror [data-math-inline]');
         await expect(formula).toHaveAttribute('data-math-error', '');
-        await expect(formula).toHaveAttribute('aria-label', 'Formula. Double-click to edit.');
+        await expect(formula).toHaveAttribute('aria-label', 'Формула. Дважды нажмите, чтобы редактировать.');
+        await expect(formula).toHaveAttribute('title', 'Дважды нажмите, чтобы редактировать');
+        await expect(formula.locator('.markdown-editor__math-hint')).toHaveCount(0);
         await expect(formula.locator('.markdown-editor__math-error')).toHaveText('\\invalid');
     });
 
@@ -431,9 +433,13 @@ test.describe('Markdown editor playground', () => {
     test('lets users switch the locale and theme in the playground', async ({page}) => {
         await page.goto('/');
 
+        const formula = page.locator('.ProseMirror [data-math-block]');
+        await expect(formula).toHaveAttribute('title', 'Дважды нажмите, чтобы редактировать');
         await page.getByLabel('Язык редактора').selectOption('en');
         await expect(page.getByRole('tablist', {name: 'Editor mode'})).toBeVisible();
         await expect(page.getByTitle('Formula')).toBeVisible();
+        await expect(formula).toHaveAttribute('title', 'Double-click to edit');
+        await expect(formula).toHaveAttribute('aria-label', 'Formula. Double-click to edit.');
 
         await page.getByLabel('Тема редактора').selectOption('dark');
         await expect(page.locator('.markdown-editor')).toHaveAttribute('data-theme', 'dark');

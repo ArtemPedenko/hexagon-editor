@@ -15,6 +15,7 @@ import {
     mountBasicMarkupEditor,
     mountBasicWysiwygEditor,
 } from './core';
+import {localizeRenderedMath} from './core/basic-editor-renderers';
 import type {BasicMarkupEditor, BasicWysiwygEditor, BasicWysiwygSelectionState} from './core';
 import type {
     MarkdownEditorMode,
@@ -493,7 +494,10 @@ function mountHosts(): void {
                 emit('cancel');
                 return true;
             },
-            onChange: (nextValue) => updateValue(nextValue, 'visual'),
+            onChange: (nextValue) => {
+                updateValue(nextValue, 'visual');
+                if (visualTarget.value !== undefined) localizeRenderedMath(visualTarget.value, props.locale);
+            },
             onSelectionChange: (nextSelection) => {
                 toolbarState.value = nextSelection;
                 if (suppressNextLinkAutoOpen) {
@@ -519,6 +523,7 @@ function mountHosts(): void {
             },
             target: visualTarget.value,
         });
+        localizeRenderedMath(visualTarget.value, props.locale);
     }
 
     if (mode.value !== 'wysiwyg' && markupTarget.value !== undefined) {
@@ -576,6 +581,13 @@ watch(
 );
 
 watch(
+    () => props.locale,
+    (locale) => {
+        if (visualTarget.value !== undefined) localizeRenderedMath(visualTarget.value, locale);
+    },
+);
+
+watch(
     () => props.readonly,
     async () => {
         const changeId = ++modeChangeId;
@@ -622,7 +634,7 @@ defineExpose<MarkdownEditorExposed>({
 </script>
 
 <template>
-  <section class="markdown-editor" :data-mode="mode" :data-theme="theme" @click="handleEditorClick">
+  <section class="markdown-editor" :data-locale="locale" :data-mode="mode" :data-theme="theme" @click="handleEditorClick">
     <header class="markdown-editor__header">
       <MarkdownEditorModeTabs :mode="mode" :set-mode="setMode" :translate="t" />
       <slot name="header" />
