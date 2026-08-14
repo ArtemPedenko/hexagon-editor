@@ -1,4 +1,4 @@
-import {EditorState, TextSelection} from 'prosemirror-state';
+import {EditorState, NodeSelection, TextSelection} from 'prosemirror-state';
 import {describe, expect, it, vi} from 'vitest';
 
 import {
@@ -47,9 +47,21 @@ describe('basic Markdown extensions', () => {
             formula: false,
             italic: false,
             mark: false,
+            mermaid: false,
             strikethrough: false,
             underline: false,
         });
+    });
+
+    it('reports a selected Mermaid diagram as active', () => {
+        const document = basicMarkdownCodec.parse('```mermaid\ngraph LR\n  A --> B\n```');
+        const state = EditorState.create({
+            doc: document,
+            schema: basicMarkdownSchema,
+            selection: NodeSelection.create(document, 0),
+        });
+
+        expect(getBasicWysiwygSelectionState(state).mermaid).toBe(true);
     });
 
     it('reports only the nearest list type as active in mixed nested lists', () => {

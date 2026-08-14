@@ -10,13 +10,14 @@ import horizontalRule from '../assets/toolbar-icons/minus.svg?raw';
 import image from '../assets/toolbar-icons/picture.svg?raw';
 import italic from '../assets/toolbar-icons/italic.svg?raw';
 import link from '../assets/toolbar-icons/link.svg?raw';
+import mermaid from '../assets/toolbar-icons/mermaid.svg?raw';
 import orderedList from '../assets/toolbar-icons/list-ol.svg?raw';
 import quote from '../assets/toolbar-icons/quote-open.svg?raw';
 import strike from '../assets/toolbar-icons/strikethrough.svg?raw';
 import table from '../assets/toolbar-icons/layout-cells.svg?raw';
 import underline from '../assets/toolbar-icons/underline.svg?raw';
 
-const icons = {arrowLeft, arrowRight, bold, bulletList, chevronDown, code, function: functionIcon, horizontalRule, image, italic, link, orderedList, quote, strike, table, underline} as const;
+const icons = {arrowLeft, arrowRight, bold, bulletList, chevronDown, code, function: functionIcon, horizontalRule, image, italic, link, mermaid, orderedList, quote, strike, table, underline} as const;
 
 const props = defineProps<{name: keyof typeof icons}>();
 </script>

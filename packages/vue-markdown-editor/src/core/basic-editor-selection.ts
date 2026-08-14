@@ -57,7 +57,9 @@ export function getBasicWysiwygSelectionState(
         image: image !== undefined, imageObjectFit: image?.attrs['object-fit'] as string | undefined,
         italic: hasActiveMark(state, schema, 'em'), linkHref: currentLink?.href, linkOpenInNewWindow: currentLink?.openInNewWindow ?? false, linkText: currentLink?.text,
         listIndentEnabled, listOutdentEnabled,
-        mark: hasActiveMark(state, schema, 'mark'), orderedList: listType === 'ordered_list', quote: hasAncestor(state, 'blockquote'),
+        mark: hasActiveMark(state, schema, 'mark'),
+        mermaid: selectedNode?.type.name === 'mermaid' || atomicSourceNode?.type.name === 'mermaid',
+        orderedList: listType === 'ordered_list', quote: hasAncestor(state, 'blockquote'),
         strikethrough: hasActiveMark(state, schema, 'strike'), underline: hasActiveMark(state, schema, 'underline'),
     };
 }

@@ -1,6 +1,10 @@
 import katex from 'katex';
+import type {Mermaid} from 'mermaid';
 
 import {getAdvancedMarkdownRenderers} from './optional-renderers';
+
+let mermaidDiagramId = 0;
+let mermaidPromise: Promise<Mermaid> | undefined;
 
 export function renderHtmlBlock(html: string, attribute: string): HTMLElement {
     const element = document.createElement('div');
@@ -12,7 +16,7 @@ export function renderHtmlBlock(html: string, attribute: string): HTMLElement {
 export function renderOptionalBlock(kind: 'math' | 'mermaid', source: string, display = true): HTMLElement {
     const renderers = getAdvancedMarkdownRenderers();
     if (kind === 'math' && renderers.math !== undefined) return renderers.math(source, display);
-    if (kind === 'mermaid' && renderers.mermaid !== undefined) return renderers.mermaid(source);
+    if (kind === 'mermaid') return renderers.mermaid?.(source) ?? renderMermaid(source);
     const element = document.createElement(kind === 'math' && !display ? 'span' : 'pre');
     element.setAttribute(`data-${kind}${kind === 'math' ? display ? '-block' : '-inline' : ''}`, '');
     if (kind === 'math') {
@@ -20,7 +24,31 @@ export function renderOptionalBlock(kind: 'math' | 'mermaid', source: string, di
         try { element.innerHTML = katex.renderToString(source, {displayMode: display, throwOnError: true}); }
         catch { element.setAttribute('data-math-error', ''); const fallback = document.createElement(display ? 'pre' : 'span'); fallback.className = 'markdown-editor__math-error'; fallback.textContent = source; element.replaceChildren(fallback); }
         const hint = document.createElement('span'); hint.className = 'markdown-editor__math-hint'; hint.setAttribute('aria-hidden', 'true'); hint.textContent = 'Double-click to edit'; element.append(hint);
-    } else element.textContent = source;
+    }
+    return element;
+}
+
+function renderMermaid(source: string): HTMLElement {
+    const element = document.createElement('div');
+    element.setAttribute('data-mermaid', '');
+    element.setAttribute('aria-busy', 'true');
+    element.setAttribute('aria-label', 'Mermaid diagram. Double-click to edit.');
+    const fallback = document.createElement('pre');
+    fallback.textContent = source;
+    element.append(fallback);
+    const id = `markdown-editor-mermaid-${++mermaidDiagramId}`;
+    mermaidPromise ??= import('mermaid').then(({default: mermaid}) => {
+        mermaid.initialize({securityLevel: 'strict', startOnLoad: false});
+        return mermaid;
+    });
+    void mermaidPromise.then((mermaid) => mermaid.render(id, source)).then(({bindFunctions, svg}) => {
+        element.innerHTML = svg;
+        element.removeAttribute('aria-busy');
+        bindFunctions?.(element);
+    }).catch(() => {
+        element.removeAttribute('aria-busy');
+        element.setAttribute('data-mermaid-error', '');
+    });
     return element;
 }
 

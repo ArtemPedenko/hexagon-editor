@@ -4,7 +4,7 @@ import type {MarkdownEditorToolbarPreset} from '../public-types';
 export const markdownEditorToolbarItemIds = [
     'undo', 'redo', 'heading', 'bold', 'italic', 'underline', 'strike', 'mark', 'code',
     'bullet-list', 'ordered-list', 'quote', 'fold-heading', 'code-block', 'code-language',
-    'link', 'color', 'image', 'image-width', 'image-fit', 'formula', 'html',
+    'link', 'color', 'image', 'image-width', 'image-fit', 'formula', 'mermaid', 'html',
     'horizontal-rule', 'table',
 ] as const;
 
@@ -84,7 +84,7 @@ export const fullToolbarConfig = createToolbarConfig([
     createToolbarGroup('text', ['heading', 'bold', 'italic', 'underline', 'strike', 'mark', 'code']),
     createToolbarGroup('blocks', ['bullet-list', 'ordered-list', 'quote', 'fold-heading', 'code-block']),
     createToolbarGroup('links', ['color', 'link', 'image', 'image-width', 'image-fit']),
-    createToolbarGroup('insert', ['formula', 'html', 'horizontal-rule', 'table']),
+    createToolbarGroup('insert', ['formula', 'mermaid', 'html', 'horizontal-rule', 'table']),
 ]);
 
 export const minimalToolbarConfig = createToolbarConfig([

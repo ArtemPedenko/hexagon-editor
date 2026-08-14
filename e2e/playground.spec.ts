@@ -22,7 +22,7 @@ test.describe('Markdown editor playground', () => {
         await expect(page.locator('.ProseMirror [data-math-inline] .katex')).toBeVisible();
         await expect(page.locator('.ProseMirror [data-math-block]')).toContainText('sum');
         await expect(page.locator('.ProseMirror [data-math-block] .katex-display')).toBeVisible();
-        await expect(page.locator('.ProseMirror [data-mermaid]')).toContainText('graph LR');
+        await expect(page.locator('.ProseMirror [data-mermaid] svg')).toBeVisible();
         await expect(page.locator('.ProseMirror [data-yfm-html]')).toContainText('YFM HTML block');
         await expect(page.locator('.playground__preview')).toContainText('HTML directive');
         expect(errors).toEqual([]);
@@ -344,15 +344,26 @@ test.describe('Markdown editor playground', () => {
         await page.goto('/');
         await page.locator('.ProseMirror [data-mermaid]').dblclick();
 
+        const mermaidButton = page.getByRole('button', {name: 'Диаграмма Mermaid'});
+        await expect(mermaidButton).toHaveAttribute('aria-pressed', 'true');
         const sourceEditor = page.locator('.markdown-editor__atomic-source .cm-content');
-        await sourceEditor.click();
-        await page.keyboard.press('Control+a');
-        await page.keyboard.type('flowchart LR\\n  Start --> Finish');
+        await sourceEditor.fill('flowchart LR\n  Start --> Finish');
         await page.keyboard.press('Control+Enter');
 
         const diagram = page.locator('.ProseMirror [data-mermaid]');
-        await expect(diagram).toContainText('flowchart LR');
-        await expect(diagram).toContainText('Start --> Finish');
+        await expect(diagram.locator('svg')).toBeVisible();
+        await expect(diagram).not.toHaveAttribute('data-mermaid-error', '');
+        await expect(mermaidButton).toHaveAttribute('aria-pressed', 'true');
+    });
+
+    test('inserts and renders a Mermaid diagram from the full toolbar', async ({page}) => {
+        await page.goto('/');
+        await page.locator('.ProseMirror p').filter({hasText: 'Этот раздел можно свернуть кнопкой в тулбаре.'}).click();
+        await page.getByRole('button', {name: 'Диаграмма Mermaid'}).click();
+
+        const diagrams = page.locator('.ProseMirror [data-mermaid]');
+        await expect(diagrams).toHaveCount(2);
+        await expect(diagrams.last().locator('svg')).toBeVisible();
     });
 
     test('keeps YFM HTML source editable in the visual editor', async ({page}) => {

@@ -91,6 +91,7 @@ import {
 } from "../extensions/markdown/table";
 import {toggleFoldingHeading} from '../extensions/additional/folding-heading';
 import {defaultMathLatex} from '../extensions/additional/math';
+import {insertMermaid} from '../extensions/additional/mermaid';
 
 export function createMarkdownTablePastePlugin(): Plugin {
   return createTablePastePlugin(basicMarkdownCodec);
@@ -192,6 +193,7 @@ export function createBasicEditorCommands(): BasicEditorCommands {
     setImageDisplay: setImageDisplayCommand,
     insertMathBlock: insertMathBlockAndEdit,
     insertInlineMath: insertInlineMathAndEdit,
+    insertMermaid,
     insertTable: createTableCommand,
     italic: toggleItalic,
     link: (href) => toggleLink(href),

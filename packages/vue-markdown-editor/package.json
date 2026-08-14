@@ -75,6 +75,7 @@
     "markdown-it-ins": "^4.0.0",
     "markdown-it-mark": "^4.0.0",
     "markdown-it-sub": "^2.0.0",
+    "mermaid": "^11.16.1",
     "prosemirror-codemark": "^0.4.2",
     "prosemirror-commands": "^1.6.0",
     "prosemirror-dropcursor": "^1.8.3",

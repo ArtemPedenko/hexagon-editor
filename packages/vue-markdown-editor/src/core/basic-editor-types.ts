@@ -8,7 +8,7 @@ export interface BasicEditorCommands {
     setCodeBlockLanguage(language: string): Command; deleteTableColumn: Command; deleteTable: Command; deleteTableRow: Command; heading(level: number): Command;
     horizontalRule: Command; insertFile(href: string, name: string): Command; insertImage(src: string, alt: string, title?: string): Command;
     setImageDisplay(width?: number | string, objectFit?: ImageObjectFit, height?: number | null): Command; insertMathBlock: Command; insertInlineMath: Command;
-    insertTable(rows?: number, columns?: number): Command; italic: Command; liftListItem: Command; link(href: string): Command; removeLink: Command;
+    insertMermaid: Command; insertTable(rows?: number, columns?: number): Command; italic: Command; liftListItem: Command; link(href: string): Command; removeLink: Command;
     setLink(href: string, title?: string, text?: string, openInNewWindow?: boolean): Command; mark: Command; orderedList: Command; paragraph: Command; quote: Command; redo: Command;
     setColor(color: string): Command; sinkListItem: Command; splitListItem: Command; strikethrough: Command; toMathBlock: Command; toggleHeadingFolding: Command;
     underline: Command; undo: Command;
@@ -17,7 +17,7 @@ export interface BasicEditorCommands {
 export interface BasicWysiwygSelectionState {
     bold: boolean; bulletList: boolean; code: boolean; codeBlock: boolean; codeBlockLanguage: string | undefined; formula: boolean; headingFolded: boolean;
     headingLevel: number | undefined; image: boolean; imageObjectFit: string | undefined; italic: boolean; linkHref: string | undefined; linkOpenInNewWindow: boolean; linkText: string | undefined;
-    listIndentEnabled: boolean; listOutdentEnabled: boolean; mark: boolean; orderedList: boolean; quote: boolean; strikethrough: boolean; underline: boolean;
+    listIndentEnabled: boolean; listOutdentEnabled: boolean; mark: boolean; mermaid: boolean; orderedList: boolean; quote: boolean; strikethrough: boolean; underline: boolean;
 }
 
 export interface BasicWysiwygEditor { destroy(): void; focus(): void; getValue(): string; hasFocus(): boolean; insert(markup: string): void; moveCursor(position: 'start' | 'end'): void; run(command: Command): boolean; selectElement(element: Element): void; setValue(value: string): void; }

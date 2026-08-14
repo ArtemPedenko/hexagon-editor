@@ -61,7 +61,7 @@ The root entry exports the complete supported public API. Focused integrations m
 
 The editor supports CommonMark blocks and marks, tables, definition lists, heading attributes and folding headings (`##+`), quote links, raw HTML, directives, Math/LaTeX (`$…$` and `$$…$$`), Mermaid fences, and YFM HTML blocks (`:::html`).
 
-KaTeX renders math by default. Mermaid and YFM HTML can use host-provided renderers:
+KaTeX renders math by default. Mermaid diagrams are rendered lazily by the bundled Mermaid runtime. Mermaid and YFM HTML rendering can be overridden by the host:
 
 ```ts
 import {configureAdvancedMarkdownRenderers} from '@gravity-ui/vue-markdown-editor';
@@ -72,7 +72,7 @@ configureAdvancedMarkdownRenderers({
 });
 ```
 
-If a renderer is not supplied, the source remains visible as a safe fallback.
+Invalid Mermaid source remains visible as an editable fallback. YFM HTML source remains visible unless the host supplies a renderer.
 
 ## Accessibility and responsive behavior
 
