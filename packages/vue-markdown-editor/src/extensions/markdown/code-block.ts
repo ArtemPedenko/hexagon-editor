@@ -62,6 +62,7 @@ function createCodeBlockDisplayPlugin(): Plugin {
                     if (node.type.name !== codeBlockNodeName) return true;
                     const source = node.textContent;
                     const language = node.attrs[CodeBlockAttrs.Lang] as string;
+                    const activeLine = getActiveLineRange(state, position, source);
                     let line = 1;
                     decorations.push(createLanguageDecoration(position, language));
                     decorations.push(createLineNumberDecoration(position + 1, line));
@@ -71,6 +72,9 @@ function createCodeBlockDisplayPlugin(): Plugin {
                         decorations.push(createLineNumberDecoration(position + offset + 2, line));
                     }
                     for (const token of getSyntaxTokens(source, language)) {
+                        if (activeLine !== undefined && token.from < activeLine.to && token.to > activeLine.from) {
+                            continue;
+                        }
                         decorations.push(Decoration.inline(position + token.from + 1, position + token.to + 1, {class: `markdown-editor__code-token--${token.kind}`}));
                     }
                     return false;
@@ -79,6 +83,23 @@ function createCodeBlockDisplayPlugin(): Plugin {
             },
         },
     });
+}
+
+function getActiveLineRange(
+    state: EditorState,
+    position: number,
+    source: string,
+): {from: number; to: number} | undefined {
+    const {selection} = state;
+    if (!selection.empty || selection.$from.parent.type.name !== codeBlockNodeName) return undefined;
+    const offset = selection.from - position - 1;
+    if (offset < 0 || offset > source.length) return undefined;
+    const previousNewline = source.lastIndexOf('\n', Math.max(0, offset - 1));
+    const nextNewline = source.indexOf('\n', offset);
+    return {
+        from: previousNewline + 1,
+        to: nextNewline === -1 ? source.length + 1 : nextNewline + 1,
+    };
 }
 
 function createLanguageDecoration(position: number, language: string): Decoration {

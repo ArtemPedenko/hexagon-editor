@@ -157,6 +157,57 @@ test.describe('Markdown editor playground', () => {
         await expect(page.locator('[data-markdown-editor-toolbar] [data-toolbar-item="code-language"]')).toHaveCount(0);
     });
 
+    test('keeps the cursor stable while syntax tokens are completed', async ({page}) => {
+        await page.goto('/');
+        const code = page.locator('.ProseMirror pre[data-language="typescript"] code');
+        await code.evaluate((element) => {
+            element.closest<HTMLElement>('[contenteditable="true"]')?.focus();
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+            let text: Text | undefined;
+            for (let node = walker.nextNode(); node !== null; node = walker.nextNode()) {
+                if (!(node.parentElement?.closest('.markdown-editor__code-line-number, .markdown-editor__code-language'))) {
+                    text = node as Text;
+                }
+            }
+            if (text === undefined) throw new Error('Expected code text');
+            const range = document.createRange();
+            range.setStart(text, text.length);
+            range.collapse(true);
+            const selection = window.getSelection();
+            selection?.removeAllRanges();
+            selection?.addRange(range);
+            document.dispatchEvent(new Event('selectionchange'));
+        });
+        await page.keyboard.press('Enter');
+        await page.keyboard.type('const value = 1;');
+        await expect(code).toContainText('const value = 1;');
+
+        const language = page.locator('.ProseMirror pre[data-language="typescript"] .markdown-editor__code-language');
+        await language.selectOption('html');
+        const htmlCode = page.locator('.ProseMirror pre[data-language="html"] code');
+        await htmlCode.evaluate((element) => {
+            element.closest<HTMLElement>('[contenteditable="true"]')?.focus();
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+            let text: Text | undefined;
+            for (let node = walker.nextNode(); node !== null; node = walker.nextNode()) {
+                if (!(node.parentElement?.closest('.markdown-editor__code-line-number, .markdown-editor__code-language'))) {
+                    text = node as Text;
+                }
+            }
+            if (text === undefined) throw new Error('Expected code text');
+            const range = document.createRange();
+            range.setStart(text, text.length);
+            range.collapse(true);
+            const selection = window.getSelection();
+            selection?.removeAllRanges();
+            selection?.addRange(range);
+            document.dispatchEvent(new Event('selectionchange'));
+        });
+        await page.keyboard.press('Enter');
+        await page.keyboard.type('<div>content</div>');
+        await expect(htmlCode).toContainText('<div>content</div>');
+    });
+
     test('groups inline and block code actions in one toolbar popover', async ({page}) => {
         await page.goto('/');
         const paragraph = page.locator('.ProseMirror p').filter({hasText: 'Этот раздел можно свернуть кнопкой в тулбаре.'});
