@@ -5,7 +5,7 @@
     --markdown-text: #202125;
     --markdown-focus-background: #e9efff;
     --markdown-focus-text: #1d3c93;
-    overflow: hidden;
+    overflow: clip;
     border: 1px solid var(--markdown-border);
     color: var(--markdown-text);
     background: var(--markdown-background);

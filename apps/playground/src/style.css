@@ -73,7 +73,7 @@ h1 {
 	margin: clamp(1rem, 3vw, 3rem);
 	border: 1px solid #d8dbe0;
 	background: #fff;
-	overflow: hidden;
+	overflow: clip;
 }
 
 .playground__editor-pane,

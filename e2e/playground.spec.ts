@@ -356,6 +356,16 @@ test.describe('Markdown editor playground', () => {
         await expect(page.locator('.markdown-editor[data-mode="markup"] .cm-editor')).toBeVisible();
     });
 
+    test('keeps the editor toolbar sticky while the page scrolls', async ({page}) => {
+        await page.setViewportSize({height: 500, width: 1000});
+        await page.goto('/');
+        const toolbar = page.locator('[data-markdown-editor-toolbar]');
+        await expect(toolbar).toBeVisible();
+
+        await page.evaluate(() => window.scrollTo({top: 500}));
+        await expect.poll(async () => (await toolbar.boundingBox())?.y).toBe(0);
+    });
+
     test('lets users switch the locale and theme in the playground', async ({page}) => {
         await page.goto('/');
 
