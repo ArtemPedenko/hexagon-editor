@@ -5,6 +5,7 @@ import type {
     BasicWysiwygSelectionState,
 } from '../core';
 import type {MarkdownEditorToolbarPreset} from '../public-types';
+import type {MarkdownEditorMode} from '../public-types';
 import {
     getToolbarConfig,
     isToolbarItemAvailable,
@@ -26,6 +27,8 @@ const props = defineProps<{
     imageEditorVisible: boolean;
     linkEditorVisible: boolean;
     listMenuVisible: boolean;
+    mode: MarkdownEditorMode;
+    modeMenuVisible: boolean;
     state: BasicWysiwygSelectionState;
     textStyleLabel: string;
     toolbarPreset: MarkdownEditorToolbarPreset;
@@ -55,6 +58,7 @@ const emit = defineEmits<{
     'toggle-image-editor': [reference: HTMLElement];
     'toggle-link-editor': [reference: HTMLElement];
     'toggle-list-menu': [reference: HTMLElement];
+    'toggle-mode-menu': [reference: HTMLElement];
 }>();
 
 function getButton(event: MouseEvent): HTMLElement {
@@ -93,6 +97,7 @@ function getButton(event: MouseEvent): HTMLElement {
         <button v-else-if="toolbarItem.id === 'table'" data-toolbar-item="table" :aria-label="translate('table')" type="button" :title="translate('table')" @mousedown.prevent @click="emit('execute', commands.insertTable())"><ToolbarIcon name="table" /></button>
       </template>
     </div>
+    <button class="markdown-editor__toolbar-mode" data-toolbar-item="mode" type="button" :aria-expanded="modeMenuVisible" :aria-label="translate('mode')" :title="translate('mode')" @mousedown.prevent @click="emit('toggle-mode-menu', getButton($event))"><ToolbarIcon name="gear" /><ToolbarIcon name="chevronDown" /></button>
     <slot :commands="commands" :execute="(command: ToolbarCommand) => emit('execute', command)" />
   </div>
 </template>
@@ -109,6 +114,8 @@ button:disabled { cursor: default; opacity: .35; }
 .markdown-editor__toolbar-heading { gap: .125rem; min-width: 2.75rem; }
 .markdown-editor__toolbar-heading :deep(.markdown-editor__toolbar-icon), .markdown-editor__toolbar-list :deep(.markdown-editor__toolbar-icon:last-child), .markdown-editor__toolbar-code :deep(.markdown-editor__toolbar-icon:last-child) { width: .75rem; height: .75rem; }
 .markdown-editor__toolbar-list, .markdown-editor__toolbar-code { gap: .1875rem; }
+.markdown-editor__toolbar-mode { gap: .1875rem; margin-inline-start: auto; }
+.markdown-editor__toolbar-mode :deep(.markdown-editor__toolbar-icon:last-child) { width: .75rem; height: .75rem; }
 select { height: 1.75rem; border: 0; border-radius: .375rem; color: var(--markdown-text); background: transparent; font: inherit; }
 select:hover { background: color-mix(in srgb, var(--markdown-text) 10%, transparent); }
 .markdown-editor__color { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 1.75rem; height: 1.75rem; border-radius: .375rem; cursor: pointer; }

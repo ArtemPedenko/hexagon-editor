@@ -1,5 +1,10 @@
 import {expect, test} from '@playwright/test';
 
+async function selectEditorMode(page: import('@playwright/test').Page, name: string): Promise<void> {
+    await page.locator('[data-toolbar-item="mode"]').click();
+    await page.getByRole('menuitemradio', {exact: true, name}).click();
+}
+
 test.describe('Markdown editor playground', () => {
     test('renders every advanced Markdown extension without console errors', async ({page}) => {
         const errors: string[] = [];
@@ -130,12 +135,12 @@ test.describe('Markdown editor playground', () => {
 
     test('edits link text without deleting the surrounding paragraph', async ({page}) => {
         await page.goto('/');
-        await page.getByRole('tab', {name: 'Разметка'}).click();
+        await selectEditorMode(page, 'Разметка');
         const markup = page.locator('.cm-content');
         await markup.click();
         await page.keyboard.press('ControlOrMeta+A');
         await page.keyboard.type('123123  [qwe](http://localhost:5173/ "3213123")');
-        await page.getByRole('tab', {name: 'Визуальный'}).click();
+        await selectEditorMode(page, 'Визуальный');
 
         await page.locator('.ProseMirror a', {hasText: 'qwe'}).click();
         await page.getByLabel('Текст ссылки').fill('changed');
@@ -420,19 +425,26 @@ test.describe('Markdown editor playground', () => {
     test('keeps the document available in all editor modes', async ({page}) => {
         await page.goto('/');
 
-        await page.getByRole('tab', {name: 'Разметка'}).click();
+        await page.locator('[data-toolbar-item="mode"]').click();
+        await expect(page.getByRole('menuitemradio', {name: 'Визуальный'})).toHaveAttribute('aria-checked', 'true');
+        await page.keyboard.press('Escape');
+        await selectEditorMode(page, 'Разметка');
         const markupEditor = page.locator('.markdown-editor[data-mode="markup"] .cm-editor');
         await expect(markupEditor).toBeVisible();
+        await page.locator('[data-toolbar-item="mode"]').click();
+        await expect(page.getByRole('menuitemradio', {name: 'Разметка'})).toHaveAttribute('aria-checked', 'true');
+        await page.keyboard.press('Escape');
+        await expect(page.locator('.markdown-editor[data-mode="markup"] [data-markdown-editor-toolbar]')).toBeVisible();
         await expect(markupEditor.locator('.cm-gutters')).toHaveCount(0);
         await markupEditor.locator('.cm-content').click();
         await expect(markupEditor.locator('.cm-content')).toHaveCSS('caret-color', 'rgb(241, 243, 245)');
         await expect(page.locator('.cm-content')).toContainText('##+ Расширенные возможности');
 
-        await page.getByRole('tab', {name: 'Разделить'}).click();
+        await selectEditorMode(page, 'Разделить');
         await expect(page.locator('.markdown-editor[data-mode="split"] .ProseMirror')).toBeVisible();
         await expect(page.locator('.markdown-editor[data-mode="split"] .cm-editor')).toBeVisible();
 
-        await page.getByRole('tab', {name: 'Визуальный'}).click();
+        await selectEditorMode(page, 'Визуальный');
         await expect(page.locator('.markdown-editor[data-mode="wysiwyg"] .ProseMirror')).toBeVisible();
     });
 
@@ -440,12 +452,15 @@ test.describe('Markdown editor playground', () => {
         await page.setViewportSize({height: 844, width: 390});
         await page.goto('/');
 
-        await page.getByRole('tab', {name: 'Визуальный'}).focus();
+        const modeButton = page.locator('[data-toolbar-item="mode"]');
+        await modeButton.focus();
         await expect(page.getByTitle('Уровень заголовка')).toContainText('H');
         await expect(page.getByTitle('Формула')).toBeVisible();
-        await page.keyboard.press('ArrowRight');
+        await page.keyboard.press('Enter');
+        await page.getByRole('menuitemradio', {name: 'Разметка'}).click();
 
         await expect(page.locator('.markdown-editor[data-mode="markup"] .cm-editor')).toBeVisible();
+        await expect(page.locator('.markdown-editor[data-mode="markup"] [data-markdown-editor-toolbar]')).toBeVisible();
     });
 
     test('keeps the editor toolbar sticky while the page scrolls', async ({page}) => {
@@ -464,7 +479,7 @@ test.describe('Markdown editor playground', () => {
         const formula = page.locator('.ProseMirror [data-math-block]');
         await expect(formula).toHaveAttribute('title', 'Дважды нажмите, чтобы редактировать');
         await page.getByLabel('Язык редактора').selectOption('en');
-        await expect(page.getByRole('tablist', {name: 'Editor mode'})).toBeVisible();
+        await expect(page.getByRole('button', {name: 'Editor mode'})).toBeVisible();
         await expect(page.getByTitle('Formula')).toBeVisible();
         await expect(formula).toHaveAttribute('title', 'Double-click to edit');
         await expect(formula).toHaveAttribute('aria-label', 'Formula. Double-click to edit.');
@@ -521,8 +536,8 @@ test.describe('Markdown editor playground', () => {
         await page.getByRole('menuitem', {name: 'Добавить колонку'}).click();
         await expect(page.locator('.ProseMirror table').last().locator('td')).toHaveCount(8);
 
-        await page.getByRole('tab', {name: 'Разметка'}).click();
-        await page.getByRole('tab', {name: 'Визуальный'}).click();
+        await selectEditorMode(page, 'Разметка');
+        await selectEditorMode(page, 'Визуальный');
 
         await expect(page.locator('.ProseMirror table').last()).toBeVisible();
         await expect(page.locator('.ProseMirror table').last().locator('th')).toHaveCount(4);
@@ -669,10 +684,10 @@ test.describe('Markdown editor playground', () => {
         await heading.click();
         await page.getByTitle('Свернуть раздел').click();
 
-        await page.getByRole('tab', {name: 'Разметка'}).click();
+        await selectEditorMode(page, 'Разметка');
         await expect(page.locator('.markdown-editor[data-mode="markup"] .cm-content'))
             .toContainText('#+ Vue Markdown editor {#editor-demo .playground-title}');
-        await page.getByRole('tab', {name: 'Визуальный'}).click();
+        await selectEditorMode(page, 'Визуальный');
 
         await expect(page.locator('.ProseMirror h1#editor-demo.playground-title'))
             .toHaveText('Vue Markdown editor');

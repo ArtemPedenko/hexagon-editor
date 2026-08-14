@@ -125,7 +125,7 @@ describe('MarkdownEditor', () => {
         app.unmount();
     });
 
-    it('localizes labels, applies the selected theme, and supports arrow-key mode navigation', async () => {
+    it('localizes labels, applies the selected theme, and switches modes from the toolbar', async () => {
         const target = document.createElement('div');
         const app = createApp(() => h(MarkdownEditor, {locale: 'en', theme: 'dark', toolbarPreset: 'full'}));
 
@@ -133,12 +133,19 @@ describe('MarkdownEditor', () => {
         app.mount(target);
         await nextTick();
 
-        const tablist = target.querySelector<HTMLElement>('[role="tablist"]') as HTMLElement;
-        expect(tablist.getAttribute('aria-label')).toBe('Editor mode');
+        const modeButton = target.querySelector<HTMLButtonElement>('[data-toolbar-item="mode"]') as HTMLButtonElement;
+        expect(modeButton.getAttribute('aria-label')).toBe('Editor mode');
+        expect(modeButton.getAttribute('aria-expanded')).toBe('false');
         expect(target.querySelector('[title="Formula"]')).not.toBeNull();
         expect(target.querySelector('[title="Bulleted list"]')).not.toBeNull();
         expect(target.querySelector('[data-markdown-editor-toolbar]')?.getAttribute('aria-label')).toBe('Markdown formatting');
-        tablist.dispatchEvent(new KeyboardEvent('keydown', {bubbles: true, key: 'ArrowRight'}));
+        modeButton.click();
+        await nextTick();
+
+        const modeMenu = document.body.querySelector<HTMLElement>('[role="menu"][aria-label="Editor mode"]') as HTMLElement;
+        expect(modeMenu.getAttribute('data-theme')).toBe('dark');
+        expect(modeMenu.querySelector('[role="menuitemradio"][aria-checked="true"]')?.textContent).toBe('Visual');
+        modeMenu.querySelector<HTMLButtonElement>('[role="menuitemradio"]:nth-child(2)')?.click();
         await nextTick();
 
         expect(target.querySelector('.markdown-editor')?.getAttribute('data-theme')).toBe('dark');
@@ -293,7 +300,7 @@ describe('MarkdownEditor', () => {
         await nextTick();
 
         expect(Array.from(target.querySelectorAll('[data-toolbar-group]')).map((group) => group.getAttribute('data-toolbar-group'))).toEqual(['custom-first', 'custom-second']);
-        expect(Array.from(target.querySelectorAll('[data-toolbar-item]')).map((button) => button.getAttribute('data-toolbar-item'))).toEqual(['italic', 'bold', 'link']);
+        expect(Array.from(target.querySelectorAll('[data-toolbar-item]')).map((button) => button.getAttribute('data-toolbar-item'))).toEqual(['italic', 'bold', 'link', 'mode']);
 
         app.unmount();
     });

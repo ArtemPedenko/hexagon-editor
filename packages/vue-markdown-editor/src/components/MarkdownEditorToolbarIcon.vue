@@ -6,6 +6,7 @@ import bulletList from '../assets/toolbar-icons/list-ul.svg?raw';
 import chevronDown from '../assets/toolbar-icons/chevron-down.svg?raw';
 import code from '../assets/toolbar-icons/code.svg?raw';
 import functionIcon from '../assets/toolbar-icons/function.svg?raw';
+import gear from '../assets/toolbar-icons/gear.svg?raw';
 import horizontalRule from '../assets/toolbar-icons/minus.svg?raw';
 import image from '../assets/toolbar-icons/picture.svg?raw';
 import italic from '../assets/toolbar-icons/italic.svg?raw';
@@ -17,7 +18,7 @@ import strike from '../assets/toolbar-icons/strikethrough.svg?raw';
 import table from '../assets/toolbar-icons/layout-cells.svg?raw';
 import underline from '../assets/toolbar-icons/underline.svg?raw';
 
-const icons = {arrowLeft, arrowRight, bold, bulletList, chevronDown, code, function: functionIcon, horizontalRule, image, italic, link, mermaid, orderedList, quote, strike, table, underline} as const;
+const icons = {arrowLeft, arrowRight, bold, bulletList, chevronDown, code, function: functionIcon, gear, horizontalRule, image, italic, link, mermaid, orderedList, quote, strike, table, underline} as const;
 
 const props = defineProps<{name: keyof typeof icons}>();
 </script>

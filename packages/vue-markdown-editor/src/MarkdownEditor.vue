@@ -2,7 +2,6 @@
 import {autoUpdate, computePosition, flip, offset, shift} from '@floating-ui/dom';
 import {computed, nextTick, onBeforeUnmount, onMounted, ref, watch} from 'vue';
 
-import MarkdownEditorModeTabs from './components/MarkdownEditorModeTabs.vue';
 import MarkdownEditorSelectionActions from './components/MarkdownEditorSelectionActions.vue';
 import MarkdownEditorToolbar from './components/MarkdownEditorToolbar.vue';
 import ToolbarIcon from './components/MarkdownEditorToolbarIcon.vue';
@@ -126,6 +125,9 @@ const codeMenu = ref<HTMLElement>();
 const headingMenu = ref<HTMLElement>();
 const headingMenuVisible = ref(false);
 const listMenu = ref<HTMLElement>();
+const modeMenu = ref<HTMLElement>();
+const modeMenuVisible = ref(false);
+const editorModes: MarkdownEditorMode[] = ['wysiwyg', 'markup', 'split'];
 let stopImageFloating: (() => void) | undefined;
 const linkForm = ref<InstanceType<typeof MarkdownEditorLinkForm>>();
 let stopFormulaFloating: (() => void) | undefined;
@@ -133,6 +135,7 @@ let stopCodeFloating: (() => void) | undefined;
 let stopHeadingFloating: (() => void) | undefined;
 let stopLinkFloating: (() => void) | undefined;
 let stopListFloating: (() => void) | undefined;
+let stopModeFloating: (() => void) | undefined;
 let markupEditor: BasicMarkupEditor | undefined;
 let modeChangeId = 0;
 let syncing = false;
@@ -389,6 +392,22 @@ async function toggleImageEditor(reference: HTMLElement): Promise<void> {
     startFloating(reference, imageForm.value?.element, (cleanup) => { stopImageFloating = cleanup; });
 }
 
+async function toggleModeMenu(reference: HTMLElement): Promise<void> {
+    modeMenuVisible.value = !modeMenuVisible.value;
+    stopModeFloating?.();
+    stopModeFloating = undefined;
+    if (!modeMenuVisible.value) return;
+    await nextTick();
+    startFloating(reference, modeMenu.value, (cleanup) => { stopModeFloating = cleanup; });
+}
+
+async function selectEditorMode(nextMode: MarkdownEditorMode): Promise<void> {
+    modeMenuVisible.value = false;
+    stopModeFloating?.();
+    stopModeFloating = undefined;
+    await setMode(nextMode);
+}
+
 function insertHtmlDirective(): void {
     visualEditor?.run(commands.insertHtml);
 }
@@ -458,6 +477,11 @@ function closeFloatingPanels(event: PointerEvent): void {
         stopImageFloating?.();
         stopImageFloating = undefined;
     }
+    if (!modeMenu.value?.contains(target)) {
+        modeMenuVisible.value = false;
+        stopModeFloating?.();
+        stopModeFloating = undefined;
+    }
 }
 
 function closePanelsOnEscape(event: KeyboardEvent): void {
@@ -468,18 +492,21 @@ function closePanelsOnEscape(event: KeyboardEvent): void {
     imageEditorVisible.value = false;
     linkEditorVisible.value = false;
     listMenuVisible.value = false;
+    modeMenuVisible.value = false;
     stopHeadingFloating?.();
     stopCodeFloating?.();
     stopFormulaFloating?.();
     stopImageFloating?.();
     stopLinkFloating?.();
     stopListFloating?.();
+    stopModeFloating?.();
     stopHeadingFloating = undefined;
     stopCodeFloating = undefined;
     stopFormulaFloating = undefined;
     stopImageFloating = undefined;
     stopLinkFloating = undefined;
     stopListFloating = undefined;
+    stopModeFloating = undefined;
 }
 
 function mountHosts(): void {
@@ -611,6 +638,7 @@ onBeforeUnmount(() => {
     stopImageFloating?.();
     stopLinkFloating?.();
     stopListFloating?.();
+    stopModeFloating?.();
 });
 
 defineExpose<MarkdownEditorExposed>({
@@ -632,13 +660,12 @@ defineExpose<MarkdownEditorExposed>({
 
 <template>
   <section class="markdown-editor" :data-locale="locale" :data-mode="mode" :data-theme="theme" @click="handleEditorClick">
-    <header class="markdown-editor__header">
-      <MarkdownEditorModeTabs :mode="mode" :set-mode="setMode" :translate="t" />
+    <header v-if="$slots.header" class="markdown-editor__header">
       <slot name="header" />
     </header>
 
     <MarkdownEditorToolbar
-      v-if="mode !== 'markup' && !readonly"
+      v-if="!readonly"
       :commands="commands"
       :code-menu-visible="codeMenuVisible"
       :formula-menu-visible="formulaMenuVisible"
@@ -646,6 +673,8 @@ defineExpose<MarkdownEditorExposed>({
       :image-editor-visible="imageEditorVisible"
       :link-editor-visible="linkEditorVisible"
       :list-menu-visible="listMenuVisible"
+      :mode="mode"
+      :mode-menu-visible="modeMenuVisible"
       :state="toolbarState"
       :text-style-label="textStyleLabel"
       :toolbar-preset="toolbarPreset"
@@ -659,6 +688,7 @@ defineExpose<MarkdownEditorExposed>({
       @toggle-image-editor="toggleImageEditor"
       @toggle-link-editor="toggleLinkEditor"
       @toggle-list-menu="toggleListMenu"
+      @toggle-mode-menu="toggleModeMenu"
     >
       <template #default="slotProps"><slot name="toolbar" v-bind="slotProps" /></template>
     </MarkdownEditorToolbar>
@@ -683,6 +713,11 @@ defineExpose<MarkdownEditorExposed>({
         <button :aria-checked="toolbarState.orderedList" role="menuitemradio" type="button" @mousedown.prevent @click="executeListCommand(commands.orderedList)"><ToolbarIcon name="orderedList" /><span>{{ t('orderedList') }}</span></button>
         <button :disabled="!toolbarState.listIndentEnabled" role="menuitem" type="button" @mousedown.prevent @click="executeListCommand(commands.sinkListItem)"><span class="markdown-editor__floating-menu-icon">→</span><span>{{ t('listIndent') }}</span><kbd>Tab</kbd></button>
         <button :disabled="!toolbarState.listOutdentEnabled" role="menuitem" type="button" @mousedown.prevent @click="executeListCommand(commands.liftListItem)"><span class="markdown-editor__floating-menu-icon">←</span><span>{{ t('listOutdent') }}</span><kbd>⇧ Tab</kbd></button>
+      </div>
+      <div v-if="modeMenuVisible" ref="modeMenu" class="markdown-editor__floating-menu" :data-theme="theme" role="menu" :aria-label="t('mode')">
+        <button v-for="editorMode in editorModes" :key="editorMode" :aria-checked="mode === editorMode" role="menuitemradio" type="button" @click="selectEditorMode(editorMode)">
+          <span>{{ t(editorMode === 'wysiwyg' ? 'visual' : editorMode) }}</span>
+        </button>
       </div>
       <MarkdownEditorLinkForm
         v-if="linkEditorVisible"
