@@ -92,13 +92,12 @@ test.describe('Markdown editor playground', () => {
         await page.getByTitle('Ссылка').click();
         await page.getByLabel('Адрес ссылки').fill('https://example.com/docs');
         await page.getByLabel('Текст ссылки').fill('Документация');
-        await page.getByLabel('Заголовок ссылки').fill('Документы');
         await page.getByLabel('Открывать в новом окне').check();
         await page.getByRole('button', {name: 'Сохранить'}).last().click();
 
         const link = page.locator('.ProseMirror a', {hasText: 'Документация'});
         await expect(link).toHaveAttribute('href', 'https://example.com/docs');
-        await expect(link).toHaveAttribute('title', 'Документы');
+        await expect(link).toHaveAttribute('title', 'Документация');
         await expect(link).toHaveAttribute('target', '_blank');
         await expect(link).toHaveAttribute('rel', 'noopener noreferrer');
         await expect(link).toHaveAttribute('data-link-tooltip', 'https://example.com/docs');

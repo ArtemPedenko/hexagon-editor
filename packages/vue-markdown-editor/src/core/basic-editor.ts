@@ -5,7 +5,7 @@ import {
 } from "prosemirror-commands";
 import { keymap } from "prosemirror-keymap";
 import type { Node as ProseMirrorNode } from "prosemirror-model";
-import { EditorState, Plugin, PluginKey } from "prosemirror-state";
+import { EditorState, Plugin, PluginKey, TextSelection } from "prosemirror-state";
 import type {Transaction} from "prosemirror-state";
 import type { Command } from "prosemirror-state";
 import {
@@ -308,6 +308,11 @@ export function mountBasicWysiwygEditor({
       const result = command(view.state, view.dispatch, view);
       view.focus();
       return result;
+    },
+    selectElement: (element) => {
+      const from = view.posAtDOM(element, 0);
+      const to = from + (element.textContent?.length ?? 0);
+      view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, from, to)));
     },
     setValue: (value) => {
       if (value === basicMarkdownCodec.serialize(view.state.doc)) {

@@ -17,10 +17,10 @@ export interface BasicEditorCommands {
 export interface BasicWysiwygSelectionState {
     bold: boolean; bulletList: boolean; code: boolean; codeBlock: boolean; codeBlockLanguage: string | undefined; formula: boolean; headingFolded: boolean;
     headingLevel: number | undefined; image: boolean; imageObjectFit: string | undefined; italic: boolean; linkHref: string | undefined; linkOpenInNewWindow: boolean; linkText: string | undefined;
-    linkTitle: string | undefined; listIndentEnabled: boolean; listOutdentEnabled: boolean; mark: boolean; orderedList: boolean; quote: boolean; strikethrough: boolean; underline: boolean;
+    listIndentEnabled: boolean; listOutdentEnabled: boolean; mark: boolean; orderedList: boolean; quote: boolean; strikethrough: boolean; underline: boolean;
 }
 
-export interface BasicWysiwygEditor { destroy(): void; focus(): void; getValue(): string; hasFocus(): boolean; insert(markup: string): void; moveCursor(position: 'start' | 'end'): void; run(command: Command): boolean; setValue(value: string): void; }
+export interface BasicWysiwygEditor { destroy(): void; focus(): void; getValue(): string; hasFocus(): boolean; insert(markup: string): void; moveCursor(position: 'start' | 'end'): void; run(command: Command): boolean; selectElement(element: Element): void; setValue(value: string): void; }
 
 export interface MountBasicWysiwygEditorOptions {
     editable?: boolean; initialValue?: string; onChange?(value: string): void;

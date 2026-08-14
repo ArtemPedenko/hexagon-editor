@@ -90,7 +90,6 @@ const linkEditorVisible = ref(false);
 const listMenuVisible = ref(false);
 const linkUrl = ref('');
 const linkText = ref('');
-const linkTitle = ref('');
 const linkOpenInNewWindow = ref(false);
 const formulaMenuVisible = ref(false);
 const toolbarState = ref<BasicWysiwygSelectionState>({
@@ -107,7 +106,6 @@ const toolbarState = ref<BasicWysiwygSelectionState>({
     linkHref: undefined,
     linkOpenInNewWindow: false,
     linkText: undefined,
-    linkTitle: undefined,
     listIndentEnabled: false,
     listOutdentEnabled: false,
     italic: false,
@@ -165,7 +163,6 @@ function destroyHosts(): void {
         linkHref: undefined,
         linkOpenInNewWindow: false,
         linkText: undefined,
-        linkTitle: undefined,
         listIndentEnabled: false,
         listOutdentEnabled: false,
         italic: false,
@@ -239,7 +236,8 @@ function applyLink(): void {
     }
 
     suppressNextLinkAutoOpen = true;
-    execute(commands.setLink(linkUrl.value.trim(), linkTitle.value.trim() || undefined, linkText.value.trim() || undefined, linkOpenInNewWindow.value));
+    const text = linkText.value.trim() || linkUrl.value.trim();
+    execute(commands.setLink(linkUrl.value.trim(), text, text, linkOpenInNewWindow.value));
     linkEditorVisible.value = false;
 }
 
@@ -310,7 +308,6 @@ async function toggleLinkEditor(reference: HTMLElement): Promise<void> {
     if (!linkEditorVisible.value) return;
     linkUrl.value = toolbarState.value.linkHref ?? '';
     linkText.value = toolbarState.value.linkText ?? window.getSelection()?.toString().trim() ?? '';
-    linkTitle.value = toolbarState.value.linkTitle ?? '';
     linkOpenInNewWindow.value = toolbarState.value.linkOpenInNewWindow;
     await nextTick();
     startFloating(reference, linkForm.value?.element, (cleanup) => { stopLinkFloating = cleanup; });
@@ -325,7 +322,6 @@ async function showLinkEditorAtCursor(reference?: HTMLElement): Promise<void> {
 
     linkUrl.value = reference?.getAttribute('href') ?? href ?? '';
     linkText.value = reference?.textContent ?? toolbarState.value.linkText ?? '';
-    linkTitle.value = reference?.getAttribute('title') ?? toolbarState.value.linkTitle ?? '';
     linkOpenInNewWindow.value = reference?.getAttribute('target') === '_blank' || toolbarState.value.linkOpenInNewWindow;
     linkEditorVisible.value = true;
     await nextTick();
@@ -343,6 +339,7 @@ function handleEditorClick(event: MouseEvent): void {
     const link = target.closest<HTMLElement>('.ProseMirror a');
     if (link === null) return;
     event.preventDefault();
+    visualEditor?.selectElement(link);
     void showLinkEditorAtCursor(link);
 }
 
@@ -650,13 +647,11 @@ defineExpose<MarkdownEditorExposed>({
         :open-in-new-window="linkOpenInNewWindow"
         :theme="theme"
         :text="linkText"
-        :title="linkTitle"
         :url="linkUrl"
         @apply="applyLink"
         @cancel="closeLinkEditor"
         @remove="execute(commands.removeLink)"
         @update:text="linkText = $event"
-        @update:title="linkTitle = $event"
         @update:url="linkUrl = $event"
         @update:open-in-new-window="linkOpenInNewWindow = $event"
       />
