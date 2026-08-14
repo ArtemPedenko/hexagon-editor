@@ -294,6 +294,15 @@
     min-height: 20rem;
 }
 
+.markdown-editor :deep(.cm-content) {
+    caret-color: var(--markdown-text);
+}
+
+.markdown-editor :deep(.cm-cursor),
+.markdown-editor :deep(.cm-dropCursor) {
+    border-left-color: var(--markdown-text);
+}
+
 .markdown-editor :deep(.ProseMirror) {
     padding: 1rem;
     outline: none;
@@ -466,10 +475,6 @@
 .markdown-editor :deep(.markdown-editor__atomic-source .cm-content) {
     min-height: 0;
     padding: 0.4rem 0.5rem;
-}
-
-.markdown-editor :deep(.markdown-editor__atomic-source .cm-gutters) {
-    display: none;
 }
 
 :global(.markdown-editor__table-popover) {

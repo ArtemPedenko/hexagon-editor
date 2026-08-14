@@ -2,7 +2,7 @@ import {defaultKeymap, history, historyKeymap, indentWithTab, redo, undo} from '
 import {markdown, markdownLanguage} from '@codemirror/lang-markdown';
 import {bracketMatching, defaultHighlightStyle, syntaxHighlighting} from '@codemirror/language';
 import {EditorState} from '@codemirror/state';
-import {EditorView, keymap, lineNumbers} from '@codemirror/view';
+import {EditorView, keymap} from '@codemirror/view';
 
 export interface BasicMarkupEditor {
     destroy(): void;
@@ -38,7 +38,6 @@ export function mountBasicMarkupEditor({
             doc: initialValue,
             extensions: [
                 EditorView.editable.of(editable),
-                lineNumbers(),
                 history(),
                 bracketMatching(),
                 markdown({base: markdownLanguage}),

@@ -421,7 +421,11 @@ test.describe('Markdown editor playground', () => {
         await page.goto('/');
 
         await page.getByRole('tab', {name: 'Разметка'}).click();
-        await expect(page.locator('.markdown-editor[data-mode="markup"] .cm-editor')).toBeVisible();
+        const markupEditor = page.locator('.markdown-editor[data-mode="markup"] .cm-editor');
+        await expect(markupEditor).toBeVisible();
+        await expect(markupEditor.locator('.cm-gutters')).toHaveCount(0);
+        await markupEditor.locator('.cm-content').click();
+        await expect(markupEditor.locator('.cm-content')).toHaveCSS('caret-color', 'rgb(241, 243, 245)');
         await expect(page.locator('.cm-content')).toContainText('##+ Расширенные возможности');
 
         await page.getByRole('tab', {name: 'Разделить'}).click();
