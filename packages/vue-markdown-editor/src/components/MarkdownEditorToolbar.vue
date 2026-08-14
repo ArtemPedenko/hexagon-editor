@@ -24,6 +24,7 @@ const props = defineProps<{
     headingMenuVisible: boolean;
     imageEditorVisible: boolean;
     linkEditorVisible: boolean;
+    listMenuVisible: boolean;
     state: BasicWysiwygSelectionState;
     textStyleLabel: string;
     toolbarPreset: MarkdownEditorToolbarPreset;
@@ -51,6 +52,7 @@ const emit = defineEmits<{
     'toggle-heading-menu': [reference: HTMLElement];
     'toggle-image-editor': [reference: HTMLElement];
     'toggle-link-editor': [reference: HTMLElement];
+    'toggle-list-menu': [reference: HTMLElement];
 }>();
 
 function getButton(event: MouseEvent): HTMLElement {
@@ -72,8 +74,8 @@ function getButton(event: MouseEvent): HTMLElement {
         <button v-else-if="toolbarItem.id === 'strike'" data-toolbar-item="strike" :disabled="!isToolbarItemEnabled(toolbarItem, state)" :aria-label="translate('strike')" :aria-pressed="isToolbarItemActive(toolbarItem, state, state.strikethrough)" type="button" :title="translate('strike')" @mousedown.prevent @click="runItem(toolbarItem, commands.strikethrough)"><ToolbarIcon name="strike" /></button>
         <button v-else-if="toolbarItem.id === 'mark'" data-toolbar-item="mark" :disabled="!isToolbarItemEnabled(toolbarItem, state)" :aria-label="translate('mark')" :aria-pressed="isToolbarItemActive(toolbarItem, state, state.mark)" type="button" :title="translate('mark')" @mousedown.prevent @click="runItem(toolbarItem, commands.mark)">M</button>
         <button v-else-if="toolbarItem.id === 'code'" data-toolbar-item="code" :disabled="!isToolbarItemEnabled(toolbarItem, state)" :aria-label="translate('code')" :aria-pressed="isToolbarItemActive(toolbarItem, state, state.code)" type="button" :title="translate('code')" @mousedown.prevent @click="runItem(toolbarItem, commands.code)"><ToolbarIcon name="code" /></button>
-        <button v-else-if="toolbarItem.id === 'bullet-list'" data-toolbar-item="bullet-list" :disabled="!isToolbarItemEnabled(toolbarItem, state)" :aria-label="translate('bulletList')" :aria-pressed="isToolbarItemActive(toolbarItem, state, state.bulletList)" type="button" :title="translate('bulletList')" @mousedown.prevent @click="runItem(toolbarItem, commands.bulletList)"><ToolbarIcon name="bulletList" /></button>
-        <button v-else-if="toolbarItem.id === 'ordered-list'" data-toolbar-item="ordered-list" :disabled="!isToolbarItemEnabled(toolbarItem, state)" :aria-label="translate('orderedList')" :aria-pressed="isToolbarItemActive(toolbarItem, state, state.orderedList)" type="button" :title="translate('orderedList')" @mousedown.prevent @click="runItem(toolbarItem, commands.orderedList)"><ToolbarIcon name="orderedList" /></button>
+        <button v-else-if="toolbarItem.id === 'bullet-list'" class="markdown-editor__toolbar-list" data-toolbar-item="list" :aria-expanded="listMenuVisible" :aria-label="translate(state.orderedList ? 'orderedList' : 'bulletList')" :aria-pressed="state.bulletList || state.orderedList" :title="translate(state.orderedList ? 'orderedList' : 'bulletList')" type="button" @mousedown.prevent @click="emit('toggle-list-menu', getButton($event))"><ToolbarIcon :name="state.orderedList ? 'orderedList' : 'bulletList'" /><ToolbarIcon name="chevronDown" /></button>
+        <template v-else-if="toolbarItem.id === 'ordered-list'" />
         <button v-else-if="toolbarItem.id === 'quote'" data-toolbar-item="quote" :disabled="!isToolbarItemEnabled(toolbarItem, state)" :aria-label="translate('quote')" :aria-pressed="isToolbarItemActive(toolbarItem, state, state.quote)" type="button" :title="translate('quote')" @mousedown.prevent @click="runItem(toolbarItem, commands.quote)"><ToolbarIcon name="quote" /></button>
         <button v-else-if="toolbarItem.id === 'fold-heading'" data-toolbar-item="fold-heading" :aria-label="translate('foldHeading')" :aria-pressed="state.headingFolded" type="button" :title="translate('foldHeading')" @mousedown.prevent @click="emit('execute', commands.toggleHeadingFolding)">▸</button>
         <button v-else-if="toolbarItem.id === 'code-block'" data-toolbar-item="code-block" :aria-label="translate('codeBlock')" :aria-pressed="state.codeBlock" type="button" :title="translate('codeBlock')" @mousedown.prevent @click="emit('execute', commands.codeBlock)">{ }</button>
@@ -102,7 +104,8 @@ button:focus-visible { outline: 2px solid var(--markdown-focus-text); outline-of
 button[aria-pressed='true'], button[aria-expanded='true'] { color: var(--markdown-text); background: color-mix(in srgb, var(--markdown-text) 22%, transparent); }
 button:disabled { cursor: default; opacity: .35; }
 .markdown-editor__toolbar-heading { gap: .125rem; min-width: 2.75rem; }
-.markdown-editor__toolbar-heading :deep(.markdown-editor__toolbar-icon) { width: .75rem; height: .75rem; }
+.markdown-editor__toolbar-heading :deep(.markdown-editor__toolbar-icon), .markdown-editor__toolbar-list :deep(.markdown-editor__toolbar-icon:last-child) { width: .75rem; height: .75rem; }
+.markdown-editor__toolbar-list { gap: .1875rem; }
 select { height: 1.75rem; border: 0; border-radius: .375rem; color: var(--markdown-text); background: transparent; font: inherit; }
 select:hover { background: color-mix(in srgb, var(--markdown-text) 10%, transparent); }
 .markdown-editor__color { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 1.75rem; height: 1.75rem; border-radius: .375rem; cursor: pointer; }

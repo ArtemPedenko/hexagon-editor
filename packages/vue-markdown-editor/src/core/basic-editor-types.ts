@@ -17,7 +17,7 @@ export interface BasicEditorCommands {
 export interface BasicWysiwygSelectionState {
     bold: boolean; bulletList: boolean; code: boolean; codeBlock: boolean; codeBlockLanguage: string | undefined; formula: boolean; headingFolded: boolean;
     headingLevel: number | undefined; image: boolean; imageObjectFit: string | undefined; italic: boolean; linkHref: string | undefined; linkText: string | undefined;
-    linkTitle: string | undefined; mark: boolean; orderedList: boolean; quote: boolean; strikethrough: boolean; underline: boolean;
+    linkTitle: string | undefined; listIndentEnabled: boolean; listOutdentEnabled: boolean; mark: boolean; orderedList: boolean; quote: boolean; strikethrough: boolean; underline: boolean;
 }
 
 export interface BasicWysiwygEditor { destroy(): void; focus(): void; getValue(): string; hasFocus(): boolean; insert(markup: string): void; moveCursor(position: 'start' | 'end'): void; run(command: Command): boolean; setValue(value: string): void; }

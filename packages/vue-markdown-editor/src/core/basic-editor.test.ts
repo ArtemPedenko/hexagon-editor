@@ -52,6 +52,26 @@ describe('basic Markdown extensions', () => {
         });
     });
 
+    it('reports only the nearest list type as active in mixed nested lists', () => {
+        const document = basicMarkdownCodec.parse('- Outer\n  1. Nested');
+        let nestedTextPosition = 0;
+        document.descendants((node, position) => {
+            if (node.isText && node.text === 'Nested') nestedTextPosition = position;
+        });
+        const state = EditorState.create({
+            doc: document,
+            schema: basicMarkdownSchema,
+            selection: TextSelection.create(document, nestedTextPosition + 1),
+        });
+
+        expect(getBasicWysiwygSelectionState(state)).toMatchObject({
+            bulletList: false,
+            listIndentEnabled: false,
+            listOutdentEnabled: true,
+            orderedList: true,
+        });
+    });
+
     it('renders a recoverable Math error with an editing hint', () => {
         const target = document.createElement('div');
         const editor = mountBasicWysiwygEditor({initialValue: '$\\invalid$', target});

@@ -158,7 +158,7 @@ describe('MarkdownEditor', () => {
         const picker = target.querySelector<HTMLButtonElement>('[aria-label="Уровень заголовка"]') as HTMLButtonElement;
         picker.click();
         await nextTick();
-        Array.from(document.body.querySelectorAll<HTMLButtonElement>('[role="menuitemradio"]')).find((button) => button.textContent === 'Текст')?.click();
+        Array.from(document.body.querySelectorAll<HTMLButtonElement>('[role="menuitemradio"]')).find((button) => button.textContent?.includes('Текст'))?.click();
         await nextTick();
 
         expect(target.querySelector('.ProseMirror h2')).toBeNull();
@@ -193,8 +193,41 @@ describe('MarkdownEditor', () => {
         document.dispatchEvent(new Event('selectionchange'));
         await nextTick();
 
-        expect(picker.textContent).toContain('Текст');
+        expect(picker.textContent).toContain('H');
         expect(boldButton.getAttribute('aria-pressed')).toBe('true');
+
+        app.unmount();
+    });
+
+    it('highlights only the nearest list type in the list popover', async () => {
+        const target = document.createElement('div');
+        const app = createApp(() => h(MarkdownEditor, {modelValue: '- Outer\n  1. Nested'}));
+
+        document.body.append(target);
+        app.mount(target);
+        await nextTick();
+
+        const nestedText = Array.from(target.querySelectorAll('li')).find((item) => item.textContent === 'Nested')?.querySelector('p')?.firstChild;
+        expect(nestedText).toBeInstanceOf(Text);
+        target.querySelector<HTMLElement>('.ProseMirror')?.focus();
+        const selection = window.getSelection();
+        const range = document.createRange();
+        range.setStart(nestedText as Text, 1);
+        range.collapse(true);
+        selection?.removeAllRanges();
+        selection?.addRange(range);
+        document.dispatchEvent(new Event('selectionchange'));
+        await nextTick();
+
+        target.querySelector<HTMLButtonElement>('[data-toolbar-item="list"]')?.click();
+        await nextTick();
+        const items = document.body.querySelectorAll<HTMLButtonElement>('[role="menuitemradio"]');
+        const bullet = Array.from(items).find((item) => item.textContent?.includes('Маркированный'));
+        const ordered = Array.from(items).find((item) => item.textContent?.includes('Нумерованный'));
+        expect(bullet?.getAttribute('aria-checked')).toBe('false');
+        expect(ordered?.getAttribute('aria-checked')).toBe('true');
+        expect(Array.from(document.body.querySelectorAll<HTMLButtonElement>('[role="menuitem"]')).find((item) => item.textContent?.includes('Увеличить отступ'))?.disabled).toBe(true);
+        expect(Array.from(document.body.querySelectorAll<HTMLButtonElement>('[role="menuitem"]')).find((item) => item.textContent?.includes('Уменьшить отступ'))?.disabled).toBe(false);
 
         app.unmount();
     });

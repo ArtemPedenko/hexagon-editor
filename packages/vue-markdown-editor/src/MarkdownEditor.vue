@@ -5,6 +5,7 @@ import {computed, nextTick, onBeforeUnmount, onMounted, ref, watch} from 'vue';
 import MarkdownEditorModeTabs from './components/MarkdownEditorModeTabs.vue';
 import MarkdownEditorSelectionActions from './components/MarkdownEditorSelectionActions.vue';
 import MarkdownEditorToolbar from './components/MarkdownEditorToolbar.vue';
+import ToolbarIcon from './components/MarkdownEditorToolbarIcon.vue';
 import MarkdownEditorImageForm from './forms/MarkdownEditorImageForm.vue';
 import MarkdownEditorLinkForm from './forms/MarkdownEditorLinkForm.vue';
 import {getMarkdownEditorMessages} from './i18n';
@@ -86,6 +87,7 @@ const imageAlt = ref('');
 const imageTitle = ref('');
 const imageForm = ref<InstanceType<typeof MarkdownEditorImageForm>>();
 const linkEditorVisible = ref(false);
+const listMenuVisible = ref(false);
 const linkUrl = ref('');
 const linkText = ref('');
 const linkTitle = ref('');
@@ -104,6 +106,8 @@ const toolbarState = ref<BasicWysiwygSelectionState>({
     linkHref: undefined,
     linkText: undefined,
     linkTitle: undefined,
+    listIndentEnabled: false,
+    listOutdentEnabled: false,
     italic: false,
     mark: false,
     orderedList: false,
@@ -112,17 +116,19 @@ const toolbarState = ref<BasicWysiwygSelectionState>({
     underline: false,
 });
 const textStyle = computed(() => toolbarState.value.headingLevel?.toString() ?? 'paragraph');
-const textStyleLabel = computed(() => textStyle.value === 'paragraph' ? t('paragraph') : `H${textStyle.value}`);
+const textStyleLabel = computed(() => textStyle.value === 'paragraph' ? 'H' : `H${textStyle.value}`);
 const htmlDirective = '::: html\n\n<div>Add HTML code here</div>\n\n:::';
 const mathBlock = '$$\nE = mc^2\n$$';
 const formulaMenu = ref<HTMLElement>();
 const headingMenu = ref<HTMLElement>();
 const headingMenuVisible = ref(false);
+const listMenu = ref<HTMLElement>();
 let stopImageFloating: (() => void) | undefined;
 const linkForm = ref<InstanceType<typeof MarkdownEditorLinkForm>>();
 let stopFormulaFloating: (() => void) | undefined;
 let stopHeadingFloating: (() => void) | undefined;
 let stopLinkFloating: (() => void) | undefined;
+let stopListFloating: (() => void) | undefined;
 let markupEditor: BasicMarkupEditor | undefined;
 let modeChangeId = 0;
 let syncing = false;
@@ -130,6 +136,11 @@ let visualEditor: BasicWysiwygEditor | undefined;
 
 function t(key: MarkdownEditorMessageKey): string {
     return getMarkdownEditorMessages(props.locale)[key];
+}
+
+function headingMenuLabel(style: string): string {
+    if (style === 'paragraph') return t('paragraph');
+    return props.locale === 'ru' ? `Заголовок ${style}` : `Heading ${style}`;
 }
 
 function destroyHosts(): void {
@@ -151,6 +162,8 @@ function destroyHosts(): void {
         linkHref: undefined,
         linkText: undefined,
         linkTitle: undefined,
+        listIndentEnabled: false,
+        listOutdentEnabled: false,
         italic: false,
         mark: false,
         orderedList: false,
@@ -297,6 +310,22 @@ async function toggleLinkEditor(reference: HTMLElement): Promise<void> {
     startFloating(reference, linkForm.value?.element, (cleanup) => { stopLinkFloating = cleanup; });
 }
 
+async function toggleListMenu(reference: HTMLElement): Promise<void> {
+    listMenuVisible.value = !listMenuVisible.value;
+    stopListFloating?.();
+    stopListFloating = undefined;
+    if (!listMenuVisible.value) return;
+    await nextTick();
+    startFloating(reference, listMenu.value, (cleanup) => { stopListFloating = cleanup; });
+}
+
+function executeListCommand(command: Parameters<BasicWysiwygEditor['run']>[0]): void {
+    execute(command);
+    listMenuVisible.value = false;
+    stopListFloating?.();
+    stopListFloating = undefined;
+}
+
 async function toggleImageEditor(reference: HTMLElement): Promise<void> {
     imageEditorVisible.value = !imageEditorVisible.value;
     stopImageFloating?.();
@@ -362,6 +391,11 @@ function closeFloatingPanels(event: PointerEvent): void {
         stopLinkFloating?.();
         stopLinkFloating = undefined;
     }
+    if (!listMenu.value?.contains(target)) {
+        listMenuVisible.value = false;
+        stopListFloating?.();
+        stopListFloating = undefined;
+    }
     if (!imageForm.value?.element?.contains(target)) {
         imageEditorVisible.value = false;
         stopImageFloating?.();
@@ -375,14 +409,17 @@ function closePanelsOnEscape(event: KeyboardEvent): void {
     formulaMenuVisible.value = false;
     imageEditorVisible.value = false;
     linkEditorVisible.value = false;
+    listMenuVisible.value = false;
     stopHeadingFloating?.();
     stopFormulaFloating?.();
     stopImageFloating?.();
     stopLinkFloating?.();
+    stopListFloating?.();
     stopHeadingFloating = undefined;
     stopFormulaFloating = undefined;
     stopImageFloating = undefined;
     stopLinkFloating = undefined;
+    stopListFloating = undefined;
 }
 
 function mountHosts(): void {
@@ -496,6 +533,7 @@ onBeforeUnmount(() => {
     stopFormulaFloating?.();
     stopImageFloating?.();
     stopLinkFloating?.();
+    stopListFloating?.();
 });
 
 defineExpose<MarkdownEditorExposed>({
@@ -529,6 +567,7 @@ defineExpose<MarkdownEditorExposed>({
       :heading-menu-visible="headingMenuVisible"
       :image-editor-visible="imageEditorVisible"
       :link-editor-visible="linkEditorVisible"
+      :list-menu-visible="listMenuVisible"
       :state="toolbarState"
       :text-style-label="textStyleLabel"
       :toolbar-preset="toolbarPreset"
@@ -540,17 +579,27 @@ defineExpose<MarkdownEditorExposed>({
       @toggle-heading-menu="showHeadingMenu"
       @toggle-image-editor="toggleImageEditor"
       @toggle-link-editor="toggleLinkEditor"
+      @toggle-list-menu="toggleListMenu"
     >
       <template #default="slotProps"><slot name="toolbar" v-bind="slotProps" /></template>
     </MarkdownEditorToolbar>
 
     <Teleport to="body">
       <div v-if="headingMenuVisible" ref="headingMenu" class="markdown-editor__floating-menu" :data-theme="theme" role="menu" :aria-label="t('heading')">
-        <button v-for="style in ['paragraph', '1', '2', '3', '4', '5', '6']" :key="style" :aria-checked="textStyle === style" role="menuitemradio" type="button" @click="applyTextStyle(style)">{{ style === 'paragraph' ? t('paragraph') : `H${style}` }}</button>
+        <button v-for="style in ['paragraph', '1', '2', '3', '4', '5', '6']" :key="style" :aria-checked="textStyle === style" role="menuitemradio" type="button" @click="applyTextStyle(style)">
+          <span class="markdown-editor__floating-menu-icon">{{ style === 'paragraph' ? 'T' : `H${style}` }}</span>
+          <span>{{ headingMenuLabel(style) }}</span>
+        </button>
       </div>
       <div v-if="formulaMenuVisible" ref="formulaMenu" class="markdown-editor__floating-menu" :data-theme="theme" role="menu" :aria-label="t('formulaInsert')">
-        <button role="menuitem" type="button" @mousedown.prevent @click="insertInlineMath">{{ t('formulaInline') }}</button>
-        <button role="menuitem" type="button" @mousedown.prevent @click="insertMathBlock">{{ t('formulaBlock') }}</button>
+        <button role="menuitem" type="button" @mousedown.prevent @click="insertInlineMath"><span class="markdown-editor__floating-menu-icon">ƒ</span><span>{{ t('formulaInline') }}</span></button>
+        <button role="menuitem" type="button" @mousedown.prevent @click="insertMathBlock"><span class="markdown-editor__floating-menu-icon">∑</span><span>{{ t('formulaBlock') }}</span></button>
+      </div>
+      <div v-if="listMenuVisible" ref="listMenu" class="markdown-editor__floating-menu markdown-editor__floating-menu--list" :data-theme="theme" role="menu" :aria-label="t('bulletList')">
+        <button :aria-checked="toolbarState.bulletList" role="menuitemradio" type="button" @mousedown.prevent @click="executeListCommand(commands.bulletList)"><ToolbarIcon name="bulletList" /><span>{{ t('bulletList') }}</span></button>
+        <button :aria-checked="toolbarState.orderedList" role="menuitemradio" type="button" @mousedown.prevent @click="executeListCommand(commands.orderedList)"><ToolbarIcon name="orderedList" /><span>{{ t('orderedList') }}</span></button>
+        <button :disabled="!toolbarState.listIndentEnabled" role="menuitem" type="button" @mousedown.prevent @click="executeListCommand(commands.sinkListItem)"><span class="markdown-editor__floating-menu-icon">→</span><span>{{ t('listIndent') }}</span><kbd>Tab</kbd></button>
+        <button :disabled="!toolbarState.listOutdentEnabled" role="menuitem" type="button" @mousedown.prevent @click="executeListCommand(commands.liftListItem)"><span class="markdown-editor__floating-menu-icon">←</span><span>{{ t('listOutdent') }}</span><kbd>⇧ Tab</kbd></button>
       </div>
       <MarkdownEditorLinkForm
         v-if="linkEditorVisible"

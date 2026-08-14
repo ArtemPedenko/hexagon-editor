@@ -279,6 +279,7 @@ test.describe('Markdown editor playground', () => {
         await page.goto('/');
 
         await page.getByRole('tab', {name: 'Визуальный'}).focus();
+        await expect(page.getByTitle('Уровень заголовка')).toContainText('H');
         await expect(page.getByTitle('Формула')).toBeVisible();
         await page.keyboard.press('ArrowRight');
 
@@ -359,6 +360,11 @@ test.describe('Markdown editor playground', () => {
         const paragraph = page.locator('.ProseMirror p').filter({hasText: 'Этот раздел можно свернуть кнопкой в тулбаре.'});
         await paragraph.click({position: {x: 20, y: 10}});
         await page.getByTitle('Маркированный список').click();
+        await page.getByRole('menuitemradio', {name: 'Маркированный список'}).click();
+        await page.getByTitle('Маркированный список').click();
+        await expect(page.getByRole('menuitem', {name: /Увеличить отступ/})).toBeDisabled();
+        await expect(page.getByRole('menuitem', {name: /Уменьшить отступ/})).toBeEnabled();
+        await page.getByTitle('Маркированный список').click();
         await page.keyboard.press('End');
         await page.keyboard.press('Enter');
         await page.keyboard.type('Новый пункт');
@@ -374,6 +380,7 @@ test.describe('Markdown editor playground', () => {
         const paragraph = page.locator('.ProseMirror p').filter({hasText: 'Этот раздел можно свернуть кнопкой в тулбаре.'});
         await paragraph.click({position: {x: 20, y: 10}});
         await page.getByTitle('Маркированный список').click();
+        await page.getByRole('menuitemradio', {name: 'Маркированный список'}).click();
         await page.keyboard.press('End');
         await page.keyboard.press('Enter');
         await page.keyboard.type('Второй пункт');
@@ -396,7 +403,8 @@ test.describe('Markdown editor playground', () => {
 
         const paragraph = page.locator('.ProseMirror p').filter({hasText: 'Этот раздел можно свернуть кнопкой в тулбаре.'});
         await paragraph.click({position: {x: 20, y: 10}});
-        await page.getByTitle('Нумерованный список').click();
+        await page.getByTitle('Маркированный список').click();
+        await page.getByRole('menuitemradio', {name: 'Нумерованный список'}).click();
         await page.keyboard.press('End');
         await page.keyboard.press('Enter');
         await page.keyboard.type('Второй пункт');
