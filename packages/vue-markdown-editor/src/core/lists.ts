@@ -1,7 +1,6 @@
 /**
- * List commands and normalisation plugins ported from
- * gravity-ui/markdown-editor@fcb1c735.  The Vue package uses the same
- * ProseMirror schema names, so this module deliberately preserves upstream
+ * List commands and normalisation plugins ported from upstream. The Vue
+ * package uses the same ProseMirror schema names, so this module deliberately preserves upstream
  * transaction semantics instead of reimplementing keyboard handlers in the
  * view layer.
  */

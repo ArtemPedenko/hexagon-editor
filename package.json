@@ -1,8 +1,8 @@
 {
-  "name": "gravity-ui-vue-markdown-editor",
+  "name": "hexagon-editor-monorepo",
   "version": "0.0.0",
   "private": true,
-  "description": "A Vue 3 port of @gravity-ui/markdown-editor",
+  "description": "Vue 3 Markdown editor monorepo",
   "license": "MIT",
   "packageManager": "pnpm@11.16.0",
   "engines": {
@@ -11,7 +11,7 @@
   },
   "scripts": {
     "build": "pnpm --recursive run build",
-    "dev": "pnpm --filter @gravity-ui/vue-markdown-editor-playground dev",
+    "dev": "pnpm --filter hexagon-editor-playground dev",
     "test": "pnpm --recursive run test",
     "test:e2e": "playwright test",
     "test:all": "pnpm test && pnpm test:e2e",

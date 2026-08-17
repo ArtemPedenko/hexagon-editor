@@ -1,17 +1,17 @@
-# @gravity-ui/vue-markdown-editor
+# hexagon-editor
 
 Vue 3 editor for Markdown and YFM with visual, markup and split modes.
 
 ## Install
 
 ```bash
-pnpm add @gravity-ui/vue-markdown-editor
+pnpm add hexagon-editor
 ```
 
 Import the component and its styles in the application entry point:
 
 ```ts
-import '@gravity-ui/vue-markdown-editor/style.css';
+import 'hexagon-editor/style.css';
 ```
 
 ## Component API
@@ -19,7 +19,7 @@ import '@gravity-ui/vue-markdown-editor/style.css';
 ```vue
 <script setup lang="ts">
 import {ref} from 'vue';
-import {MarkdownEditor} from '@gravity-ui/vue-markdown-editor';
+import {MarkdownEditor} from 'hexagon-editor';
 
 const value = ref('# Document');
 const mode = ref<'wysiwyg' | 'markup' | 'split'>('wysiwyg');
@@ -64,7 +64,7 @@ The editor supports CommonMark blocks and marks, tables, definition lists, headi
 KaTeX renders math by default. Mermaid diagrams are rendered lazily by the bundled Mermaid runtime. Mermaid and YFM HTML rendering can be overridden by the host:
 
 ```ts
-import {configureAdvancedMarkdownRenderers} from '@gravity-ui/vue-markdown-editor';
+import {configureAdvancedMarkdownRenderers} from 'hexagon-editor';
 
 configureAdvancedMarkdownRenderers({
   mermaid: (source) => renderMermaidIntoElement(source),

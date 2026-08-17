@@ -7,7 +7,7 @@ export default defineConfig({
     plugins: [vue()],
     resolve: {
         alias: {
-            '@gravity-ui/vue-markdown-editor': fileURLToPath(
+            'hexagon-editor': fileURLToPath(
                 new URL('../../packages/vue-markdown-editor/src/index.ts', import.meta.url),
             ),
         },

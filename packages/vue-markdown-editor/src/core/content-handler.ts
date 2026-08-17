@@ -11,7 +11,7 @@ type MarkdownParser = Pick<MarkdownCodec, 'parse'>;
 /**
  * Framework-independent upstream content operations for a mounted WYSIWYG
  * view. Vue only owns the view lifecycle; document mutation semantics stay
- * identical to gravity-ui/markdown-editor.
+ * identical to the upstream implementation.
  */
 export class WysiwygContentHandler {
     readonly #parser: MarkdownParser;

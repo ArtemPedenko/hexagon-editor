@@ -1,8 +1,8 @@
 <script setup lang="ts">
 	import { computed, ref } from 'vue';
 
-	import { MarkdownEditor, renderMarkdownPreview, VERSION } from '@gravity-ui/vue-markdown-editor';
-	import type { MarkdownEditorLocale, MarkdownEditorMode, MarkdownEditorTheme } from '@gravity-ui/vue-markdown-editor';
+	import { MarkdownEditor, renderMarkdownPreview, VERSION } from 'hexagon-editor';
+	import type { MarkdownEditorLocale, MarkdownEditorMode, MarkdownEditorTheme } from 'hexagon-editor';
 
 	const editorMode = ref<MarkdownEditorMode>('wysiwyg');
 	const locale = ref<MarkdownEditorLocale>('ru');

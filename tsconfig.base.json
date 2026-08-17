@@ -6,7 +6,7 @@
     "moduleResolution": "Bundler",
     "baseUrl": ".",
     "paths": {
-      "@gravity-ui/vue-markdown-editor": ["packages/vue-markdown-editor/src/index.ts"]
+      "hexagon-editor": ["packages/vue-markdown-editor/src/index.ts"]
     },
     "strict": true,
     "skipLibCheck": true,

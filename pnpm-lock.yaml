@@ -35,7 +35,7 @@ importers:
 
   apps/playground:
     dependencies:
-      '@gravity-ui/vue-markdown-editor':
+      hexagon-editor:
         specifier: workspace:*
         version: link:../../packages/vue-markdown-editor
       vue:

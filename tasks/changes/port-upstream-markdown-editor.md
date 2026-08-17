@@ -1,4 +1,4 @@
-# Перенести upstream-модули gravity-ui/markdown-editor на Vue 3
+# Перенести модули upstream Markdown editor на Vue 3
 
 ## Статус постановки
 
@@ -6,7 +6,7 @@
 
 ## Решения и [Уточнить]
 
-- Единственный эталон поведения и исходников — `gravity-ui/markdown-editor` commit `fcb1c73561e9d0ee04a8f2a73308c4fadd1cff14` (15.45.0, MIT).
+- Единственный эталон поведения и исходников — upstream commit `fcb1c73561e9d0ee04a8f2a73308c4fadd1cff14` (15.45.0, MIT).
 - Переносить весь применимый upstream-код; React-bound view, hooks и renderer заменять Vue 3-адаптером, не меняя редакторскую семантику.
 - Публичный API включает все применимые upstream export и extension/action points под теми же именами и семантикой; React entry points заменяются Vue-компонентом и composable.
 - GPT исключается полностью: исходники, i18n, иконки, зависимости, экспорты, playground и документация. `Superscript`, `Autocomplete`, `CommandMenu` и все YFM-расширения также исключены из переноса.
@@ -22,7 +22,7 @@
 
 ## Описание
 
-Текущий `@gravity-ui/vue-markdown-editor` реализует ограниченный самостоятельный редактор и расходится с `@gravity-ui/markdown-editor` в API, extension architecture, Markdown-кодеках, командах и клавиатурных сценариях. Требуется заменить этот подход последовательным переносом upstream-модулей на Vue 3: framework-independent ProseMirror/CodeMirror-код переносится без изменения поведения, а React UI заменяется Vue-реализацией. Результат — Vue-пакет с функциональным и контрактным паритетом upstream, кроме GPT и интеграции Yandex Forms.
+Текущий `hexagon-editor` реализует ограниченный самостоятельный редактор и расходится с upstream в API, extension architecture, Markdown-кодеках, командах и клавиатурных сценариях. Требуется заменить этот подход последовательным переносом upstream-модулей на Vue 3: framework-independent ProseMirror/CodeMirror-код переносится без изменения поведения, а React UI заменяется Vue-реализацией. Результат — Vue-пакет с функциональным и контрактным паритетом upstream, кроме GPT и интеграции Yandex Forms.
 
 ## Что нужно сделать
 
@@ -38,7 +38,7 @@
 
 ## Технические детали
 
-Поддерживать ESM TypeScript/Vue 3-пакет `@gravity-ui/vue-markdown-editor`. Новые entry points и совместимые deep imports публиковать только после фиксации в parity-матрице. Стили и i18n переносить вместе с соответствующей функцией. Нельзя заменять существующий upstream-модуль упрощённой командой или новым форматом Markdown.
+Поддерживать ESM TypeScript/Vue 3-пакет `hexagon-editor`. Новые entry points и совместимые deep imports публиковать только после фиксации в parity-матрице. Стили и i18n переносить вместе с соответствующей функцией. Нельзя заменять существующий upstream-модуль упрощённой командой или новым форматом Markdown.
 
 ## Критерии приёмки
 

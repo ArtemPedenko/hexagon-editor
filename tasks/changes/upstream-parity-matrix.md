@@ -1,8 +1,8 @@
-# Parity-матрица `gravity-ui/markdown-editor` → Vue
+# Parity-матрица upstream Markdown editor → Vue
 
 ## Эталон и правила учёта
 
-- **Upstream:** `gravity-ui/markdown-editor` commit `fcb1c73561e9d0ee04a8f2a73308c4fadd1cff14` (15.45.0, MIT).
+- **Upstream:** commit `fcb1c73561e9d0ee04a8f2a73308c4fadd1cff14` (15.45.0, MIT).
 - **Статусы:** `done` — используется в runtime Vue-пакета; `partial` — есть часть API/поведения, но не весь upstream-контракт; `pending` — ещё не переносился; `excluded` — только согласованное исключение.
 - **Допустимые исключения:** `extensions/additional/GPT`, связанные с ним icons/i18n/tests, `extensions/markdown/Superscript`, behavior-расширения `Autocomplete`, `CommandMenu` и `FilePaste`, все YFM-расширения, загрузка файлов и `FileForm`, продуктовая интеграция Yandex Forms; для `CodeBlock` — IDE-paste и полноценный Vue node-view. Общие редакторские формы изображения и ссылки не исключены.
 - Для React-bound исходников Vue-эквивалентом должен стать компонент/composable/node-view; перенос core-семантики и Markdown-формата обязателен до UI-слоя.

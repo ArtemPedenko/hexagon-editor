@@ -1,5 +1,5 @@
 {
-  "name": "@gravity-ui/vue-markdown-editor-playground",
+  "name": "hexagon-editor-playground",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,7 +10,7 @@
     "lint": "eslint src --max-warnings=0"
   },
   "dependencies": {
-    "@gravity-ui/vue-markdown-editor": "workspace:*",
+    "hexagon-editor": "workspace:*",
     "vue": "^3.5.0"
   },
   "devDependencies": {

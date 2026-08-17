@@ -1,5 +1,5 @@
 {
-  "name": "@gravity-ui/vue-markdown-editor",
+  "name": "hexagon-editor",
   "version": "0.1.0-alpha.0",
   "description": "Vue 3 Markdown/YFM WYSIWYG and markup editor",
   "license": "MIT",

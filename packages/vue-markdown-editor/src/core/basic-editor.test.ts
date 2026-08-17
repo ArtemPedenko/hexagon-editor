@@ -339,11 +339,11 @@ describe('basic Markdown extensions', () => {
         const state = EditorState.create({doc: document, selection: TextSelection.create(document, 1, 5)});
         let nextState = state;
 
-        createBasicEditorCommands().link('https://gravity-ui.com')(state, (transaction) => {
+        createBasicEditorCommands().link('https://example.com')(state, (transaction) => {
             nextState = state.apply(transaction);
         });
 
-        expect(nextState.doc.firstChild?.firstChild?.marks[0]?.attrs.href).toBe('https://gravity-ui.com');
+        expect(nextState.doc.firstChild?.firstChild?.marks[0]?.attrs.href).toBe('https://example.com');
     });
 
     it.each([
