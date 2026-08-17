@@ -21,14 +21,15 @@ test.describe('Markdown editor playground', () => {
         const quote = page.locator('.ProseMirror blockquote');
         await expect(quote).toHaveText('Изменения затрагивают:');
         await expect(quote).toHaveCSS('border-left-color', 'rgb(82, 130, 255)');
-        await expect(page.locator('.ProseMirror [data-demo-html]')).toHaveText('Raw HTML block');
+        await expect(page.locator('.ProseMirror p', {hasText: '<div data-demo-html>Raw HTML block</div>'})).toHaveText('<div data-demo-html>Raw HTML block</div>');
+        await expect(page.locator('.ProseMirror [data-demo-html]')).toHaveCount(0);
         await expect(page.locator('.ProseMirror [data-directive-html]')).toHaveText('HTML directive');
         await expect(page.locator('.ProseMirror [data-math-inline]')).toBeVisible();
         await expect(page.locator('.ProseMirror [data-math-inline] .katex')).toBeVisible();
         await expect(page.locator('.ProseMirror [data-math-block]')).toContainText('sum');
         await expect(page.locator('.ProseMirror [data-math-block] .katex-display')).toBeVisible();
         await expect(page.locator('.ProseMirror [data-mermaid] svg')).toBeVisible();
-        await expect(page.locator('.ProseMirror [data-yfm-html]')).toContainText('YFM HTML block');
+        await expect(page.locator('.ProseMirror [data-yfm-html]')).toHaveText(':::html\n<section>YFM HTML block</section>\n:::');
         await expect(page.locator('.playground__preview')).toContainText('HTML directive');
         expect(errors).toEqual([]);
     });
@@ -400,17 +401,26 @@ test.describe('Markdown editor playground', () => {
         await expect(diagrams.last().locator('svg')).toBeVisible();
     });
 
-    test('keeps YFM HTML source editable in the visual editor', async ({page}) => {
+    test('keeps YFM HTML source editable as text in the visual editor', async ({page}) => {
         await page.goto('/');
-        await page.locator('.ProseMirror [data-yfm-html]').dblclick();
+        const source = page.locator('.ProseMirror [data-yfm-html]');
+        await source.evaluate((element) => {
+            const text = element.firstChild;
+            if (!(text instanceof Text)) throw new Error('YFM source is not editable text');
+            const start = text.data.indexOf('YFM HTML');
+            if (start < 0) throw new Error('YFM source text is missing');
+            (element.closest('.ProseMirror') as HTMLElement | null)?.focus();
+            const range = document.createRange();
+            range.setStart(text, start);
+            range.setEnd(text, start + 'YFM HTML'.length);
+            const selection = window.getSelection();
+            selection?.removeAllRanges();
+            selection?.addRange(range);
+        });
+        await page.keyboard.insertText('Updated YFM HTML');
 
-        const sourceEditor = page.locator('.markdown-editor__atomic-source .cm-content');
-        await sourceEditor.click();
-        await page.keyboard.press('Control+a');
-        await page.keyboard.type('<aside>Updated YFM HTML</aside>');
-        await page.keyboard.press('Control+Enter');
-
-        await expect(page.locator('.ProseMirror [data-yfm-html]')).toContainText('<aside>Updated YFM HTML</aside>');
+        await expect(source).toHaveText(':::html\n<section>Updated YFM HTML block</section>\n:::');
+        await expect(page.locator('.markdown-editor__atomic-source')).toHaveCount(0);
     });
 
     test('does not insert another formula while editing the current formula', async ({page}) => {

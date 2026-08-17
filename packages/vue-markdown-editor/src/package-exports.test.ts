@@ -14,7 +14,7 @@ describe('package exports', () => {
 
         expect(Object.keys(manifest.exports)).toEqual([
             '.', './classname', './configure', './core', './extensions', './forms', './i18n',
-            './presets', './specs', './toolbar', './style.css',
+            './presets', './renderer', './specs', './toolbar', './style.css',
         ]);
         expect(manifest.dependencies.react).toBeUndefined();
         expect(manifest.dependencies['react-dom']).toBeUndefined();

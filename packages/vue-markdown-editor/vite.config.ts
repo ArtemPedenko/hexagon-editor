@@ -26,6 +26,7 @@ export default defineConfig({
                 i18n: resolve(import.meta.dirname, 'src/i18n/index.ts'),
                 index: resolve(import.meta.dirname, 'src/index.ts'),
                 presets: resolve(import.meta.dirname, 'src/presets/index.ts'),
+                renderer: resolve(import.meta.dirname, 'src/renderer/index.ts'),
                 specs: resolve(import.meta.dirname, 'src/extensions/specs.ts'),
                 toolbar: resolve(import.meta.dirname, 'src/toolbar/index.ts'),
             },

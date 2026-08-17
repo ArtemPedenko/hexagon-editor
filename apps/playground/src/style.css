@@ -83,8 +83,8 @@ h1 {
 
 .playground__source-pane {
 	border-left: 1px solid #e5e7eb;
-	background: #25272b;
-	color: #aab1be;
+	background: #fff;
+	color: #4e5665;
 }
 
 .playground__pane-title {
@@ -338,6 +338,33 @@ h1 {
 .playground__preview code {
 	font-family: 'SFMono-Regular', Consolas, monospace;
 	font-size: 0.82em;
+}
+
+.playground__preview blockquote {
+	margin: 1rem 0;
+	padding-left: 0.75rem;
+	border-left: 2px solid #5282ff;
+}
+
+.playground__preview table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.playground__preview th,
+.playground__preview td {
+	padding: 0.4rem 0.5rem;
+	border: 1px solid #d8dbe0;
+	text-align: left;
+}
+
+.playground__preview img,
+.playground__preview svg {
+	max-width: 100%;
+}
+
+.playground__preview summary {
+	cursor: pointer;
 }
 
 @media (max-width: 760px) {

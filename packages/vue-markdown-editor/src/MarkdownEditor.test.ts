@@ -342,6 +342,26 @@ describe('MarkdownEditor', () => {
         app.unmount();
     });
 
+    it('shows raw HTML and unspaced HTML directives as source text', async () => {
+        const target = document.createElement('div');
+        const app = createApp(() => h(MarkdownEditor, {
+            modelValue: '<section data-raw-html-element>Raw HTML</section>\n\n:::html\n<section data-yfm-html-element>YFM HTML</section>\n:::',
+        }));
+
+        document.body.append(target);
+        app.mount(target);
+        await nextTick();
+
+        expect(target.querySelector('.ProseMirror p')?.textContent).toBe('<section data-raw-html-element>Raw HTML</section>');
+        expect(target.querySelector('[data-yfm-html]')?.textContent).toBe(':::html\n<section data-yfm-html-element>YFM HTML</section>\n:::');
+        expect(target.querySelector('[data-raw-html-element]')).toBeNull();
+        expect(target.querySelector('[data-raw-html]')).toBeNull();
+        expect(target.querySelector('[data-yfm-html-element]')).toBeNull();
+        expect(target.querySelector('[data-yfm-html]')?.classList.contains('ProseMirror-selectednode')).toBe(false);
+
+        app.unmount();
+    });
+
     it('folds the content under a folding heading from the toolbar', async () => {
         const target = document.createElement('div');
         const app = createApp(() => h(MarkdownEditor, {modelValue: '##+ Section\n\nHidden content', toolbarPreset: 'full'}));

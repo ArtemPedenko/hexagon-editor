@@ -18,16 +18,14 @@ export const htmlNodeSpecs: Record<HtmlNode, NodeSpec> = {
         group: 'block',
         parseDOM: [{
             getAttrs: (node) => ({[HtmlAttr.Content]: (node as HTMLElement).getAttribute('data-html-raw') ?? (node as HTMLElement).innerHTML}),
-            tag: 'div[data-html]',
+            tag: '[data-html]',
         }],
-        toDOM: (node) => {
-            const element = document.createElement('div');
-            element.setAttribute('data-html', '');
-            element.setAttribute('data-html-raw', node.attrs[HtmlAttr.Content] as string);
-            element.contentEditable = 'false';
-            element.innerHTML = node.attrs[HtmlAttr.Content] as string;
-            return element;
-        },
+        toDOM: (node) => ['div', {
+            'data-html': '',
+            'data-html-raw': node.attrs[HtmlAttr.Content],
+            'data-raw-html': '',
+            contenteditable: 'false',
+        }, node.attrs[HtmlAttr.Content]],
     },
     [HtmlNode.Inline]: {
         atom: true,

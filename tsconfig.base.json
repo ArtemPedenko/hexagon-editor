@@ -6,7 +6,8 @@
     "moduleResolution": "Bundler",
     "baseUrl": ".",
     "paths": {
-      "hexagon-editor": ["packages/vue-markdown-editor/src/index.ts"]
+      "hexagon-editor": ["packages/vue-markdown-editor/src/index.ts"],
+      "hexagon-editor/renderer": ["packages/vue-markdown-editor/src/renderer/index.ts"]
     },
     "strict": true,
     "skipLibCheck": true,

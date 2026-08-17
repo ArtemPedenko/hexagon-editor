@@ -1,8 +1,9 @@
 <script setup lang="ts">
-	import { computed, ref } from 'vue';
+	import { ref } from 'vue';
 
-	import { MarkdownEditor, renderMarkdownPreview, VERSION } from 'hexagon-editor';
+	import { MarkdownEditor, VERSION } from 'hexagon-editor';
 	import type { MarkdownEditorLocale, MarkdownEditorMode, MarkdownEditorTheme } from 'hexagon-editor';
+	import { MarkdownRenderer } from 'hexagon-editor/renderer';
 
 	const editorMode = ref<MarkdownEditorMode>('wysiwyg');
 	const locale = ref<MarkdownEditorLocale>('ru');
@@ -43,8 +44,6 @@
 		':::',
 	].join('\n');
 	const markdown = ref(advancedMarkdownDemo);
-	const previewHtml = computed(() => renderMarkdownPreview(markdown.value));
-
 </script>
 
 <template>
@@ -81,9 +80,7 @@
       />
       <aside class="playground__source-pane">
         <div class="playground__pane-title">Preview</div>
-        <!-- markdown-it is configured with html: false in renderMarkdownPreview. -->
-        <!-- eslint-disable-next-line vue/no-v-html -->
-        <div class="playground__preview" v-html="previewHtml" />
+        <MarkdownRenderer class="playground__preview" :content="markdown" />
       </aside>
     </section>
   </main>

@@ -10,7 +10,7 @@ import type {MarkdownSerializerState, ParseSpec} from 'prosemirror-markdown';
 import {configureMathMarkdown, createMathNodeSpecs, mathSerializerNodes, mathTokenSpecs} from '../extensions/additional/math';
 import {configureMermaidMarkdown, createMermaidNodeSpec, mermaidTokenSpec, serializeMermaid} from '../extensions/additional/mermaid';
 import {configureQuoteLinkMarkdown, quoteLinkNodeSpec, quoteLinkTokenSpec, serializeQuoteLink} from '../extensions/additional/quote-link';
-import {configureYfmHtmlBlockMarkdown, createYfmHtmlBlockNodeSpec, serializeYfmHtmlBlock, yfmHtmlBlockTokenSpec} from '../extensions/additional/yfm-html-block';
+import {configureYfmHtmlBlockMarkdown} from '../extensions/additional/yfm-html-block';
 import {blockquoteNodeSpec, blockquoteTokenSpec, serializeBlockquote} from '../extensions/markdown/blockquote';
 import {boldMarkSpec, boldTokenSpec, serializeBold} from '../extensions/markdown/bold';
 import {breakTokenSpecs, hardBreakNodeSpec, serializeHardBreak, serializeSoftBreak, softBreakNodeSpec} from '../extensions/markdown/breaks';
@@ -32,7 +32,7 @@ import {TableNode, tableNodeSpecs, tableSerializerNodes} from '../extensions/mar
 import {ExtensionsManager} from './extensions-manager';
 import type {ExtensionBuilder} from './extension-builder';
 import {defaultMarkdownSchema, MarkdownCodec} from './markdown';
-import {renderHtmlBlock, renderOptionalBlock, renderYfmHtml} from './basic-editor-renderers';
+import {renderHtmlBlock, renderOptionalBlock} from './basic-editor-renderers';
 
 const basicMarks: Record<string, MarkSpec> = {
     ins: underlineMarkSpec,
@@ -52,8 +52,8 @@ const extendedMarkdownNodes: Record<string, NodeSpec> = {
     definition_term: {content: 'inline*', toDOM: () => ['dt', 0]},
     quote_link: quoteLinkNodeSpec,
     directive: {atom: true, attrs: {content: {default: ''}, name: {default: 'note'}}, group: 'block', toDOM: (node) => node.attrs.name === 'html' ? renderHtmlBlock(node.attrs.content, 'data-directive-html') : ['div', {'data-directive': node.attrs.name}, node.attrs.content]},
-    raw_html: {atom: true, attrs: {html: {default: ''}}, group: 'block', toDOM: (node) => renderHtmlBlock(node.attrs.html, 'data-raw-html')},
-    yfm_html_block: createYfmHtmlBlockNodeSpec((html) => renderYfmHtml(html)),
+    raw_html: {atom: true, attrs: {html: {default: ''}}, group: 'block', toDOM: (node) => ['div', {'data-raw-html': ''}, node.attrs.html]},
+    yfm_html_block: {attrs: {html: {default: ''}}, content: 'text*', group: 'block', toDOM: () => ['p', {'data-yfm-html': '', style: 'white-space: pre-wrap'}, 0]},
 };
 
 export const basicMarkdownSchema: Schema = new Schema({
@@ -69,12 +69,17 @@ const tableTokenSpecs: Record<string, ParseSpec> = {
     blockquote: blockquoteTokenSpec, code_inline: codeTokenSpec, ...codeBlockTokenSpecs, em: italicTokenSpec, hr: horizontalRuleTokenSpec, link: linkTokenSpec, image: imageTokenSpec, mark: markTokenSpec, s: strikeTokenSpec, sub: subscriptTokenSpec, ins: underlineTokenSpec, ...breakTokenSpecs, strong: boldTokenSpec, ...listTokenSpecs, ...deflistTokenSpecs, ...htmlTokenSpecs,
     directive: {node: 'directive', getAttrs: (token) => ({content: token.content, name: token.info})},
     heading: {block: 'heading', getAttrs: (token) => ({class: token.attrGet('class'), folding: token.attrGet('folding') === null ? null : token.attrGet('folding') === 'true', id: token.attrGet('id'), level: Number(token.tag.slice(1))})},
-    ...mathTokenSpecs, quote_link: quoteLinkTokenSpec, table: {block: 'table'}, tbody: {block: TableNode.Body}, td: {block: TableNode.DataCell}, th: {block: TableNode.HeaderCell}, thead: {block: TableNode.Head}, tr: {block: TableNode.Row}, yfm_html_block: yfmHtmlBlockTokenSpec,
+    ...mathTokenSpecs, quote_link: quoteLinkTokenSpec, table: {block: 'table'}, tbody: {block: TableNode.Body}, td: {block: TableNode.DataCell}, th: {block: TableNode.HeaderCell}, thead: {block: TableNode.Head}, tr: {block: TableNode.Row}, yfm_html_block: {block: 'yfm_html_block', noCloseToken: true},
 };
 
-export function createExtendedMarkdownIt(markdown = new MarkdownIt('commonmark', {html: true})): MarkdownIt {
+export function createExtendedMarkdownIt(markdown = new MarkdownIt('commonmark', {html: false})): MarkdownIt {
     markdown.enable('table').use(deflist).use(markPlugin).enable('strikethrough').use(subPlugin).use(insPlugin);
     configureMathMarkdown(markdown); configureMermaidMarkdown(markdown); configureQuoteLinkMarkdown(markdown); configureYfmHtmlBlockMarkdown(markdown); configureImageMarkdown(markdown); configureLinkMarkdown(markdown);
+    markdown.core.ruler.after('block', 'yfm_html_source', (state) => {
+        for (const token of state.tokens) {
+            if (token.type === 'yfm_html_block') token.content = `:::html\n${token.content}\n:::`;
+        }
+    });
     markdown.core.ruler.after('block', 'folding_heading', (state) => {
         for (const [index, token] of state.tokens.entries()) {
             const inline = state.tokens[index + 1]; const close = state.tokens[index + 2];
@@ -107,7 +112,7 @@ const basicMarkdownParserExtension = (builder: ExtensionBuilder) => {
     builder.addParserToken('mermaid', mermaidTokenSpec);
 };
 
-const basicMarkdownParser = ExtensionsManager.process(basicMarkdownParserExtension, {baseSchema: basicMarkdownSchema, markdown: {html: true}}).textParser;
+const basicMarkdownParser = ExtensionsManager.process(basicMarkdownParserExtension, {baseSchema: basicMarkdownSchema, markdown: {html: false}}).textParser;
 
 const basicMarkdownSerializerNodes = {
     blockquote: serializeBlockquote, code_block: serializeCodeBlock, hard_break: serializeHardBreak, horizontal_rule: serializeHorizontalRule, image: serializeImage, ...listSerializerNodes,
@@ -117,7 +122,8 @@ const basicMarkdownSerializerNodes = {
     directive(state: MarkdownSerializerState, node: ProseMirrorNode) { state.write(`::: ${node.attrs.name}\n${node.attrs.content}\n:::`); state.closeBlock(node); },
     ...mathSerializerNodes, mermaid: serializeMermaid,
     heading(state: MarkdownSerializerState, node: ProseMirrorNode) { state.write(`${'#'.repeat(node.attrs.level)}${node.attrs.folding === null ? '' : '+'} `); state.renderInline(node); const attributes = [node.attrs.id === null ? '' : `#${node.attrs.id}`, node.attrs.class === null ? '' : `.${node.attrs.class}`].filter(Boolean).join(' '); if (attributes) state.write(` {${attributes}}`); state.closeBlock(node); },
-    raw_html(state: MarkdownSerializerState, node: ProseMirrorNode) { state.write(node.attrs.html); state.closeBlock(node); }, soft_break: serializeSoftBreak, ...deflistSerializerNodes, ...htmlSerializerNodes, yfm_html_block: serializeYfmHtmlBlock, quote_link: serializeQuoteLink, ...tableSerializerNodes,
+    raw_html(state: MarkdownSerializerState, node: ProseMirrorNode) { state.write(node.attrs.html); state.closeBlock(node); }, soft_break: serializeSoftBreak, ...deflistSerializerNodes, ...htmlSerializerNodes,
+    yfm_html_block(state: MarkdownSerializerState, node: ProseMirrorNode) { state.write(node.textContent || `:::html\n${node.attrs.html || ''}\n:::`); state.closeBlock(node); }, quote_link: serializeQuoteLink, ...tableSerializerNodes,
 };
 
 const basicMarkdownSerializerMarks = {
@@ -129,6 +135,6 @@ const basicMarkdownSerializer = ExtensionsManager.process((builder) => {
     basicMarkdownParserExtension(builder);
     for (const [name, token] of Object.entries(basicMarkdownSerializerNodes)) builder.addNodeSerializer(name, token);
     for (const [name, token] of Object.entries(basicMarkdownSerializerMarks)) builder.addMarkSerializer(name, token);
-}, {baseSchema: basicMarkdownSchema, markdown: {html: true}}).serializer;
+}, {baseSchema: basicMarkdownSchema, markdown: {html: false}}).serializer;
 
 export const basicMarkdownCodec = new MarkdownCodec({parser: basicMarkdownParser, serializer: basicMarkdownSerializer});

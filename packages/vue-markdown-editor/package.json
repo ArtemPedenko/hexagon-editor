@@ -40,6 +40,10 @@
       "types": "./dist/presets/index.d.ts",
       "import": "./dist/presets.js"
     },
+    "./renderer": {
+      "types": "./dist/renderer/index.d.ts",
+      "import": "./dist/renderer.js"
+    },
     "./specs": {
       "types": "./dist/extensions/specs.d.ts",
       "import": "./dist/specs.js"
@@ -95,6 +99,7 @@
   "devDependencies": {
     "@types/markdown-it": "^14.1.2",
     "@vitejs/plugin-vue": "^6.0.0",
+    "@vue/server-renderer": "^3.5.0",
     "jsdom": "^30.0.1",
     "vite": "^7.0.0",
     "vite-plugin-dts": "^4.5.0",

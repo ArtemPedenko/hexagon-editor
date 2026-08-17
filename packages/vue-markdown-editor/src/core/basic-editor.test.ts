@@ -120,14 +120,15 @@ describe('basic Markdown extensions', () => {
         expect(nextState.doc.firstChild?.type.name).toBe('table');
     });
 
-    it('round-trips raw HTML blocks, directives, and heading attributes', () => {
+    it('keeps raw HTML as text while parsing directives and heading attributes', () => {
         const source = '# Heading {#intro .lead}\n\n<div>HTML</div>\n\n::: html\n<div>Add HTML code here</div>\n:::';
         const document = basicMarkdownCodec.parse(source);
         const serialized = basicMarkdownCodec.serialize(document);
 
         expect(document.child(0).attrs.id).toBe('intro');
         expect(document.child(0).textContent).toBe('Heading');
-        expect(document.child(1).type.name).toBe('html_block');
+        expect(document.child(1).type.name).toBe('paragraph');
+        expect(document.child(1).textContent).toBe('<div>HTML</div>');
         expect(document.child(2).type.name).toBe('directive');
         expect(document.child(2).textContent).toBe('');
         expect(serialized).toContain('# Heading {#intro .lead}');
@@ -136,7 +137,8 @@ describe('basic Markdown extensions', () => {
 
         const reparsed = basicMarkdownCodec.parse(serialized);
         expect(reparsed.child(0).attrs).toMatchObject({class: 'lead', id: 'intro'});
-        expect(reparsed.child(1).type.name).toBe('html_block');
+        expect(reparsed.child(1).type.name).toBe('paragraph');
+        expect(reparsed.child(1).textContent).toBe('<div>HTML</div>');
         expect(reparsed.child(2).type.name).toBe('directive');
         expect(reparsed.child(2).attrs).toMatchObject({
             content: '<div>Add HTML code here</div>',

@@ -14,6 +14,28 @@ Import the component and its styles in the application entry point:
 import 'hexagon-editor/style.css';
 ```
 
+## Read-only rendering
+
+Sites that only display documents can import the standalone renderer without bundling the editor, ProseMirror, CodeMirror, toolbar, or editor styles:
+
+```vue
+<script setup lang="ts">
+import {MarkdownRenderer} from 'hexagon-editor/renderer';
+
+defineProps<{content: string}>();
+</script>
+
+<template>
+  <MarkdownRenderer :content="content" />
+</template>
+```
+
+`MarkdownRenderer` supports server rendering. Mermaid source is emitted as a stable fallback during SSR and is replaced with an SVG after hydration. The Mermaid runtime is loaded lazily only when a document contains a diagram.
+
+The renderer intentionally ships no CSS. Style its `.markdown-renderer` root and semantic descendants in the consuming site. KaTeX output also requires host-provided styles if the site wants the standard KaTeX appearance.
+
+Raw Markdown HTML and the contents of `:::html ... :::` are displayed as source text. Only the spaced `::: html ... :::` directive is rendered as HTML. Pass trusted content to that directive; the renderer does not sanitize it.
+
 ## Component API
 
 ```vue
@@ -53,7 +75,7 @@ Headless integrations can compose the exported `ZeroPreset`, `CommonMarkPreset`,
 
 ## Stable entry points
 
-The root entry exports the complete supported public API. Focused integrations may use the documented subpaths: `./core`, `./extensions`, `./specs`, `./presets`, `./toolbar`, `./forms`, `./configure`, and `./classname`. Other internal source paths are not part of the compatibility contract.
+The root entry exports the complete supported public API. Focused integrations may use the documented subpaths: `./core`, `./extensions`, `./specs`, `./presets`, `./renderer`, `./toolbar`, `./forms`, `./configure`, and `./classname`. Other internal source paths are not part of the compatibility contract.
 
 `configure({lang, renderers})` sets process-wide defaults and optional host renderers. `cn(block)` provides the `hx-md-` BEM classname convention without a React dependency.
 

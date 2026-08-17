@@ -9,10 +9,19 @@ export default defineConfig({
     },
     plugins: [vue()],
     resolve: {
-        alias: {
-            'hexagon-editor': fileURLToPath(
-                new URL('../../packages/vue-markdown-editor/src/index.ts', import.meta.url),
-            ),
-        },
+        alias: [
+            {
+                find: 'hexagon-editor/renderer',
+                replacement: fileURLToPath(
+                    new URL('../../packages/vue-markdown-editor/src/renderer/index.ts', import.meta.url),
+                ),
+            },
+            {
+                find: /^hexagon-editor$/,
+                replacement: fileURLToPath(
+                    new URL('../../packages/vue-markdown-editor/src/index.ts', import.meta.url),
+                ),
+            },
+        ],
     },
 });

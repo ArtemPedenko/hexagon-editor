@@ -16,7 +16,6 @@ const atomicSourceNodeNames = new Set([
   "math_block",
   "mermaid",
   "raw_html",
-  "yfm_html_block",
 ]);
 
 function getAtomicSource(node: ProseMirrorNode): string {

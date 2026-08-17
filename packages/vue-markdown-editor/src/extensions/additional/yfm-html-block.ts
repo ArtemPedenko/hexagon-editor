@@ -38,7 +38,7 @@ export const yfmHtmlBlockNodeSpec: NodeSpec = {
     attrs: {html: {default: ''}},
     group: 'block',
     selectable: true,
-    toDOM: (node) => ['pre', {'data-yfm-html': ''}, node.attrs.html],
+    toDOM: (node) => ['div', {'data-yfm-html': ''}, node.attrs.html],
 };
 
 export function createYfmHtmlBlockNodeSpec(render: (html: string) => HTMLElement): NodeSpec {
@@ -58,7 +58,10 @@ export const serializeYfmHtmlBlock: ConstructorParameters<typeof MarkdownSeriali
 export const insertYfmHtmlBlock: Command = (state, dispatch) => {
     const type = state.schema.nodes[yfmHtmlBlockNodeName];
     if (type === undefined || !state.selection.empty) return false;
-    dispatch?.(state.tr.replaceSelectionWith(type.create({html: defaultYfmHtml})).scrollIntoView());
+    const node = type.isTextblock
+        ? type.create({html: defaultYfmHtml}, state.schema.text(`:::html\n${defaultYfmHtml}\n:::`))
+        : type.create({html: defaultYfmHtml});
+    dispatch?.(state.tr.replaceSelectionWith(node).scrollIntoView());
     return true;
 };
 
