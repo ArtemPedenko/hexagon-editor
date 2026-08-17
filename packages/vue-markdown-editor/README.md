@@ -32,7 +32,7 @@ defineProps<{content: string}>();
 
 `MarkdownRenderer` supports server rendering. Mermaid source is emitted as a stable fallback during SSR and is replaced with an SVG after hydration. The Mermaid runtime is loaded lazily only when a document contains a diagram.
 
-The renderer intentionally ships no CSS. Style its `.markdown-renderer` root and semantic descendants in the consuming site. KaTeX output also requires host-provided styles if the site wants the standard KaTeX appearance.
+The renderer includes basic typography for headings, links, and inline code. Override its `.markdown-renderer` root, semantic descendants, or the `--markdown-renderer-link` and `--markdown-renderer-code-background` custom properties to match the consuming site. KaTeX output requires host-provided styles if the site wants the standard KaTeX appearance.
 
 Raw Markdown HTML and the contents of `:::html ... :::` are displayed as source text. Only the spaced `::: html ... :::` directive is rendered as HTML. Pass trusted content to that directive; the renderer does not sanitize it.
 

@@ -227,6 +227,49 @@
     cursor: text;
 }
 
+.markdown-editor :deep(.ProseMirror h1),
+.markdown-editor :deep(.ProseMirror h2),
+.markdown-editor :deep(.ProseMirror h3),
+.markdown-editor :deep(.ProseMirror h4),
+.markdown-editor :deep(.ProseMirror h5),
+.markdown-editor :deep(.ProseMirror h6) {
+    margin-block: 1.25em 0.5em;
+    font-weight: 600;
+    line-height: 1.25;
+}
+
+.markdown-editor :deep(.ProseMirror h1) { font-size: 2em; }
+.markdown-editor :deep(.ProseMirror h2) { font-size: 1.5em; }
+.markdown-editor :deep(.ProseMirror h3) { font-size: 1.25em; }
+.markdown-editor :deep(.ProseMirror h4) { font-size: 1.125em; }
+.markdown-editor :deep(.ProseMirror h5) { font-size: 1em; }
+.markdown-editor :deep(.ProseMirror h6) { font-size: 0.875em; }
+
+.markdown-editor :deep(.ProseMirror > :first-child) {
+    margin-block-start: 0;
+}
+
+.markdown-editor :deep(.ProseMirror a) {
+    color: var(--markdown-focus-text);
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+}
+
+.markdown-editor :deep(.ProseMirror code) {
+    padding: 0.15em 0.35em;
+    border-radius: 0.25rem;
+    background: var(--markdown-focus-background);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.875em;
+}
+
+.markdown-editor :deep(.ProseMirror pre code) {
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+    font-size: inherit;
+}
+
 .markdown-editor :deep(.ProseMirror ul),
 .markdown-editor :deep(.ProseMirror ol) {
     margin-block: 0.75rem;

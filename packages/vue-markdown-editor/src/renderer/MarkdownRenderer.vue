@@ -102,3 +102,53 @@ onBeforeUnmount(() => {
   <!-- eslint-disable-next-line vue/no-v-html -->
   <div ref="root" class="markdown-renderer" v-html="renderedContent" />
 </template>
+
+<style scoped>
+.markdown-renderer {
+    --markdown-renderer-code-background: #eef1f5;
+    --markdown-renderer-link: #1d5fd1;
+}
+
+.markdown-renderer :deep(h1),
+.markdown-renderer :deep(h2),
+.markdown-renderer :deep(h3),
+.markdown-renderer :deep(h4),
+.markdown-renderer :deep(h5),
+.markdown-renderer :deep(h6) {
+    margin-block: 1.25em 0.5em;
+    font-weight: 600;
+    line-height: 1.25;
+}
+
+.markdown-renderer :deep(h1) { font-size: 2em; }
+.markdown-renderer :deep(h2) { font-size: 1.5em; }
+.markdown-renderer :deep(h3) { font-size: 1.25em; }
+.markdown-renderer :deep(h4) { font-size: 1.125em; }
+.markdown-renderer :deep(h5) { font-size: 1em; }
+.markdown-renderer :deep(h6) { font-size: 0.875em; }
+
+.markdown-renderer :deep(> :first-child) {
+    margin-block-start: 0;
+}
+
+.markdown-renderer :deep(a) {
+    color: var(--markdown-renderer-link);
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+}
+
+.markdown-renderer :deep(code) {
+    padding: 0.15em 0.35em;
+    border-radius: 0.25rem;
+    background: var(--markdown-renderer-code-background);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.875em;
+}
+
+.markdown-renderer :deep(pre code) {
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+    font-size: inherit;
+}
+</style>
