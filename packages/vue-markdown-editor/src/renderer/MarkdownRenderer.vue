@@ -131,6 +131,32 @@ onBeforeUnmount(() => {
     margin-block-start: 0;
 }
 
+.markdown-renderer :deep(p) {
+    margin-block: 0.75rem;
+    line-height: 1.6;
+}
+
+.markdown-renderer :deep(ul),
+.markdown-renderer :deep(ol) {
+    margin-block: 0.75rem;
+    padding-inline-start: 1.75rem;
+}
+
+.markdown-renderer :deep(ul) { list-style: disc outside; }
+.markdown-renderer :deep(ol) { list-style: decimal outside; }
+.markdown-renderer :deep(ul ul) { list-style-type: circle; }
+.markdown-renderer :deep(ul ul ul) { list-style-type: square; }
+.markdown-renderer :deep(li > p) { margin-block: 0; }
+
+.markdown-renderer :deep(blockquote) {
+    margin: 1rem 0;
+    padding-inline-start: 0.75rem;
+    border-inline-start: 2px solid #5282ff;
+}
+
+.markdown-renderer :deep(blockquote > :first-child) { margin-block-start: 0; }
+.markdown-renderer :deep(blockquote > :last-child) { margin-block-end: 0; }
+
 .markdown-renderer :deep(a) {
     color: var(--markdown-renderer-link);
     text-decoration: underline;
@@ -150,5 +176,44 @@ onBeforeUnmount(() => {
     border-radius: 0;
     background: transparent;
     font-size: inherit;
+}
+
+.markdown-renderer :deep(pre) {
+    overflow: auto;
+    margin: 1rem 0;
+    padding: 0.75rem;
+    border-radius: 0.375rem;
+    color: #e6edf3;
+    background: #161b22;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    line-height: 1.5;
+}
+
+.markdown-renderer :deep(hr) {
+    margin-block: 1.5rem;
+    border: 0;
+    border-block-start: 1px solid #d8dbe0;
+}
+
+.markdown-renderer :deep(table) {
+    width: 100%;
+    margin: 1rem 0;
+    border-collapse: collapse;
+}
+
+.markdown-renderer :deep(th),
+.markdown-renderer :deep(td) {
+    min-width: 5rem;
+    padding: 0.45rem 0.6rem;
+    border: 1px solid #d8dbe0;
+    text-align: left;
+}
+
+.markdown-renderer :deep(th) { font-weight: 600; }
+
+.markdown-renderer :deep(img) {
+    max-width: 100%;
+    height: auto;
+    vertical-align: middle;
 }
 </style>

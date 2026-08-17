@@ -309,64 +309,6 @@ h1 {
 	background: #f3f5f8;
 }
 
-.playground__preview {
-	padding: 1rem;
-	overflow: auto;
-	color: #4e5665;
-	line-height: 1.55;
-}
-
-.playground__preview > :first-child {
-	margin-top: 0;
-}
-
-.playground__preview h1,
-.playground__preview h2,
-.playground__preview h3 {
-	color: #202125;
-	line-height: 1.2;
-}
-
-.playground__preview pre {
-	padding: 0.75rem;
-	overflow: auto;
-	border-radius: 0.25rem;
-	color: #e6e8eb;
-	background: #25272b;
-}
-
-.playground__preview code {
-	font-family: 'SFMono-Regular', Consolas, monospace;
-	font-size: 0.82em;
-}
-
-.playground__preview blockquote {
-	margin: 1rem 0;
-	padding-left: 0.75rem;
-	border-left: 2px solid #5282ff;
-}
-
-.playground__preview table {
-	width: 100%;
-	border-collapse: collapse;
-}
-
-.playground__preview th,
-.playground__preview td {
-	padding: 0.4rem 0.5rem;
-	border: 1px solid #d8dbe0;
-	text-align: left;
-}
-
-.playground__preview img,
-.playground__preview svg {
-	max-width: 100%;
-}
-
-.playground__preview summary {
-	cursor: pointer;
-}
-
 @media (max-width: 760px) {
 	.playground__workspace {
 		grid-template-columns: 1fr;
