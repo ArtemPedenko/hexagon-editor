@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
+/* eslint-disable vue/one-component-per-file -- Tests define isolated inline components. */
 
 import {EditorView} from '@codemirror/view';
-import {createApp, h, nextTick, ref} from 'vue';
+import {createApp, defineComponent, h, nextTick, ref} from 'vue';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
 import MarkdownEditor from './MarkdownEditor.vue';
@@ -431,6 +432,44 @@ describe('MarkdownEditor', () => {
         expect(editor.value?.getMode()).toBe('wysiwyg');
         expect(editor.value?.getValue()).toContain('$$\nE = mc^2\n$$');
         expect(target.querySelector('.markdown-editor__atomic-source')?.textContent).toContain('E = mc^2');
+
+        app.unmount();
+    });
+
+    it('renders and updates a registered directive component in visual mode', async () => {
+        const Opros = defineComponent({
+            props: {
+                content: {required: true, type: String},
+                name: {required: true, type: String},
+                readonly: Boolean,
+                updateContent: {required: true, type: Function},
+            },
+            setup: (props) => () => h('button', {
+                'data-opros-editor': props.name,
+                disabled: props.readonly,
+                onClick: () => props.updateContent('Changed'),
+            }, props.content),
+        });
+        const modelValue = ref('::: opros\nQuestion\n:::');
+        const target = document.createElement('div');
+        const app = createApp(() => h(MarkdownEditor, {
+            directiveComponents: {opros: Opros},
+            modelValue: modelValue.value,
+            'onUpdate:modelValue': (value: string) => { modelValue.value = value; },
+        }));
+
+        document.body.append(target);
+        app.mount(target);
+        await nextTick();
+
+        const component = target.querySelector<HTMLButtonElement>('[data-opros-editor="opros"]');
+        expect(component?.textContent).toBe('Question');
+        expect(component?.disabled).toBe(false);
+        component?.click();
+        await nextTick();
+
+        expect(modelValue.value).toContain('::: opros\nChanged\n:::');
+        expect(target.querySelector('[data-opros-editor="opros"]')?.textContent).toBe('Changed');
 
         app.unmount();
     });

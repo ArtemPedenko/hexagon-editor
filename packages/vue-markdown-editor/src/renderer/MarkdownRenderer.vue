@@ -1,19 +1,49 @@
 <script setup lang="ts">
-import {computed, nextTick, onBeforeUnmount, onMounted, ref, watch} from 'vue';
+import {computed, getCurrentInstance, h, nextTick, onBeforeUnmount, onMounted, ref, render, watch} from 'vue';
 
 import {renderMarkdownContent} from './markdown';
 import {getMermaid, nextMermaidDiagramId} from './mermaid-runtime';
+import type {MarkdownDirectiveComponentProps, MarkdownDirectiveComponents} from '../directives';
 
 defineOptions({name: 'MarkdownRenderer'});
 
 const props = defineProps<{
     content: string;
+    directiveComponents?: MarkdownDirectiveComponents;
 }>();
 
 const root = ref<HTMLElement>();
+const appContext = getCurrentInstance()?.appContext;
 const renderedContent = computed(() => renderMarkdownContent(props.content));
 let renderVersion = 0;
 let destroyed = false;
+let directiveTargets: HTMLElement[] = [];
+
+function unmountDirectiveComponents(): void {
+    for (const target of directiveTargets) render(null, target);
+    directiveTargets = [];
+}
+
+function renderDirectiveComponents(): void {
+    unmountDirectiveComponents();
+    if (props.directiveComponents === undefined) return;
+    for (const target of root.value?.querySelectorAll<HTMLElement>('[data-directive]') ?? []) {
+        const name = target.dataset.directive ?? '';
+        const component = props.directiveComponents[name];
+        if (component === undefined) continue;
+        const content = target.textContent ?? '';
+        const componentProps: MarkdownDirectiveComponentProps = {
+            content,
+            name,
+            readonly: true,
+            updateContent: () => undefined,
+        };
+        const vnode = h(component, componentProps);
+        vnode.appContext = appContext ?? null;
+        render(vnode, target);
+        directiveTargets.push(target);
+    }
+}
 
 async function renderMermaidDiagrams(): Promise<void> {
     const version = ++renderVersion;
@@ -46,21 +76,24 @@ async function renderMermaidDiagrams(): Promise<void> {
 }
 
 watch(
-    () => props.content,
+    () => [props.content, props.directiveComponents] as const,
     async () => {
         renderVersion += 1;
         await nextTick();
+        renderDirectiveComponents();
         await renderMermaidDiagrams();
     },
 );
 
 onMounted(() => {
+    renderDirectiveComponents();
     void renderMermaidDiagrams();
 });
 
 onBeforeUnmount(() => {
     destroyed = true;
     renderVersion += 1;
+    unmountDirectiveComponents();
 });
 </script>
 

@@ -44,6 +44,32 @@ describe('editor forms', () => {
         app.unmount();
     });
 
+    it('uploads an image and fills its URL and alt text', async () => {
+        const target = document.createElement('div');
+        const url = ref('');
+        const alt = ref('');
+        const uploadImage = vi.fn(async (file: File) => `https://cdn.example.com/${file.name}`);
+        const app = createApp(() => h(MarkdownEditorImageForm, {
+            alt: alt.value,
+            uploadImage,
+            url: url.value,
+            'onUpdate:alt': (value: string) => { alt.value = value; },
+            'onUpdate:url': (value: string) => { url.value = value; },
+        }));
+        document.body.append(target); app.mount(target); await nextTick();
+
+        const input = target.querySelector<HTMLInputElement>('input[type="file"]')!;
+        const file = new File(['image'], 'diagram.png', {type: 'image/png'});
+        Object.defineProperty(input, 'files', {configurable: true, value: [file]});
+        input.dispatchEvent(new Event('change'));
+        await vi.waitFor(() => expect(url.value).toBe('https://cdn.example.com/diagram.png'));
+
+        expect(uploadImage).toHaveBeenCalledWith(file);
+        expect(alt.value).toBe('diagram.png');
+        expect(target.querySelector<HTMLInputElement>('[aria-label="Адрес изображения"]')?.value).toBe(url.value);
+        app.unmount();
+    });
+
     it('applies disabled and readonly states to controls', async () => {
         const target = document.createElement('div');
         const app = createApp(() => h(MarkdownEditorLinkForm, {disabled: true, readOnlyText: true, text: 'fixed'}));

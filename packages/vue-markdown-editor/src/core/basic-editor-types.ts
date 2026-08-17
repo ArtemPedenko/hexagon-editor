@@ -1,5 +1,7 @@
 import type {Command, Plugin} from 'prosemirror-state';
+import type {AppContext} from 'vue';
 
+import type {MarkdownDirectiveComponents} from '../directives';
 import type {SelectionContextOptions} from '../extensions/behavior/selection-context';
 import type {ImageObjectFit} from '../extensions/markdown/image';
 
@@ -23,6 +25,8 @@ export interface BasicWysiwygSelectionState {
 export interface BasicWysiwygEditor { destroy(): void; focus(): void; getValue(): string; hasFocus(): boolean; insert(markup: string): void; moveCursor(position: 'start' | 'end'): void; run(command: Command): boolean; selectElement(element: Element): void; setValue(value: string): void; }
 
 export interface MountBasicWysiwygEditorOptions {
+    directiveAppContext?: AppContext;
+    directiveComponents?: MarkdownDirectiveComponents;
     editable?: boolean; initialValue?: string; onChange?(value: string): void;
     onCancel?(): boolean; onSelectionChange?(selection: BasicWysiwygSelectionState): void; onSubmit?(): boolean;
     placeholder?: string; plugins?: readonly Plugin[]; selectionContext?: SelectionContextOptions; target: HTMLElement;

@@ -14,6 +14,9 @@ import {
 } from "prosemirror-schema-list";
 import {tableEditing} from "prosemirror-tables";
 import { Decoration, DecorationSet, EditorView } from "prosemirror-view";
+import type {NodeViewConstructor} from "prosemirror-view";
+import {h, reactive, render} from "vue";
+import type {AppContext} from "vue";
 
 import "prosemirror-view/style/prosemirror.css";
 import "katex/dist/katex.min.css";
@@ -92,6 +95,7 @@ import {
 import {toggleFoldingHeading} from '../extensions/additional/folding-heading';
 import {defaultMathLatex} from '../extensions/additional/math';
 import {insertMermaid} from '../extensions/additional/mermaid';
+import type {MarkdownDirectiveComponentProps, MarkdownDirectiveComponents} from '../directives';
 
 export function createMarkdownTablePastePlugin(): Plugin {
   return createTablePastePlugin(basicMarkdownCodec);
@@ -252,6 +256,8 @@ export function getBasicWysiwygSelectionState(
  * in task 7, after markup/split lifecycle management is available.
  */
 export function mountBasicWysiwygEditor({
+  directiveAppContext,
+  directiveComponents,
   editable = true,
   initialValue = "",
   onCancel,
@@ -314,6 +320,9 @@ export function mountBasicWysiwygEditor({
       onSelectionChange?.(getBasicWysiwygSelectionState(state));
     },
     editable: () => editable,
+    nodeViews: directiveComponents === undefined ? undefined : {
+      directive: createDirectiveNodeView(directiveComponents, editable, directiveAppContext),
+    },
     state: editorState,
   });
   const contentHandler = new WysiwygContentHandler(view, basicMarkdownCodec);
@@ -347,5 +356,60 @@ export function mountBasicWysiwygEditor({
       }
       contentHandler.replace(value);
     },
+  };
+}
+
+function createDirectiveNodeView(
+  components: MarkdownDirectiveComponents,
+  editable: boolean,
+  appContext?: AppContext,
+): NodeViewConstructor {
+  return (node, view, getPos) => {
+    const dom = document.createElement('div');
+    dom.setAttribute('data-directive', String(node.attrs.name));
+    const mountTarget = document.createElement('div');
+    dom.append(mountTarget);
+    const state = reactive({node, selected: false});
+
+    const updateContent = (content: string): void => {
+      if (!editable) return;
+      const position = getPos();
+      if (position === undefined) return;
+      view.dispatch(view.state.tr.setNodeMarkup(position, undefined, {...state.node.attrs, content}));
+    };
+    const renderComponent = (): void => {
+      const name = String(state.node.attrs.name);
+      const component = components[name];
+      dom.setAttribute('data-directive', name);
+      if (component === undefined) {
+        render(null, mountTarget);
+        mountTarget.textContent = String(state.node.attrs.content);
+        return;
+      }
+      const props: MarkdownDirectiveComponentProps = {
+        content: String(state.node.attrs.content),
+        name,
+        readonly: !editable,
+        updateContent,
+      };
+      const vnode = h(component, props);
+      vnode.appContext = appContext ?? null;
+      render(vnode, mountTarget);
+    };
+
+    renderComponent();
+    return {
+      deselectNode: () => { state.selected = false; dom.removeAttribute('data-selected'); },
+      destroy: () => { render(null, mountTarget); dom.remove(); },
+      dom,
+      selectNode: () => { state.selected = true; dom.setAttribute('data-selected', ''); },
+      stopEvent: () => true,
+      update: (nextNode) => {
+        if (nextNode.type !== state.node.type) return false;
+        state.node = nextNode;
+        renderComponent();
+        return true;
+      },
+    };
   };
 }

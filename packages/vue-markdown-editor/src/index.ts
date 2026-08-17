@@ -12,6 +12,7 @@ export type {
 export type {ChangeEditorModeOptions, MarkdownEditorInitialOptions} from './public-types';
 export {Lang, configure, getConfig, subscribeConfigure} from './configure';
 export type {ConfigureSubscriber, MarkdownEditorConfig} from './configure';
+export type {MarkdownDirectiveComponentProps, MarkdownDirectiveComponents} from './directives';
 export {cn} from './classname';
 export {getMarkdownEditorMessages, markdownEditorMessages} from './i18n';
 export type {MarkdownEditorMessageKey, MarkdownEditorMessages} from './i18n';
@@ -20,7 +21,7 @@ export * from './core';
 export {default as MarkdownEditor} from './MarkdownEditor.vue';
 export type {MarkdownEditorExposed} from './MarkdownEditor.vue';
 export {default as MarkdownEditorImageForm} from './forms/MarkdownEditorImageForm.vue';
-export type {MarkdownEditorImageSubmitParams} from './forms/MarkdownEditorImageForm.vue';
+export type {MarkdownEditorImageSubmitParams, MarkdownEditorImageUpload} from './forms/MarkdownEditorImageForm.vue';
 export {default as MarkdownEditorLinkForm} from './forms/MarkdownEditorLinkForm.vue';
 export type {MarkdownEditorLinkSubmitParams} from './forms/MarkdownEditorLinkForm.vue';
 export {default as MarkdownEditorForm} from './forms/MarkdownEditorForm.vue';

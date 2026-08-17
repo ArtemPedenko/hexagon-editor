@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {computed, nextTick, onBeforeUnmount, onMounted, ref, watch} from 'vue';
+import {computed, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, ref, watch} from 'vue';
 
 import MarkdownEditorFloatingMenus from './components/MarkdownEditorFloatingMenus.vue';
 import MarkdownEditorImageActions from './components/MarkdownEditorImageActions.vue';
@@ -7,6 +7,7 @@ import MarkdownEditorToolbar from './components/MarkdownEditorToolbar.vue';
 import {useFloatingPanel} from './composables/useFloatingPanel';
 import {joinMarkdown, useMarkdownEditorValue} from './composables/useMarkdownEditorValue';
 import MarkdownEditorImageForm from './forms/MarkdownEditorImageForm.vue';
+import type {MarkdownEditorImageUpload} from './forms/MarkdownEditorImageForm.vue';
 import MarkdownEditorLinkForm from './forms/MarkdownEditorLinkForm.vue';
 import {getMarkdownEditorMessages} from './i18n';
 import type {MarkdownEditorMessageKey} from './i18n';
@@ -25,6 +26,7 @@ import type {
     MarkdownEditorTheme,
 } from './public-types';
 import type {MarkdownEditorToolbarConfig} from './toolbar';
+import type {MarkdownDirectiveComponents} from './directives';
 
 export interface MarkdownEditorExposed {
     append(markup: string): void;
@@ -48,23 +50,27 @@ defineOptions({name: 'MarkdownEditor'});
 const props = withDefaults(
     defineProps<{
         modelValue?: string;
+        directiveComponents?: MarkdownDirectiveComponents;
         mode?: MarkdownEditorMode;
         locale?: MarkdownEditorLocale;
         placeholder?: string;
         readonly?: boolean;
         toolbarPreset?: MarkdownEditorToolbarPreset;
+        uploadImage?: MarkdownEditorImageUpload;
         /** Overrides the preset with an ordered set of toolbar groups and items. */
         toolbarConfig?: MarkdownEditorToolbarConfig;
         theme?: MarkdownEditorTheme;
     }>(),
     {
         modelValue: '',
+        directiveComponents: undefined,
         mode: 'wysiwyg',
         locale: 'ru',
         placeholder: '',
         readonly: false,
         toolbarConfig: undefined,
         toolbarPreset: 'default',
+        uploadImage: undefined,
         theme: 'auto',
     },
 );
@@ -79,6 +85,7 @@ const emit = defineEmits<{
 }>();
 
 const commands = createBasicEditorCommands();
+const appContext = getCurrentInstance()?.appContext;
 const markupTarget = ref<HTMLElement>();
 const visualTarget = ref<HTMLElement>();
 const mode = ref<MarkdownEditorMode>(props.mode);
@@ -355,6 +362,8 @@ function closePanelsOnEscape(event: KeyboardEvent): void {
 function mountHosts(): void {
     if (mode.value !== 'markup' && visualTarget.value !== undefined) {
         visualEditor = mountBasicWysiwygEditor({
+            directiveAppContext: appContext,
+            directiveComponents: props.directiveComponents,
             editable: !props.readonly,
             initialValue: value.value,
             onCancel: () => {
@@ -562,6 +571,7 @@ defineExpose<MarkdownEditorExposed>({
         :locale="locale"
         :theme="theme"
         :title="imageTitle"
+        :upload-image="uploadImage"
         :url="imageUrl"
         @apply="applyImage"
         @cancel="closeImageEditor"
