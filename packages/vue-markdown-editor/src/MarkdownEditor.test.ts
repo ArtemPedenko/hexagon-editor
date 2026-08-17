@@ -175,6 +175,71 @@ describe('MarkdownEditor', () => {
         app.unmount();
     });
 
+    it('applies toolbar commands to the markup editor', async () => {
+        const modelValue = ref('selected text');
+        const target = document.createElement('div');
+        const app = createApp({
+            setup: () => () => h(MarkdownEditor, {
+                mode: 'split',
+                modelValue: modelValue.value,
+                'onUpdate:modelValue': (nextValue: string) => {
+                    modelValue.value = nextValue;
+                },
+            }),
+        });
+
+        document.body.append(target);
+        app.mount(target);
+        await nextTick();
+
+        const markupElement = target.querySelector<HTMLElement>('.cm-editor') as HTMLElement;
+        const markupView = EditorView.findFromDOM(markupElement);
+        markupView?.focus();
+        markupView?.dispatch({selection: {anchor: 0, head: modelValue.value.length}});
+        target.querySelector<HTMLButtonElement>('[data-toolbar-item="bold"]')?.click();
+        await nextTick();
+
+        expect(modelValue.value).toBe('**selected text**');
+
+        markupView?.dispatch({selection: {anchor: 0, head: modelValue.value.length}});
+        target.querySelector<HTMLButtonElement>('[data-toolbar-item="list"]')?.click();
+        await nextTick();
+        Array.from(document.body.querySelectorAll<HTMLButtonElement>('[role="menuitemradio"]'))
+            .find((button) => button.textContent?.includes('Маркированный'))
+            ?.click();
+        await nextTick();
+
+        expect(modelValue.value).toBe('* **selected text**');
+		expect(markupView?.state.selection.main.empty).toBe(false);
+
+        app.unmount();
+    });
+
+	it('keeps a collapsed markup cursor collapsed when inserting an ordered list marker', async () => {
+		const target = document.createElement('div');
+		const app = createApp(() => h(MarkdownEditor, {mode: 'markup', modelValue: 'item'}));
+
+		document.body.append(target);
+		app.mount(target);
+		await nextTick();
+
+		const markupElement = target.querySelector<HTMLElement>('.cm-editor') as HTMLElement;
+		const markupView = EditorView.findFromDOM(markupElement);
+		markupView?.dispatch({selection: {anchor: 4}});
+		target.querySelector<HTMLButtonElement>('[data-toolbar-item="list"]')?.click();
+		await nextTick();
+		Array.from(document.body.querySelectorAll<HTMLButtonElement>('[role="menuitemradio"]'))
+			.find((button) => button.textContent?.includes('Нумерованный'))
+			?.click();
+		await nextTick();
+
+		expect(markupView?.state.doc.toString()).toBe('1. item');
+		expect(markupView?.state.selection.main.empty).toBe(true);
+		expect(markupView?.state.selection.main.head).toBe(7);
+
+		app.unmount();
+	});
+
     it('reflects the cursor formatting in the toolbar', async () => {
         const target = document.createElement('div');
         const app = createApp(() => h(MarkdownEditor, {modelValue: '# Heading\n\n**Bold**'}));
