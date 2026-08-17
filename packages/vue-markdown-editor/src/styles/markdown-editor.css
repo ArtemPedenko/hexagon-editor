@@ -5,6 +5,10 @@
     --markdown-text: #202125;
     --markdown-focus-background: #e9efff;
     --markdown-focus-text: #1d3c93;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
     overflow: clip;
     border: 1px solid var(--markdown-border);
     color: var(--markdown-text);
@@ -187,10 +191,11 @@
 }
 
 .markdown-editor__hosts {
+    flex: 1 1 auto;
+    height: 100%;
     min-width: 0;
-    min-height: 20rem;
+    min-height: 0;
     overflow: auto;
-    resize: vertical;
 }
 
 .markdown-editor__hosts--split {
@@ -202,13 +207,20 @@
     border-left: 1px solid var(--markdown-muted-border);
 }
 
+.markdown-editor__visual,
+.markdown-editor__markup {
+    height: 100%;
+    min-height: 0;
+}
+
 .markdown-editor__visual {
     position: relative;
 }
 
 .markdown-editor :deep(.ProseMirror),
 .markdown-editor :deep(.cm-editor) {
-    min-height: 20rem;
+    height: 100%;
+    min-height: 0;
 }
 
 .markdown-editor :deep(.cm-content) {
@@ -562,7 +574,7 @@
 }
 
 .markdown-editor :deep(.cm-scroller) {
-    min-height: 20rem;
+    min-height: 100%;
 }
 
 @media (max-width: 720px) {
