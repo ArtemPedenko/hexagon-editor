@@ -28,7 +28,30 @@ export {default as MarkdownEditorForm} from './forms/MarkdownEditorForm.vue';
 export {default as MarkdownEditorTextInput} from './forms/MarkdownEditorTextInput.vue';
 export {useMarkdownEditor} from './use-markdown-editor';
 export type {UseMarkdownEditorResult} from './use-markdown-editor';
-export * from './toolbar';
+export {
+    commonmarkToolbarConfig,
+    createToolbarConfig,
+    createToolbarGroup,
+    createToolbarItem,
+    defaultToolbarConfig,
+    fullToolbarConfig,
+    getToolbarConfig,
+    isToolbarItemAvailable,
+    isToolbarItemActive,
+    isToolbarItemEnabled,
+    markdownEditorToolbarItemIds,
+    minimalToolbarConfig,
+    normalizeToolbarItem,
+    zeroToolbarConfig,
+} from './toolbar';
+export type {
+    MarkdownEditorToolbarAction,
+    MarkdownEditorToolbarActionContext,
+    MarkdownEditorToolbarConfig,
+    MarkdownEditorToolbarGroup,
+    MarkdownEditorToolbarItem,
+    MarkdownEditorToolbarItemId,
+} from './toolbar';
 export {createListActions, Lists} from './extensions/markdown/lists';
 export type {ListActions, ListsOptions} from './extensions/markdown/lists';
 export {

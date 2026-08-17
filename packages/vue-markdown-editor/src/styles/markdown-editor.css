@@ -227,6 +227,32 @@
     cursor: text;
 }
 
+.markdown-editor :deep(.ProseMirror ul),
+.markdown-editor :deep(.ProseMirror ol) {
+    margin-block: 0.75rem;
+    padding-inline-start: 1.75rem;
+}
+
+.markdown-editor :deep(.ProseMirror ul) {
+    list-style: disc outside;
+}
+
+.markdown-editor :deep(.ProseMirror ol) {
+    list-style: decimal outside;
+}
+
+.markdown-editor :deep(.ProseMirror ul ul) {
+    list-style-type: circle;
+}
+
+.markdown-editor :deep(.ProseMirror ul ul ul) {
+    list-style-type: square;
+}
+
+.markdown-editor :deep(.ProseMirror li > p) {
+    margin-block: 0;
+}
+
 .markdown-editor :deep(.ProseMirror blockquote) {
     margin: 1rem 0;
     padding-inline-start: 0.75rem;
