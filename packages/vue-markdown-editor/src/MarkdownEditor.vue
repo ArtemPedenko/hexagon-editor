@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import {computed, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, ref, watch} from 'vue';
+import {computed, nextTick, onBeforeUnmount, onMounted, ref, watch} from 'vue';
 
 import MarkdownEditorFloatingMenus from './components/MarkdownEditorFloatingMenus.vue';
-import MarkdownEditorSelectionActions from './components/MarkdownEditorSelectionActions.vue';
+import MarkdownEditorImageActions from './components/MarkdownEditorImageActions.vue';
 import MarkdownEditorToolbar from './components/MarkdownEditorToolbar.vue';
 import {useFloatingPanel} from './composables/useFloatingPanel';
 import {joinMarkdown, useMarkdownEditorValue} from './composables/useMarkdownEditorValue';
@@ -44,7 +44,6 @@ export interface MarkdownEditorExposed {
 
 defineOptions({name: 'MarkdownEditor'});
 
-const appContext = getCurrentInstance()?.appContext;
 
 const props = withDefaults(
     defineProps<{
@@ -116,13 +115,14 @@ const toolbarState = ref<BasicWysiwygSelectionState>({
 });
 const textStyle = computed(() => toolbarState.value.headingLevel?.toString() ?? 'paragraph');
 const textStyleLabel = computed(() => textStyle.value === 'paragraph' ? 'H' : `H${textStyle.value}`);
-const mathBlock = '$$\nE = mc^2\n$$';
 const linkForm = ref<InstanceType<typeof MarkdownEditorLinkForm>>();
 const floatingMenus = ref<InstanceType<typeof MarkdownEditorFloatingMenus>>();
+const imageActions = ref<InstanceType<typeof MarkdownEditorImageActions>>();
 const codePanel = useFloatingPanel(() => floatingMenus.value?.getElement('code'));
 const formulaPanel = useFloatingPanel(() => floatingMenus.value?.getElement('formula'));
 const headingPanel = useFloatingPanel(() => floatingMenus.value?.getElement('heading'));
 const imagePanel = useFloatingPanel(() => imageForm.value?.element);
+const imageActionsPanel = useFloatingPanel(() => imageActions.value?.element, {placement: 'top'});
 const linkPanel = useFloatingPanel(() => linkForm.value?.element);
 const listPanel = useFloatingPanel(() => floatingMenus.value?.getElement('list'));
 const modePanel = useFloatingPanel(() => floatingMenus.value?.getElement('mode'));
@@ -273,6 +273,13 @@ async function showLinkEditorAtCursor(reference?: HTMLElement): Promise<void> {
 function handleEditorClick(event: MouseEvent): void {
     const target = event.target;
     if (!(target instanceof Element)) return;
+    const image = target.closest<HTMLImageElement>('.ProseMirror img');
+    if (image !== null) {
+        event.preventDefault();
+        visualEditor?.selectElement(image);
+        void imageActionsPanel.open(image);
+        return;
+    }
     const link = target.closest<HTMLElement>('.ProseMirror a');
     if (link === null) return;
     event.preventDefault();
@@ -293,6 +300,13 @@ async function toggleImageEditor(reference: HTMLElement): Promise<void> {
     await imagePanel.toggle(reference);
 }
 
+async function executeImageDisplay(command: Parameters<BasicWysiwygEditor['run']>[0]): Promise<void> {
+    execute(command);
+    await nextTick();
+    const image = visualTarget.value?.querySelector<HTMLImageElement>('.ProseMirror img.ProseMirror-selectednode');
+    if (image !== undefined && image !== null) await imageActionsPanel.open(image);
+}
+
 async function toggleModeMenu(reference: HTMLElement): Promise<void> {
     await modePanel.toggle(reference);
 }
@@ -311,14 +325,7 @@ async function insertMathBlock(): Promise<void> {
     if (toolbarState.value.formula) {
         return;
     }
-
-    if (visualEditor?.run(commands.insertMathBlock) === true) {
-        return;
-    }
-
-    setValue(value.value.length === 0 ? mathBlock : `${value.value}\n\n${mathBlock}`);
-    await setMode('markup');
-    markupEditor?.focus();
+    visualEditor?.run(commands.insertMathBlock);
 }
 
 function insertInlineMath(): void {
@@ -335,14 +342,14 @@ async function toggleFormulaMenu(reference: HTMLElement): Promise<void> {
 function closeFloatingPanels(event: PointerEvent): void {
     const target = event.target;
     if (!(target instanceof Node)) return;
-    for (const panel of [headingPanel, codePanel, formulaPanel, linkPanel, listPanel, imagePanel, modePanel]) {
+    for (const panel of [headingPanel, codePanel, formulaPanel, linkPanel, listPanel, imagePanel, imageActionsPanel, modePanel]) {
         if (!panel.contains(target)) panel.close();
     }
 }
 
 function closePanelsOnEscape(event: KeyboardEvent): void {
     if (event.key !== 'Escape') return;
-    for (const panel of [headingPanel, codePanel, formulaPanel, linkPanel, listPanel, imagePanel, modePanel]) panel.close();
+    for (const panel of [headingPanel, codePanel, formulaPanel, linkPanel, listPanel, imagePanel, imageActionsPanel, modePanel]) panel.close();
 }
 
 function mountHosts(): void {
@@ -371,17 +378,6 @@ function mountHosts(): void {
                 return true;
             },
             placeholder: props.placeholder,
-            selectionContext: {
-                appContext,
-                className: 'markdown-editor__selection-panel',
-                component: MarkdownEditorSelectionActions,
-                props: {
-                    boldLabel: t('selectionBold'),
-                    italicLabel: t('selectionItalic'),
-                    onBold: () => execute(commands.bold),
-                    onItalic: () => execute(commands.italic),
-                },
-            },
             target: visualTarget.value,
         });
         localizeRenderedMath(visualTarget.value, props.locale);
@@ -572,6 +568,15 @@ defineExpose<MarkdownEditorExposed>({
         @update:alt="imageAlt = $event"
         @update:title="imageTitle = $event"
         @update:url="imageUrl = $event"
+      />
+      <MarkdownEditorImageActions
+        v-if="imageActionsPanel.visible.value"
+        ref="imageActions"
+        :object-fit="toolbarState.imageObjectFit"
+        :theme="theme"
+        :translate="t"
+        @full-width="executeImageDisplay(commands.setImageDisplay('100%', 'contain', null))"
+        @object-fit="executeImageDisplay(commands.setImageDisplay(undefined, $event))"
       />
     </Teleport>
 

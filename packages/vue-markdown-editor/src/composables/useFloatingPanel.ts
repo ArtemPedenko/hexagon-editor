@@ -1,4 +1,5 @@
 import {autoUpdate, computePosition, flip, offset, shift} from '@floating-ui/dom';
+import type {Placement} from '@floating-ui/dom';
 import {nextTick, onBeforeUnmount, ref} from 'vue';
 import type {Ref} from 'vue';
 
@@ -18,7 +19,10 @@ const inheritedVariables = [
     '--markdown-text',
 ];
 
-export function useFloatingPanel(getElement: () => HTMLElement | undefined): FloatingPanel {
+export function useFloatingPanel(
+    getElement: () => HTMLElement | undefined,
+    options: {placement?: Placement} = {},
+): FloatingPanel {
     const visible = ref(false);
     let stopPositioning: (() => void) | undefined;
 
@@ -46,7 +50,7 @@ export function useFloatingPanel(getElement: () => HTMLElement | undefined): Flo
         const update = async (): Promise<void> => {
             const {x, y} = await computePosition(reference, floating, {
                 middleware: [offset(6), flip({padding: 8}), shift({padding: 8})],
-                placement: 'bottom-start',
+                placement: options.placement ?? 'bottom-start',
                 strategy: 'fixed',
             });
             Object.assign(floating.style, {left: `${x}px`, position: 'fixed', top: `${y}px`});

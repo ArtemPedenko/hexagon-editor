@@ -55,7 +55,7 @@ Headless integrations can compose the exported `ZeroPreset`, `CommonMarkPreset`,
 
 The root entry exports the complete supported public API. Focused integrations may use the documented subpaths: `./core`, `./extensions`, `./specs`, `./presets`, `./toolbar`, `./forms`, `./configure`, and `./classname`. Other internal source paths are not part of the compatibility contract.
 
-`configure({lang, renderers})` sets process-wide defaults and optional host renderers. `cn(block)` provides the upstream-compatible `g-md-` BEM classname convention without a React dependency.
+`configure({lang, renderers})` sets process-wide defaults and optional host renderers. `cn(block)` provides the `hx-md-` BEM classname convention without a React dependency.
 
 ## Supported Markdown
 

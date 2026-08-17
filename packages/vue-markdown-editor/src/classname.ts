@@ -11,9 +11,9 @@ export interface BlockClassName {
     (element: string, modifiers?: ClassNameModifiers | null, mix?: ClassNameMix): string;
 }
 
-/** Dependency-free equivalent of upstream's `g-md-` BEM classname helper. */
+/** Dependency-free BEM classname helper using the Hexagon Markdown namespace. */
 export function cn(block: string): BlockClassName {
-    const blockClass = `g-md-${block}`;
+    const blockClass = `hx-md-${block}`;
     return ((elementOrModifiers?: string | ClassNameModifiers | null, modifiersOrMix?: ClassNameModifiers | ClassNameMix | null, maybeMix?: ClassNameMix) => {
         const element = typeof elementOrModifiers === 'string' ? elementOrModifiers : undefined;
         const base = element === undefined ? blockClass : `${blockClass}__${element}`;

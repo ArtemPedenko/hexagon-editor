@@ -5,7 +5,7 @@ import {
 } from "prosemirror-commands";
 import { keymap } from "prosemirror-keymap";
 import type { Node as ProseMirrorNode } from "prosemirror-model";
-import { EditorState, Plugin, PluginKey, TextSelection } from "prosemirror-state";
+import { EditorState, NodeSelection, Plugin, PluginKey, TextSelection } from "prosemirror-state";
 import type {Transaction} from "prosemirror-state";
 import type { Command } from "prosemirror-state";
 import {
@@ -143,14 +143,14 @@ const toggleHeadingFolding = toggleFoldingHeading;
 
 function insertMathBlockAndEdit(state: EditorState, dispatch?: (transaction: Transaction) => void): boolean {
   const {$from, empty} = state.selection;
-  if (!empty || !$from.parent.isTextblock || $from.parent.content.size !== 0) return false;
+  if (!empty || !$from.parent.isTextblock) return false;
+  const node = getBasicNodeType(state.schema, "math_block").create({latex: defaultMathLatex});
+  const replaceCurrentBlock = $from.parent.content.size === 0;
+  const position = replaceCurrentBlock ? $from.before() : $from.after();
   if (dispatch !== undefined) {
-    const position = $from.before();
-    const transaction = state.tr.replaceWith(
-      position,
-      $from.after(),
-      getBasicNodeType(basicMarkdownSchema, "math_block").create({latex: defaultMathLatex}),
-    );
+    const transaction = replaceCurrentBlock
+      ? state.tr.replaceWith(position, $from.after(), node)
+      : state.tr.insert(position, node);
     transaction.setMeta(atomicSourcePluginKey, transaction.mapping.map(position, -1)).scrollIntoView();
     dispatch(transaction);
   }
@@ -333,6 +333,11 @@ export function mountBasicWysiwygEditor({
     },
     selectElement: (element) => {
       const from = view.posAtDOM(element, 0);
+      const node = view.state.doc.nodeAt(from);
+      if (node !== null && NodeSelection.isSelectable(node)) {
+        view.dispatch(view.state.tr.setSelection(NodeSelection.create(view.state.doc, from)));
+        return;
+      }
       const to = from + (element.textContent?.length ?? 0);
       view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, from, to)));
     },

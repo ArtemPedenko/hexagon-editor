@@ -248,6 +248,26 @@ describe('basic Markdown extensions', () => {
         expect(nextState.doc.firstChild?.attrs.latex).toBe('E = mc^2');
     });
 
+    it('inserts a math block after the current non-empty paragraph', () => {
+        const document = basicMarkdownSchema.node('doc', null, [
+            basicMarkdownSchema.node('paragraph', null, basicMarkdownSchema.text('Current paragraph')),
+            basicMarkdownSchema.node('paragraph', null, basicMarkdownSchema.text('Following paragraph')),
+        ]);
+        const state = EditorState.create({doc: document, selection: TextSelection.create(document, 5)});
+        let nextState = state;
+
+        const inserted = createBasicEditorCommands().insertMathBlock(state, (transaction) => {
+            nextState = state.apply(transaction);
+        });
+
+        expect(inserted).toBe(true);
+        expect(nextState.doc.childCount).toBe(3);
+        expect(nextState.doc.child(0).textContent).toBe('Current paragraph');
+        expect(nextState.doc.child(1).type.name).toBe('math_block');
+        expect(nextState.doc.child(1).attrs.latex).toBe('E = mc^2');
+        expect(nextState.doc.child(2).textContent).toBe('Following paragraph');
+    });
+
     it('replaces an empty paragraph with HTML and inserts HTML after a non-empty paragraph', () => {
         const commands = createBasicEditorCommands();
         const emptyState = EditorState.create({schema: basicMarkdownSchema});

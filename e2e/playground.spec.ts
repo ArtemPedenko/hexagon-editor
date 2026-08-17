@@ -43,7 +43,14 @@ test.describe('Markdown editor playground', () => {
         const image = page.locator('.ProseMirror img[alt="resize-fixture.svg"]');
         await expect(image).toBeVisible();
         await image.click();
-        const objectFit = page.getByLabel('Отображение изображения');
+        const imageActions = page.locator('.markdown-editor__image-actions');
+        await expect(imageActions).toBeVisible();
+        await expect(page.locator('[data-markdown-editor-toolbar] [data-toolbar-item="image-width"], [data-markdown-editor-toolbar] [data-toolbar-item="image-fit"]')).toHaveCount(0);
+        const imageBounds = await image.boundingBox();
+        const actionsBounds = await imageActions.boundingBox();
+        if (imageBounds === null || actionsBounds === null) throw new Error('Image popover is not measurable');
+        expect(actionsBounds.y + actionsBounds.height).toBeLessThanOrEqual(imageBounds.y);
+        const objectFit = page.getByRole('combobox', {name: 'Отображение изображения'});
         await expect(objectFit).toHaveValue('contain');
         await objectFit.selectOption('cover');
         await expect(image).toHaveCSS('object-fit', 'cover');
@@ -61,6 +68,7 @@ test.describe('Markdown editor playground', () => {
 
         await expect(image).not.toHaveAttribute('style', /width: 100%/);
         await expect(image).toHaveAttribute('style', /height: \d+px/);
+        await image.click();
         await page.getByTitle('На всю ширину').click();
         await expect(image).toHaveAttribute('style', /width: 100%/);
         await expect(image).not.toHaveAttribute('style', /height:/);
@@ -266,14 +274,9 @@ test.describe('Markdown editor playground', () => {
         await expect(page.locator('[data-markdown-editor-toolbar] [data-toolbar-item="code-block"]')).toHaveCount(0);
     });
 
-    test('does not show text-selection actions for atomic Markdown blocks', async ({page}) => {
+    test('does not render the floating text-selection menu', async ({page}) => {
         await page.goto('/');
-
-        const selectionActions = page.locator('.markdown-editor__selection-panel');
-        for (const selector of ['[data-math-block]', '[data-demo-html]', '[data-mermaid]']) {
-            await page.locator(`.ProseMirror ${selector}`).click();
-            await expect(selectionActions).toBeHidden();
-        }
+        await expect(page.locator('.markdown-editor__selection-panel, .markdown-editor__selection-actions')).toHaveCount(0);
     });
 
     test('types a paragraph at a virtual cursor between atomic blocks', async ({page}) => {
@@ -282,12 +285,12 @@ test.describe('Markdown editor playground', () => {
         const formula = page.locator('.ProseMirror [data-math-block]');
         await formula.click();
         await page.keyboard.press('ArrowDown');
-        await expect(page.locator('.ProseMirror .g-md-gapcursor')).toBeVisible();
+        await expect(page.locator('.ProseMirror .hx-md-gapcursor')).toBeVisible();
         await page.keyboard.type('Текст между блоками');
 
         const paragraph = page.locator('.ProseMirror p', {hasText: 'Текст между блоками'});
         await expect(paragraph).toBeVisible();
-        await expect(page.locator('.ProseMirror .g-md-gapcursor')).toHaveCount(0);
+        await expect(page.locator('.ProseMirror .hx-md-gapcursor')).toHaveCount(0);
     });
 
     test('creates editable paragraphs by clicking the free space at document edges', async ({page}) => {
@@ -378,7 +381,7 @@ test.describe('Markdown editor playground', () => {
         const mermaidButton = page.getByRole('button', {name: 'Диаграмма Mermaid'});
         await expect(mermaidButton).toHaveAttribute('aria-pressed', 'true');
         const sourceEditor = page.locator('.markdown-editor__atomic-source .cm-content');
-        await sourceEditor.fill('flowchart LR\n  Start --> Finish');
+        await sourceEditor.fill('sequenceDiagram\n  Alice->>Bob: Hi Bob\n  Bob->>Alice: Hi Alice');
         await page.keyboard.press('Control+Enter');
 
         const diagram = page.locator('.ProseMirror [data-mermaid]');
@@ -499,13 +502,17 @@ test.describe('Markdown editor playground', () => {
         await expect(page.getByRole('menuitem', {name: 'Добавить строку'})).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
     });
 
-    test('inserts a LaTeX formula from the toolbar', async ({page}) => {
+    test('inserts a formula block after a non-empty paragraph without switching to markup', async ({page}) => {
         await page.goto('/');
 
+        const paragraph = page.locator('.ProseMirror p').filter({hasText: 'Этот раздел можно свернуть кнопкой в тулбаре.'});
+        await paragraph.click();
         await page.getByTitle('Формула').click();
         await page.getByRole('menuitem', {name: 'Блок с формулой'}).click();
 
-        await expect(page.locator('.markdown-editor[data-mode="markup"] .cm-content')).toContainText('E = mc^2');
+        await expect(page.locator('.markdown-editor')).toHaveAttribute('data-mode', 'wysiwyg');
+        await expect(page.locator('.markdown-editor__atomic-source .cm-content')).toContainText('E = mc^2');
+        await expect(paragraph).toBeVisible();
     });
 
     test('inserts an inline formula from the formula menu', async ({page}) => {

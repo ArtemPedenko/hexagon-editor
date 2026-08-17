@@ -4,6 +4,9 @@ import vue from '@vitejs/plugin-vue';
 import {defineConfig} from 'vite';
 
 export default defineConfig({
+    optimizeDeps: {
+        include: ['hexagon-editor > mermaid', 'hexagon-editor > prosemirror-tables'],
+    },
     plugins: [vue()],
     resolve: {
         alias: {

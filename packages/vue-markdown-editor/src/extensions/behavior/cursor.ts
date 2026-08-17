@@ -78,7 +78,7 @@ function renderGapCursor(view: EditorView, getPosition: () => number | undefined
     const element = paragraph === undefined
         ? document.createElement('p')
         : DOMSerializer.fromSchema(view.state.schema).serializeNode(paragraph) as HTMLElement;
-    element.classList.add('g-md-gapcursor');
+    element.classList.add('hx-md-gapcursor');
     element.addEventListener('mousedown', () => {
         const position = getPosition();
         if (position !== undefined && paragraph !== undefined) view.dispatch(view.state.tr.replaceSelectionWith(paragraph));

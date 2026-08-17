@@ -394,7 +394,7 @@ describe('MarkdownEditor', () => {
         app.unmount();
     });
 
-    it('inserts a LaTeX block and switches to markup mode', async () => {
+    it('inserts a LaTeX block without leaving WYSIWYG mode', async () => {
         const target = document.createElement('div');
         const editor = ref<MarkdownEditorExposed>();
         const app = createApp(() => h(MarkdownEditor, {modelValue: 'Text', ref: editor, toolbarPreset: 'full'}));
@@ -408,8 +408,9 @@ describe('MarkdownEditor', () => {
         document.querySelector<HTMLButtonElement>('[role="menuitem"]:last-child')?.click();
         await nextTick();
 
-        expect(editor.value?.getMode()).toBe('markup');
+        expect(editor.value?.getMode()).toBe('wysiwyg');
         expect(editor.value?.getValue()).toContain('$$\nE = mc^2\n$$');
+        expect(target.querySelector('.markdown-editor__atomic-source')?.textContent).toContain('E = mc^2');
 
         app.unmount();
     });
