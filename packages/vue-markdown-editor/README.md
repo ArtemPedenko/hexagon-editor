@@ -8,11 +8,9 @@ Vue 3 editor for Markdown and YFM with visual, markup and split modes.
 pnpm add hexagon-editor
 ```
 
-Import the component and its styles in the application entry point:
-
-```ts
-import 'hexagon-editor/style.css';
-```
+Component styles are included automatically when importing the editor or renderer. The
+`hexagon-editor/style.css` export is available only for integrations that need to load
+the complete stylesheet explicitly.
 
 ## Read-only rendering
 
