@@ -1,6 +1,5 @@
-/* eslint-disable vue/one-component-per-file -- Independent ProseMirror mounts each need a Vue render root. */
-import {createApp, h, reactive} from 'vue';
-import type {App, Component} from 'vue';
+import {h, reactive, render} from 'vue';
+import type {AppContext, Component} from 'vue';
 import {autoUpdate, computePosition, flip, offset, shift} from '@floating-ui/dom';
 import {Plugin} from 'prosemirror-state';
 import type {EditorState} from 'prosemirror-state';
@@ -15,12 +14,14 @@ export interface VueNodeViewProps {
 }
 
 export interface VueNodeViewOptions {
+    appContext?: AppContext;
     contentDOM?: boolean;
     element?: keyof HTMLElementTagNameMap;
     stopEvent?(event: Event): boolean;
 }
 
 export interface VueWidgetDecorationOptions {
+    appContext?: AppContext;
     key?: string;
     side?: number;
 }
@@ -34,9 +35,22 @@ export interface VueContextPanelProps {
 }
 
 export interface VueContextPanelOptions {
+    appContext?: AppContext;
     className?: string;
     props?: Record<string, unknown>;
     shouldShow?(state: EditorState): boolean;
+}
+
+function mountVueComponent(
+    component: Component,
+    props: Record<string, unknown>,
+    target: Element,
+    appContext?: AppContext,
+): () => void {
+    const vnode = h({render: () => h(component, props)});
+    vnode.appContext = appContext ?? null;
+    render(vnode, target);
+    return () => render(null, target);
 }
 
 /** Mounts a Vue component as a ProseMirror node view with an aligned lifecycle. */
@@ -49,8 +63,7 @@ export function createVueNodeView(
         const mountTarget = document.createElement('div');
         const state = reactive<VueNodeViewProps>({getPos, node, selected: false});
         dom.append(mountTarget);
-        const app = createApp({render: () => h(component, state)});
-        app.mount(mountTarget);
+        const unmount = mountVueComponent(component, state, mountTarget, options.appContext);
 
         const contentDOM = options.contentDOM ? document.createElement('div') : undefined;
         if (contentDOM !== undefined) {
@@ -63,7 +76,7 @@ export function createVueNodeView(
                 state.selected = false;
             },
             destroy: () => {
-                app.unmount();
+                unmount();
                 dom.remove();
             },
             dom,
@@ -89,20 +102,19 @@ export function createVueWidgetDecoration(
     props: Record<string, unknown> = {},
     options: VueWidgetDecorationOptions = {},
 ): Decoration {
-    let app: App | undefined;
+    let unmount: (() => void) | undefined;
 
     return Decoration.widget(
         position,
         () => {
             const dom = document.createElement('span');
-            app = createApp({render: () => h(component, props)});
-            app.mount(dom);
+            unmount = mountVueComponent(component, props, dom, options.appContext);
             return dom;
         },
         {
             destroy: () => {
-                app?.unmount();
-                app = undefined;
+                unmount?.();
+                unmount = undefined;
             },
             key: options.key,
             side: options.side,
@@ -128,9 +140,8 @@ export function createVueContextPanelPlugin(
                 top: 0,
                 visible: false,
             });
-            const app = createApp({render: () => h(component, state)});
             document.body.append(dom);
-            app.mount(dom);
+            const unmount = mountVueComponent(component, state, dom, options.appContext);
 
             const updatePosition = async (): Promise<void> => {
                 if (typeof document.createRange().getClientRects !== 'function') {
@@ -170,7 +181,7 @@ export function createVueContextPanelPlugin(
             return {
                 destroy: () => {
                     stopAutoUpdate();
-                    app.unmount();
+                    unmount();
                     dom.remove();
                 },
                 update,

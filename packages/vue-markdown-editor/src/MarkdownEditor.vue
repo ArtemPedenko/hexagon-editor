@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {computed, nextTick, onBeforeUnmount, onMounted, ref, watch} from 'vue';
+import {computed, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, ref, watch} from 'vue';
 
 import MarkdownEditorFloatingMenus from './components/MarkdownEditorFloatingMenus.vue';
 import MarkdownEditorSelectionActions from './components/MarkdownEditorSelectionActions.vue';
@@ -43,6 +43,8 @@ export interface MarkdownEditorExposed {
 }
 
 defineOptions({name: 'MarkdownEditor'});
+
+const appContext = getCurrentInstance()?.appContext;
 
 const props = withDefaults(
     defineProps<{
@@ -370,6 +372,7 @@ function mountHosts(): void {
             },
             placeholder: props.placeholder,
             selectionContext: {
+                appContext,
                 className: 'markdown-editor__selection-panel',
                 component: MarkdownEditorSelectionActions,
                 props: {
