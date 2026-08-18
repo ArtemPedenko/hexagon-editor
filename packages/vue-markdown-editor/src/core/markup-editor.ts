@@ -44,6 +44,10 @@ export function mountBasicMarkupEditor({
 				bracketMatching(),
 				markdown({ base: markdownLanguage }),
 				syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+				// Wrap long Markdown lines to the editor viewport instead of
+				// forcing horizontal scrolling. This affects only presentation;
+				// it does not insert newline characters into the document.
+				EditorView.lineWrapping,
 				keymap.of([indentWithTab, ...defaultKeymap, ...historyKeymap]),
 				EditorView.updateListener.of(update => {
 					if (update.docChanged && !syncingExternalValue) {

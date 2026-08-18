@@ -67,292 +67,299 @@
 </script>
 
 <template>
-  <div class="markdown-editor__toolbar" data-markdown-editor-toolbar role="toolbar" :aria-label="translate('toolbar')">
-    <div
-      v-for="group in (toolbarConfig ?? getToolbarConfig(toolbarPreset)).groups"
-      :key="group.id"
-      class="markdown-editor__toolbar-group"
-      role="group"
-      :data-toolbar-group="group.id"
-    >
-      <template v-for="toolbarItem in availableItems(group.items)" :key="toolbarItem.id">
-        <button
-          v-if="toolbarItem.id === 'undo'"
-          data-toolbar-item="undo"
-          type="button"
-          :disabled="!isToolbarItemEnabled(toolbarItem, state)"
-          :aria-label="translate('undo')"
-          :title="translate('undo')"
-          @mousedown.prevent
-          @click="runItem(toolbarItem, commands.undo)"
-        >
-          <ToolbarIcon name="arrowLeft" />
-        </button>
-        <button
-          v-else-if="toolbarItem.id === 'redo'"
-          data-toolbar-item="redo"
-          type="button"
-          :disabled="!isToolbarItemEnabled(toolbarItem, state)"
-          :aria-label="translate('redo')"
-          :title="translate('redo')"
-          @mousedown.prevent
-          @click="runItem(toolbarItem, commands.redo)"
-        >
-          <ToolbarIcon name="arrowRight" />
-        </button>
-        <button
-          v-else-if="toolbarItem.id === 'heading'"
-          class="markdown-editor__toolbar-heading"
-          data-toolbar-item="heading"
-          :aria-expanded="headingMenuVisible"
-          :aria-label="translate('heading')"
-          :aria-pressed="state.headingLevel !== undefined"
-          :title="translate('heading')"
-          type="button"
-          @mousedown.prevent
-          @click="emit('toggle-heading-menu', getButton($event))"
-        >
-          <span>{{ textStyleLabel }}</span>
-          <ToolbarIcon name="chevronDown" />
-        </button>
-        <button
-          v-else-if="toolbarItem.id === 'bold'"
-          data-toolbar-item="bold"
-          :disabled="!isToolbarItemEnabled(toolbarItem, state)"
-          :aria-label="translate('bold')"
-          :aria-pressed="isToolbarItemActive(toolbarItem, state, state.bold)"
-          type="button"
-          :title="translate('bold')"
-          @mousedown.prevent
-          @click="runItem(toolbarItem, commands.bold)"
-        >
-          <ToolbarIcon name="bold" />
-        </button>
-        <button
-          v-else-if="toolbarItem.id === 'italic'"
-          data-toolbar-item="italic"
-          :disabled="!isToolbarItemEnabled(toolbarItem, state)"
-          :aria-label="translate('italic')"
-          :aria-pressed="isToolbarItemActive(toolbarItem, state, state.italic)"
-          type="button"
-          :title="translate('italic')"
-          @mousedown.prevent
-          @click="runItem(toolbarItem, commands.italic)"
-        >
-          <ToolbarIcon name="italic" />
-        </button>
-        <button
-          v-else-if="toolbarItem.id === 'underline'"
-          data-toolbar-item="underline"
-          :disabled="!isToolbarItemEnabled(toolbarItem, state)"
-          :aria-label="translate('underline')"
-          :aria-pressed="isToolbarItemActive(toolbarItem, state, state.underline)"
-          type="button"
-          :title="translate('underline')"
-          @mousedown.prevent
-          @click="runItem(toolbarItem, commands.underline)"
-        >
-          <ToolbarIcon name="underline" />
-        </button>
-        <button
-          v-else-if="toolbarItem.id === 'strike'"
-          data-toolbar-item="strike"
-          :disabled="!isToolbarItemEnabled(toolbarItem, state)"
-          :aria-label="translate('strike')"
-          :aria-pressed="isToolbarItemActive(toolbarItem, state, state.strikethrough)"
-          type="button"
-          :title="translate('strike')"
-          @mousedown.prevent
-          @click="runItem(toolbarItem, commands.strikethrough)"
-        >
-          <ToolbarIcon name="strike" />
-        </button>
-        <button
-          v-else-if="toolbarItem.id === 'mark'"
-          data-toolbar-item="mark"
-          :disabled="!isToolbarItemEnabled(toolbarItem, state)"
-          :aria-label="translate('mark')"
-          :aria-pressed="isToolbarItemActive(toolbarItem, state, state.mark)"
-          type="button"
-          :title="translate('mark')"
-          @mousedown.prevent
-          @click="runItem(toolbarItem, commands.mark)"
-        >
-          M
-        </button>
-        <button
-          v-else-if="toolbarItem.id === 'code'"
-          class="markdown-editor__toolbar-code"
-          data-toolbar-item="code"
-          :aria-expanded="codeMenuVisible"
-          :aria-label="translate(state.codeBlock ? 'codeBlock' : 'code')"
-          :aria-pressed="state.code || state.codeBlock"
-          :title="translate(state.codeBlock ? 'codeBlock' : 'code')"
-          type="button"
-          @mousedown.prevent
-          @click="emit('toggle-code-menu', getButton($event))"
-        >
-          <ToolbarIcon name="code" />
-          <ToolbarIcon name="chevronDown" />
-        </button>
-        <button
-          v-else-if="toolbarItem.id === 'bullet-list'"
-          class="markdown-editor__toolbar-list"
-          data-toolbar-item="list"
-          :aria-expanded="listMenuVisible"
-          :aria-label="translate(state.orderedList ? 'orderedList' : 'bulletList')"
-          :aria-pressed="state.bulletList || state.orderedList"
-          :title="translate(state.orderedList ? 'orderedList' : 'bulletList')"
-          type="button"
-          @mousedown.prevent
-          @click="emit('toggle-list-menu', getButton($event))"
-        >
-          <ToolbarIcon :name="state.orderedList ? 'orderedList' : 'bulletList'" />
-          <ToolbarIcon name="chevronDown" />
-        </button>
-        <template v-else-if="toolbarItem.id === 'ordered-list'" />
-        <button
-          v-else-if="toolbarItem.id === 'quote'"
-          data-toolbar-item="quote"
-          :disabled="!isToolbarItemEnabled(toolbarItem, state)"
-          :aria-label="translate('quote')"
-          :aria-pressed="isToolbarItemActive(toolbarItem, state, state.quote)"
-          type="button"
-          :title="translate('quote')"
-          @mousedown.prevent
-          @click="runItem(toolbarItem, commands.quote)"
-        >
-          <ToolbarIcon name="quote" />
-        </button>
-        <button
-          v-else-if="toolbarItem.id === 'fold-heading'"
-          data-toolbar-item="fold-heading"
-          :aria-label="translate('foldHeading')"
-          :aria-pressed="state.headingFolded"
-          type="button"
-          :title="translate('foldHeading')"
-          @mousedown.prevent
-          @click="emit('execute', 'fold-heading', commands.toggleHeadingFolding)"
-        >
-          ▸
-        </button>
-        <template v-else-if="toolbarItem.id === 'code-block'" />
-        <button
-          v-else-if="toolbarItem.id === 'link'"
-          data-toolbar-item="link"
-          :aria-expanded="linkEditorVisible"
-          :aria-pressed="state.linkHref !== undefined"
-          type="button"
-          :aria-label="translate('link')"
-          :title="translate('link')"
-          @mousedown.prevent
-          @click="emit('toggle-link-editor', getButton($event))"
-        >
-          <ToolbarIcon name="link" />
-        </button>
-        <label
-          v-else-if="toolbarItem.id === 'color'"
-          data-toolbar-item="color"
-          class="markdown-editor__color"
-          :title="translate('color')"
-        >
-          <input
-            :aria-label="translate('color')"
-            type="color"
-            value="#202125"
-            @input="emit('execute', 'color', commands.setColor(($event.target as HTMLInputElement).value))"
-          />
-        </label>
-        <button
-          v-else-if="toolbarItem.id === 'image'"
-          data-toolbar-item="image"
-          :aria-expanded="imageEditorVisible"
-          :aria-label="translate('image')"
-          type="button"
-          :title="translate('image')"
-          @mousedown.prevent
-          @click="emit('toggle-image-editor', getButton($event))"
-        >
-          <ToolbarIcon name="image" />
-        </button>
-        <button
-          v-else-if="toolbarItem.id === 'formula'"
-          data-toolbar-item="formula"
-          :aria-expanded="formulaMenuVisible"
-          :aria-label="translate('formula')"
-          :aria-pressed="state.formula"
-          :title="translate('formula')"
-          type="button"
-          @mousedown.prevent
-          @click="emit('toggle-formula-menu', getButton($event))"
-        >
-          <ToolbarIcon name="function" />
-        </button>
-        <button
-          v-else-if="toolbarItem.id === 'mermaid'"
-          data-toolbar-item="mermaid"
-          type="button"
-          :aria-label="translate('mermaid')"
-          :aria-pressed="state.mermaid"
-          :title="translate('mermaid')"
-          @mousedown.prevent
-          @click="runItem(toolbarItem, commands.insertMermaid)"
-        >
-          <ToolbarIcon name="mermaid" />
-        </button>
-        <button
-          v-else-if="toolbarItem.id === 'html'"
-          data-toolbar-item="html"
-          type="button"
-          :aria-label="translate('html')"
-          :title="translate('html')"
-          @mousedown.prevent
-          @click="emit('insert-html')"
-        >
-          &lt;/&gt;
-        </button>
-        <button
-          v-else-if="toolbarItem.id === 'horizontal-rule'"
-          data-toolbar-item="horizontal-rule"
-          :aria-label="translate('horizontalRule')"
-          type="button"
-          :title="translate('horizontalRule')"
-          @mousedown.prevent
-          @click="emit('execute', 'horizontal-rule', commands.horizontalRule)"
-        >
-          <ToolbarIcon name="horizontalRule" />
-        </button>
-        <button
-          v-else-if="toolbarItem.id === 'table'"
-          data-toolbar-item="table"
-          :aria-label="translate('table')"
-          type="button"
-          :title="translate('table')"
-          @mousedown.prevent
-          @click="emit('execute', 'table', commands.insertTable())"
-        >
-          <ToolbarIcon name="table" />
-        </button>
-      </template>
-    </div>
-    <button
-      class="markdown-editor__toolbar-mode"
-      data-toolbar-item="mode"
-      type="button"
-      :aria-expanded="modeMenuVisible"
-      :aria-label="translate('mode')"
-      :title="translate('mode')"
-      @mousedown.prevent
-      @click="emit('toggle-mode-menu', getButton($event))"
-    >
-      <ToolbarIcon name="gear" />
-      <ToolbarIcon name="chevronDown" />
-    </button>
-    <slot :commands="commands" :execute="(command: ToolbarCommand) => emit('execute', undefined, command)" />
-  </div>
+	<div class="markdown-editor__toolbar" data-markdown-editor-toolbar role="toolbar" :aria-label="translate('toolbar')">
+		<div class="markdown-editor__toolbar-buttons">
+			<div
+				v-for="group in (toolbarConfig ?? getToolbarConfig(toolbarPreset)).groups"
+				:key="group.id"
+				class="markdown-editor__toolbar-group"
+				role="group"
+				:data-toolbar-group="group.id"
+			>
+				<template v-for="toolbarItem in availableItems(group.items)" :key="toolbarItem.id">
+					<button
+						v-if="toolbarItem.id === 'undo'"
+						data-toolbar-item="undo"
+						type="button"
+						:disabled="!isToolbarItemEnabled(toolbarItem, state)"
+						:aria-label="translate('undo')"
+						:title="translate('undo')"
+						@mousedown.prevent
+						@click="runItem(toolbarItem, commands.undo)"
+					>
+						<ToolbarIcon name="arrowLeft" />
+					</button>
+					<button
+						v-else-if="toolbarItem.id === 'redo'"
+						data-toolbar-item="redo"
+						type="button"
+						:disabled="!isToolbarItemEnabled(toolbarItem, state)"
+						:aria-label="translate('redo')"
+						:title="translate('redo')"
+						@mousedown.prevent
+						@click="runItem(toolbarItem, commands.redo)"
+					>
+						<ToolbarIcon name="arrowRight" />
+					</button>
+					<button
+						v-else-if="toolbarItem.id === 'heading'"
+						class="markdown-editor__toolbar-heading"
+						data-toolbar-item="heading"
+						:aria-expanded="headingMenuVisible"
+						:aria-label="translate('heading')"
+						:aria-pressed="state.headingLevel !== undefined"
+						:title="translate('heading')"
+						type="button"
+						@mousedown.prevent
+						@click="emit('toggle-heading-menu', getButton($event))"
+					>
+						<span>{{ textStyleLabel }}</span>
+						<ToolbarIcon name="chevronDown" />
+					</button>
+					<button
+						v-else-if="toolbarItem.id === 'bold'"
+						data-toolbar-item="bold"
+						:disabled="!isToolbarItemEnabled(toolbarItem, state)"
+						:aria-label="translate('bold')"
+						:aria-pressed="isToolbarItemActive(toolbarItem, state, state.bold)"
+						type="button"
+						:title="translate('bold')"
+						@mousedown.prevent
+						@click="runItem(toolbarItem, commands.bold)"
+					>
+						<ToolbarIcon name="bold" />
+					</button>
+					<button
+						v-else-if="toolbarItem.id === 'italic'"
+						data-toolbar-item="italic"
+						:disabled="!isToolbarItemEnabled(toolbarItem, state)"
+						:aria-label="translate('italic')"
+						:aria-pressed="isToolbarItemActive(toolbarItem, state, state.italic)"
+						type="button"
+						:title="translate('italic')"
+						@mousedown.prevent
+						@click="runItem(toolbarItem, commands.italic)"
+					>
+						<ToolbarIcon name="italic" />
+					</button>
+					<button
+						v-else-if="toolbarItem.id === 'underline'"
+						data-toolbar-item="underline"
+						:disabled="!isToolbarItemEnabled(toolbarItem, state)"
+						:aria-label="translate('underline')"
+						:aria-pressed="isToolbarItemActive(toolbarItem, state, state.underline)"
+						type="button"
+						:title="translate('underline')"
+						@mousedown.prevent
+						@click="runItem(toolbarItem, commands.underline)"
+					>
+						<ToolbarIcon name="underline" />
+					</button>
+					<button
+						v-else-if="toolbarItem.id === 'strike'"
+						data-toolbar-item="strike"
+						:disabled="!isToolbarItemEnabled(toolbarItem, state)"
+						:aria-label="translate('strike')"
+						:aria-pressed="isToolbarItemActive(toolbarItem, state, state.strikethrough)"
+						type="button"
+						:title="translate('strike')"
+						@mousedown.prevent
+						@click="runItem(toolbarItem, commands.strikethrough)"
+					>
+						<ToolbarIcon name="strike" />
+					</button>
+					<button
+						v-else-if="toolbarItem.id === 'mark'"
+						data-toolbar-item="mark"
+						:disabled="!isToolbarItemEnabled(toolbarItem, state)"
+						:aria-label="translate('mark')"
+						:aria-pressed="isToolbarItemActive(toolbarItem, state, state.mark)"
+						type="button"
+						:title="translate('mark')"
+						@mousedown.prevent
+						@click="runItem(toolbarItem, commands.mark)"
+					>
+						M
+					</button>
+					<button
+						v-else-if="toolbarItem.id === 'code'"
+						class="markdown-editor__toolbar-code"
+						data-toolbar-item="code"
+						:aria-expanded="codeMenuVisible"
+						:aria-label="translate(state.codeBlock ? 'codeBlock' : 'code')"
+						:aria-pressed="state.code || state.codeBlock"
+						:title="translate(state.codeBlock ? 'codeBlock' : 'code')"
+						type="button"
+						@mousedown.prevent
+						@click="emit('toggle-code-menu', getButton($event))"
+					>
+						<ToolbarIcon name="code" />
+						<ToolbarIcon name="chevronDown" />
+					</button>
+					<button
+						v-else-if="toolbarItem.id === 'bullet-list'"
+						class="markdown-editor__toolbar-list"
+						data-toolbar-item="list"
+						:aria-expanded="listMenuVisible"
+						:aria-label="translate(state.orderedList ? 'orderedList' : 'bulletList')"
+						:aria-pressed="state.bulletList || state.orderedList"
+						:title="translate(state.orderedList ? 'orderedList' : 'bulletList')"
+						type="button"
+						@mousedown.prevent
+						@click="emit('toggle-list-menu', getButton($event))"
+					>
+						<ToolbarIcon :name="state.orderedList ? 'orderedList' : 'bulletList'" />
+						<ToolbarIcon name="chevronDown" />
+					</button>
+					<template v-else-if="toolbarItem.id === 'ordered-list'" />
+					<button
+						v-else-if="toolbarItem.id === 'quote'"
+						data-toolbar-item="quote"
+						:disabled="!isToolbarItemEnabled(toolbarItem, state)"
+						:aria-label="translate('quote')"
+						:aria-pressed="isToolbarItemActive(toolbarItem, state, state.quote)"
+						type="button"
+						:title="translate('quote')"
+						@mousedown.prevent
+						@click="runItem(toolbarItem, commands.quote)"
+					>
+						<ToolbarIcon name="quote" />
+					</button>
+					<button
+						v-else-if="toolbarItem.id === 'fold-heading'"
+						data-toolbar-item="fold-heading"
+						:aria-label="translate('foldHeading')"
+						:aria-pressed="state.headingFolded"
+						type="button"
+						:title="translate('foldHeading')"
+						@mousedown.prevent
+						@click="emit('execute', 'fold-heading', commands.toggleHeadingFolding)"
+					>
+						▸
+					</button>
+					<template v-else-if="toolbarItem.id === 'code-block'" />
+					<button
+						v-else-if="toolbarItem.id === 'link'"
+						data-toolbar-item="link"
+						:aria-expanded="linkEditorVisible"
+						:aria-pressed="state.linkHref !== undefined"
+						type="button"
+						:aria-label="translate('link')"
+						:title="translate('link')"
+						@mousedown.prevent
+						@click="emit('toggle-link-editor', getButton($event))"
+					>
+						<ToolbarIcon name="link" />
+					</button>
+					<label
+						v-else-if="toolbarItem.id === 'color'"
+						data-toolbar-item="color"
+						class="markdown-editor__color"
+						:title="translate('color')"
+					>
+						<input
+							:aria-label="translate('color')"
+							type="color"
+							value="#202125"
+							@input="emit('execute', 'color', commands.setColor(($event.target as HTMLInputElement).value))"
+						/>
+					</label>
+					<button
+						v-else-if="toolbarItem.id === 'image'"
+						data-toolbar-item="image"
+						:aria-expanded="imageEditorVisible"
+						:aria-label="translate('image')"
+						type="button"
+						:title="translate('image')"
+						@mousedown.prevent
+						@click="emit('toggle-image-editor', getButton($event))"
+					>
+						<ToolbarIcon name="image" />
+					</button>
+					<button
+						v-else-if="toolbarItem.id === 'formula'"
+						data-toolbar-item="formula"
+						:aria-expanded="formulaMenuVisible"
+						:aria-label="translate('formula')"
+						:aria-pressed="state.formula"
+						:title="translate('formula')"
+						type="button"
+						@mousedown.prevent
+						@click="emit('toggle-formula-menu', getButton($event))"
+					>
+						<ToolbarIcon name="function" />
+					</button>
+					<button
+						v-else-if="toolbarItem.id === 'mermaid'"
+						data-toolbar-item="mermaid"
+						type="button"
+						:aria-label="translate('mermaid')"
+						:aria-pressed="state.mermaid"
+						:title="translate('mermaid')"
+						@mousedown.prevent
+						@click="runItem(toolbarItem, commands.insertMermaid)"
+					>
+						<ToolbarIcon name="mermaid" />
+					</button>
+					<button
+						v-else-if="toolbarItem.id === 'html'"
+						data-toolbar-item="html"
+						type="button"
+						:aria-label="translate('html')"
+						:title="translate('html')"
+						@mousedown.prevent
+						@click="emit('insert-html')"
+					>
+						&lt;/&gt;
+					</button>
+					<button
+						v-else-if="toolbarItem.id === 'horizontal-rule'"
+						data-toolbar-item="horizontal-rule"
+						:aria-label="translate('horizontalRule')"
+						type="button"
+						:title="translate('horizontalRule')"
+						@mousedown.prevent
+						@click="emit('execute', 'horizontal-rule', commands.horizontalRule)"
+					>
+						<ToolbarIcon name="horizontalRule" />
+					</button>
+					<button
+						v-else-if="toolbarItem.id === 'table'"
+						data-toolbar-item="table"
+						:aria-label="translate('table')"
+						type="button"
+						:title="translate('table')"
+						@mousedown.prevent
+						@click="emit('execute', 'table', commands.insertTable())"
+					>
+						<ToolbarIcon name="table" />
+					</button>
+				</template>
+			</div>
+			<slot :commands="commands" :execute="(command: ToolbarCommand) => emit('execute', undefined, command)" />
+		</div>
+		<button
+			class="markdown-editor__toolbar-mode"
+			data-toolbar-item="mode"
+			type="button"
+			:aria-expanded="modeMenuVisible"
+			:aria-label="translate('mode')"
+			:title="translate('mode')"
+			@mousedown.prevent
+			@click="emit('toggle-mode-menu', getButton($event))"
+		>
+			<ToolbarIcon name="gear" />
+			<ToolbarIcon name="chevronDown" />
+		</button>
+	</div>
 </template>
 
 <style scoped>
+	.markdown-editor__toolbar-buttons {
+		display: flex;
+		flex: 1;
+		flex-wrap: wrap;
+	}
 	.markdown-editor__toolbar-group {
 		display: contents;
 	}
