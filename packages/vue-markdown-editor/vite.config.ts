@@ -33,7 +33,7 @@ export default defineConfig(({mode}) => {
                 toolbar: resolve(import.meta.dirname, 'src/toolbar/index.ts'),
             },
             formats: ['es'],
-            fileName: (_format, entryName) => `${entryName}.js`,
+            fileName: (_format, entryName) => rendererBuild ? 'renderer.js' : `${entryName}.js`,
             cssFileName: rendererBuild ? 'renderer' : 'index',
         },
         cssCodeSplit: false,
