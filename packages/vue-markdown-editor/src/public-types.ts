@@ -1,5 +1,16 @@
 import type {EditorAction, EditorActions} from './core/actions';
 
+export interface MermaidEngine {
+    initialize(options?: {securityLevel?: 'strict'; startOnLoad?: boolean}): void;
+    render(id: string, source: string): Promise<{svg: string; bindFunctions?: (element: HTMLElement) => void}> | {svg: string; bindFunctions?: (element: HTMLElement) => void};
+}
+
+export interface MarkdownFeatures {
+    math?: {renderToString(latex: string, display: boolean): string};
+    mermaid?: {load(): Promise<MermaidEngine>};
+    html?: (source: string) => HTMLElement;
+}
+
 /** Modes available to the consuming Vue application. */
 export type MarkdownEditorMode = 'wysiwyg' | 'markup' | 'split';
 export type MarkdownEditorLocale = 'en' | 'ru';

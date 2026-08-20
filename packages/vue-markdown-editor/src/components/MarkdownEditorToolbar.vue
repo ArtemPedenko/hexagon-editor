@@ -2,6 +2,7 @@
 	import type { BasicEditorCommands, BasicWysiwygEditor, BasicWysiwygSelectionState } from '../core';
 	import type { MarkdownEditorToolbarPreset } from '../public-types';
 	import type { MarkdownEditorMode } from '../public-types';
+	import type { MarkdownFeatures } from '../public-types';
 	import {
 		getToolbarConfig,
 		isToolbarItemAvailable,
@@ -29,11 +30,13 @@
 		textStyleLabel: string;
 		toolbarPreset: MarkdownEditorToolbarPreset;
 		toolbarConfig?: MarkdownEditorToolbarConfig;
+		features?: MarkdownFeatures;
 		translate: (key: MarkdownEditorMessageKey) => string;
 	}>();
 
 	function availableItems(items: MarkdownEditorToolbarConfig['groups'][number]['items']): MarkdownEditorToolbarItem[] {
-		return items.map(normalizeToolbarItem).filter(toolbarItem => isToolbarItemAvailable(toolbarItem, props.state));
+		return items.map(normalizeToolbarItem).filter(toolbarItem =>
+			isToolbarItemAvailable(toolbarItem, props.state));
 	}
 
 	function runItem(toolbarItem: MarkdownEditorToolbarItem, command: ToolbarCommand): void {
@@ -66,6 +69,7 @@
 	}
 </script>
 
+<!-- eslint-disable vue/html-indent -->
 <template>
 	<div class="markdown-editor__toolbar" data-markdown-editor-toolbar role="toolbar" :aria-label="translate('toolbar')">
 		<div class="markdown-editor__toolbar-buttons">

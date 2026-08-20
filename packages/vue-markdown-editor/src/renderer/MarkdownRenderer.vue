@@ -2,7 +2,7 @@
 import {computed, getCurrentInstance, h, nextTick, onBeforeUnmount, onMounted, ref, render, watch} from 'vue';
 
 import {renderMarkdownContent} from './markdown';
-import {getMermaid, nextMermaidDiagramId} from './mermaid-runtime';
+import type {MarkdownFeatures} from '../public-types';
 import type {MarkdownDirectiveComponentProps, MarkdownDirectiveComponents} from '../directives';
 
 defineOptions({name: 'MarkdownRenderer'});
@@ -10,11 +10,12 @@ defineOptions({name: 'MarkdownRenderer'});
 const props = defineProps<{
     content: string;
     directiveComponents?: MarkdownDirectiveComponents;
+    features?: MarkdownFeatures;
 }>();
 
 const root = ref<HTMLElement>();
 const appContext = getCurrentInstance()?.appContext;
-const renderedContent = computed(() => renderMarkdownContent(props.content));
+const renderedContent = computed(() => renderMarkdownContent(props.content, props.features));
 let renderVersion = 0;
 let destroyed = false;
 let directiveTargets: HTMLElement[] = [];
@@ -49,21 +50,14 @@ async function renderMermaidDiagrams(): Promise<void> {
     const version = ++renderVersion;
     const diagrams = [...(root.value?.querySelectorAll<HTMLElement>('[data-mermaid]') ?? [])];
     if (diagrams.length === 0) return;
-    let mermaid: Awaited<ReturnType<typeof getMermaid>>;
-    try {
-        mermaid = await getMermaid();
-    } catch {
-        for (const element of diagrams) {
-            element.removeAttribute('aria-busy');
-            element.setAttribute('data-mermaid-error', '');
-        }
-        return;
-    }
+    if (props.features?.mermaid === undefined) return;
+    let mermaid: Awaited<ReturnType<NonNullable<MarkdownFeatures['mermaid']>['load']>>;
+    try { mermaid = await props.features.mermaid.load(); mermaid.initialize({securityLevel: 'strict', startOnLoad: false}); } catch { return; }
     for (const element of diagrams) {
         if (destroyed || version !== renderVersion || !element.isConnected) return;
         const source = element.querySelector('pre')?.textContent ?? '';
         try {
-            const {bindFunctions, svg} = await mermaid.render(nextMermaidDiagramId(), source);
+            const {bindFunctions, svg} = await mermaid.render(`markdown-renderer-mermaid-${version}-${diagrams.indexOf(element)}`, source);
             if (destroyed || version !== renderVersion || !element.isConnected) return;
             element.innerHTML = svg;
             element.removeAttribute('aria-busy');

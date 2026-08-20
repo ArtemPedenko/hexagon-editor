@@ -7,8 +7,24 @@
 		MarkdownEditorMode,
 		MarkdownEditorTheme,
 		MarkdownEditorToolbarConfig,
+		MermaidEngine,
 	} from 'hexagon-editor';
 	import { MarkdownRenderer } from 'hexagon-editor/renderer';
+	import katex from 'katex';
+	import mermaid from 'mermaid';
+	import type { MarkdownFeatures } from 'hexagon-editor';
+
+	const mermaidEngine: MermaidEngine = {
+		initialize: (options: {securityLevel?: 'strict'; startOnLoad?: boolean} = {}) => {
+			mermaid.initialize({securityLevel: options.securityLevel, startOnLoad: options.startOnLoad});
+		},
+		render: mermaid.render,
+	};
+
+	const features: MarkdownFeatures = {
+		math: {renderToString: (latex, display) => katex.renderToString(latex, {displayMode: display, throwOnError: true})},
+		mermaid: {load: async () => mermaidEngine},
+	};
 
 	type PlaygroundExample = 'advanced' | 'image-upload';
 
@@ -115,12 +131,13 @@
         v-model:mode="editorMode"
         v-model:theme="theme"
         toolbar-preset="full"
+        :features="features"
         :toolbar-config="toolbarConfig"
         :upload-image="example === 'image-upload' ? uploadImage : undefined"
       />
       <aside class="playground__source-pane">
         <div class="playground__pane-title">Preview</div>
-        <MarkdownRenderer class="playground__preview" :content="markdown" />
+        <MarkdownRenderer class="playground__preview" :content="markdown" :features="features" />
       </aside>
     </section>
   </main>

@@ -73,8 +73,8 @@ export function configureMathMarkdown(markdown: MarkdownIt): MarkdownIt {
 }
 
 export const mathNodeSpecs: Record<MathNode, NodeSpec> = {
-    [MathNode.Inline]: {atom: true, attrs: {latex: {default: ''}}, group: 'inline', inline: true, toDOM: (node) => ['span', {'data-math-inline': ''}, node.attrs.latex]},
-    [MathNode.Block]: {atom: true, attrs: {latex: {default: ''}}, group: 'block', toDOM: (node) => ['pre', {'data-math-block': ''}, node.attrs.latex]},
+    [MathNode.Inline]: {atom: true, attrs: {latex: {default: ''}}, group: 'inline', inline: true, toDOM: (node) => ['span', {'data-math-inline': ''}, `$${node.attrs.latex}$`]},
+    [MathNode.Block]: {atom: true, attrs: {latex: {default: ''}}, group: 'block', toDOM: (node) => ['pre', {'data-math-block': ''}, `$$\n${node.attrs.latex}\n$$`]},
 };
 
 export function createMathNodeSpecs(render: (latex: string, display: boolean) => HTMLElement): Record<MathNode, NodeSpec> {

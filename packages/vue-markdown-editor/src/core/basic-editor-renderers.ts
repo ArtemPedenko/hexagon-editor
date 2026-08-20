@@ -1,31 +1,26 @@
-import katex from 'katex';
-import type {Mermaid} from 'mermaid';
-
 import {getMarkdownEditorMessages} from '../i18n';
-import type {MarkdownEditorLocale} from '../public-types';
-
-import {getAdvancedMarkdownRenderers} from './optional-renderers';
+import type {MarkdownEditorLocale, MarkdownFeatures, MermaidEngine} from '../public-types';
+import type {NodeViewConstructor} from 'prosemirror-view';
 
 let mermaidDiagramId = 0;
-let mermaidPromise: Promise<Mermaid> | undefined;
-
-export function renderHtmlBlock(html: string, attribute: string): HTMLElement {
-    const element = document.createElement('div');
-    element.setAttribute(attribute, '');
-    element.innerHTML = html;
-    return element;
-}
-
-export function renderOptionalBlock(kind: 'math' | 'mermaid', source: string, display = true): HTMLElement {
-    const renderers = getAdvancedMarkdownRenderers();
-    if (kind === 'math' && renderers.math !== undefined) return renderers.math(source, display);
-    if (kind === 'mermaid') return renderers.mermaid?.(source) ?? renderMermaid(source);
-    const element = document.createElement(kind === 'math' && !display ? 'span' : 'pre');
+export function renderOptionalBlock(kind: 'math' | 'mermaid', source: string, display = true, features: MarkdownFeatures = {}): HTMLElement {
+    const element = document.createElement(kind === 'math' && !display ? 'span' : kind === 'math' ? 'pre' : 'div');
     element.setAttribute(`data-${kind}${kind === 'math' ? display ? '-block' : '-inline' : ''}`, '');
     if (kind === 'math') {
-        try { element.innerHTML = katex.renderToString(source, {displayMode: display, throwOnError: true}); }
-        catch { element.setAttribute('data-math-error', ''); const fallback = document.createElement(display ? 'pre' : 'span'); fallback.className = 'markdown-editor__math-error'; fallback.textContent = source; element.replaceChildren(fallback); }
+        const fallback = display ? `$$\n${source}\n$$` : `$${source}$`;
+        try { element.innerHTML = features.math?.renderToString(source, display) ?? ''; if (features.math === undefined) element.textContent = fallback; }
+        catch {
+            element.setAttribute('data-math-error', '');
+            const error = document.createElement(display ? 'pre' : 'span');
+            error.className = 'markdown-editor__math-error';
+            error.textContent = source;
+            element.replaceChildren(error);
+        }
         localizeMathElement(element, 'en');
+    } else {
+        element.setAttribute('aria-busy', 'true');
+        const fallback = document.createElement('pre'); fallback.textContent = source; element.append(fallback);
+        if (features.mermaid !== undefined) void loadAndRenderMermaid(element, source, features.mermaid.load);
     }
     return element;
 }
@@ -42,35 +37,58 @@ export function localizeRenderedMath(root: ParentNode, locale: MarkdownEditorLoc
     }
 }
 
-function renderMermaid(source: string): HTMLElement {
-    const element = document.createElement('div');
-    element.setAttribute('data-mermaid', '');
-    element.setAttribute('aria-busy', 'true');
-    element.setAttribute('aria-label', 'Mermaid diagram. Double-click to edit.');
-    const fallback = document.createElement('pre');
-    fallback.textContent = source;
-    element.append(fallback);
-    const id = `markdown-editor-mermaid-${++mermaidDiagramId}`;
-    mermaidPromise ??= import('mermaid').then(({default: mermaid}) => {
-        mermaid.initialize({securityLevel: 'strict', startOnLoad: false});
-        return mermaid;
-    });
-    void mermaidPromise.then((mermaid) => mermaid.render(id, source)).then(({bindFunctions, svg}) => {
-        element.innerHTML = svg;
-        element.removeAttribute('aria-busy');
-        bindFunctions?.(element);
-    }).catch(() => {
-        element.removeAttribute('aria-busy');
-        element.setAttribute('data-mermaid-error', '');
-    });
-    return element;
+export async function loadAndRenderMermaid(element: HTMLElement, source: string, load: () => Promise<MermaidEngine>): Promise<void> {
+    try {
+        const engine = await load();
+        engine.initialize({securityLevel: 'strict', startOnLoad: false});
+        const {bindFunctions, svg} = await engine.render(`markdown-editor-mermaid-${++mermaidDiagramId}`, source);
+        if (!element.isConnected) return;
+        element.innerHTML = svg; element.removeAttribute('aria-busy'); bindFunctions?.(element);
+    } catch { element.removeAttribute('aria-busy'); element.setAttribute('data-mermaid-error', ''); }
 }
 
-export function renderYfmHtml(source: string): HTMLElement {
-    const renderer = getAdvancedMarkdownRenderers().html;
-    if (renderer !== undefined) return renderer(source);
+export function renderYfmHtml(source: string, features: MarkdownFeatures = {}): HTMLElement {
+    if (features.html !== undefined) return features.html(source);
     const element = document.createElement('pre');
     element.setAttribute('data-yfm-html', '');
     element.textContent = source;
     return element;
+}
+
+function renderHtmlSource(source: string): HTMLElement {
+    const template = document.createElement('template');
+    template.innerHTML = source;
+    const wrapper = document.createElement('div');
+    wrapper.append(...Array.from(template.content.childNodes));
+    return wrapper;
+}
+
+export function createFeatureNodeViews(features: MarkdownFeatures): Record<string, NodeViewConstructor> {
+    const views: Record<string, NodeViewConstructor> = {
+        inline_math: (node) => ({
+            dom: renderOptionalBlock('math', node.attrs.latex, false, features),
+            update: (next) => next.type.name === 'inline_math' && next.eq(node),
+        }),
+        math_block: (node) => ({
+            dom: renderOptionalBlock('math', node.attrs.latex, true, features),
+            update: (next) => next.type.name === 'math_block' && next.eq(node),
+        }),
+        mermaid: (node) => ({
+            dom: renderOptionalBlock('mermaid', node.attrs.source, true, features),
+            update: (next) => next.type.name === 'mermaid' && next.eq(node),
+        }),
+        directive: (node) => {
+            const dom = document.createElement('div');
+            const name = String(node.attrs.name);
+            dom.setAttribute('data-directive', name);
+            if (name === 'html') {
+                dom.setAttribute('data-directive-html', '');
+                dom.append(features.html?.(node.attrs.content) ?? renderHtmlSource(String(node.attrs.content)));
+            } else {
+                dom.textContent = node.attrs.content;
+            }
+            return {dom, update: (next) => next.type.name === 'directive'};
+        },
+    };
+    return views;
 }

@@ -30,6 +30,28 @@ defineProps<{content: string}>();
 
 `MarkdownRenderer` supports server rendering. Mermaid source is emitted as a stable fallback during SSR and is replaced with an SVG after hydration. The Mermaid runtime is loaded lazily only when a document contains a diagram.
 
+Math and Mermaid engines are optional and are not included in the base installation. Install only what the application uses:
+
+```bash
+pnpm add katex
+pnpm add mermaid
+```
+
+Pass local adapters through `features`; Mermaid can be loaded lazily, and KaTeX styles must be imported by the application:
+
+```ts
+import katex from 'katex';
+import 'katex/dist/katex.min.css';
+import type {MarkdownFeatures} from 'hexagon-editor';
+
+const features: MarkdownFeatures = {
+  math: {renderToString: (latex, display) => katex.renderToString(latex, {displayMode: display, throwOnError: true})},
+  mermaid: {load: () => import('mermaid').then(({default: mermaid}) => mermaid)},
+};
+```
+
+Without a corresponding feature, formulas and Mermaid remain safe editable Markdown fallbacks. `features.html` accepts a local trusted HTML renderer for editor HTML blocks.
+
 The renderer includes basic typography for headings, links, and inline code. Override its `.markdown-renderer` root, semantic descendants, or the `--markdown-renderer-link` and `--markdown-renderer-code-background` custom properties to match the consuming site. KaTeX output requires host-provided styles if the site wants the standard KaTeX appearance.
 
 Raw Markdown HTML and the contents of `:::html ... :::` are displayed as source text. Only the spaced `::: html ... :::` directive is rendered as HTML. Pass trusted content to that directive; the renderer does not sanitize it.
@@ -75,22 +97,13 @@ Headless integrations can compose the exported `ZeroPreset`, `CommonMarkPreset`,
 
 The root entry exports the complete supported public API. Focused integrations may use the documented subpaths: `./core`, `./extensions`, `./specs`, `./presets`, `./renderer`, `./toolbar`, `./forms`, `./configure`, and `./classname`. Other internal source paths are not part of the compatibility contract.
 
-`configure({lang, renderers})` sets process-wide defaults and optional host renderers. `cn(block)` provides the `hx-md-` BEM classname convention without a React dependency.
+`configure({lang})` sets process-wide defaults. `cn(block)` provides the `hx-md-` BEM classname convention without a React dependency.
 
 ## Supported Markdown
 
 The editor supports CommonMark blocks and marks, tables, definition lists, heading attributes and folding headings (`##+`), quote links, raw HTML, directives, Math/LaTeX (`$…$` and `$$…$$`), Mermaid fences, and YFM HTML blocks (`:::html`).
 
-KaTeX renders math by default. Mermaid diagrams are rendered lazily by the bundled Mermaid runtime. Mermaid and YFM HTML rendering can be overridden by the host:
-
-```ts
-import {configureAdvancedMarkdownRenderers} from 'hexagon-editor';
-
-configureAdvancedMarkdownRenderers({
-  mermaid: (source) => renderMermaidIntoElement(source),
-  html: (source) => renderSanitizedHtml(source),
-});
-```
+KaTeX and Mermaid render only when their local `features` adapters are supplied.
 
 Invalid Mermaid source remains visible as an editable fallback. YFM HTML source remains visible unless the host supplies a renderer.
 

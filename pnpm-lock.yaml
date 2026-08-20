@@ -38,6 +38,12 @@ importers:
       hexagon-editor:
         specifier: workspace:*
         version: link:../../packages/vue-markdown-editor
+      katex:
+        specifier: ^0.18.1
+        version: 0.18.1
+      mermaid:
+        specifier: ^11.16.1
+        version: 11.16.1
       vue:
         specifier: ^3.5.0
         version: 3.5.41(typescript@5.9.3)
@@ -72,9 +78,6 @@ importers:
       '@floating-ui/dom':
         specifier: ^1.7.0
         version: 1.8.0
-      katex:
-        specifier: ^0.18.1
-        version: 0.18.1
       markdown-it:
         specifier: ^14.1.0
         version: 14.3.0
@@ -90,9 +93,6 @@ importers:
       markdown-it-sub:
         specifier: ^2.0.0
         version: 2.0.0
-      mermaid:
-        specifier: ^11.16.1
-        version: 11.16.1
       prosemirror-codemark:
         specifier: ^0.4.2
         version: 0.4.2(prosemirror-inputrules@1.5.1)(prosemirror-model@1.25.11)(prosemirror-state@1.4.4)(prosemirror-view@1.42.2)

@@ -58,9 +58,10 @@ describe('renderMarkdownContent', () => {
     it('renders formulas and keeps invalid formulas recoverable', () => {
         const result = renderMarkdownContent('Inline $E = mc^2$\n\n$$\nnot valid \\invalid{\n$$');
 
-        expect(result).toContain('class="katex"');
-        expect(result).toContain('data-math-error');
+        expect(result).toContain('data-math-fallback');
         expect(result).toContain('not valid');
+        const rendered = renderMarkdownContent('$x$', {math: {renderToString: (latex, display) => `<span data-fake-math="${display}">${latex}</span>`}});
+        expect(rendered).toContain('data-fake-math="false"');
     });
 
     it('groups folding headings into nested interactive sections', () => {

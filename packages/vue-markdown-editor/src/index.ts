@@ -8,6 +8,8 @@ export type {
     MarkdownEditorTheme,
     MarkdownEditorOptions,
     MarkdownEditorToolbarPreset,
+    MarkdownFeatures,
+    MermaidEngine,
 } from './public-types';
 export type {ChangeEditorModeOptions, MarkdownEditorInitialOptions} from './public-types';
 export {Lang, configure, getConfig, subscribeConfigure} from './configure';

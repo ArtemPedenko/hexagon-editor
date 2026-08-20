@@ -19,7 +19,6 @@ import {h, reactive, render} from "vue";
 import type {AppContext} from "vue";
 
 import "prosemirror-view/style/prosemirror.css";
-import "katex/dist/katex.min.css";
 
 import {basicMarkdownCodec, basicMarkdownSchema} from "./basic-editor-markdown";
 export {basicMarkdownCodec, basicMarkdownSchema} from './basic-editor-markdown';
@@ -96,6 +95,7 @@ import {toggleFoldingHeading} from '../extensions/additional/folding-heading';
 import {defaultMathLatex} from '../extensions/additional/math';
 import {insertMermaid} from '../extensions/additional/mermaid';
 import type {MarkdownDirectiveComponentProps, MarkdownDirectiveComponents} from '../directives';
+import {createFeatureNodeViews} from './basic-editor-renderers';
 
 export function createMarkdownTablePastePlugin(): Plugin {
   return createTablePastePlugin(basicMarkdownCodec);
@@ -258,6 +258,7 @@ export function getBasicWysiwygSelectionState(
 export function mountBasicWysiwygEditor({
   directiveAppContext,
   directiveComponents,
+  features = {},
   editable = true,
   initialValue = "",
   onCancel,
@@ -320,8 +321,9 @@ export function mountBasicWysiwygEditor({
       onSelectionChange?.(getBasicWysiwygSelectionState(state));
     },
     editable: () => editable,
-    nodeViews: directiveComponents === undefined ? undefined : {
-      directive: createDirectiveNodeView(directiveComponents, editable, directiveAppContext),
+    nodeViews: {
+      ...createFeatureNodeViews(features),
+      ...(directiveComponents === undefined ? {} : {directive: createDirectiveNodeView(directiveComponents, editable, directiveAppContext)}),
     },
     state: editorState,
   });

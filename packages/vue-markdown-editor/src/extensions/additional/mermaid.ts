@@ -31,7 +31,7 @@ export const mermaidNodeSpec: NodeSpec = {
     attrs: {source: {default: ''}},
     group: 'block',
     selectable: true,
-    toDOM: (node) => ['pre', {'data-mermaid': ''}, node.attrs.source],
+    toDOM: (node) => ['pre', {'data-mermaid': ''}, `\`\`\`mermaid\n${node.attrs.source}\n\`\`\``],
 };
 
 export function createMermaidNodeSpec(render: (source: string) => HTMLElement): NodeSpec {

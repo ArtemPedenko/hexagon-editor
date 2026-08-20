@@ -4,6 +4,7 @@ import type {AppContext} from 'vue';
 import type {MarkdownDirectiveComponents} from '../directives';
 import type {SelectionContextOptions} from '../extensions/behavior/selection-context';
 import type {ImageObjectFit} from '../extensions/markdown/image';
+import type {MarkdownFeatures} from '../public-types';
 
 export interface BasicEditorCommands {
     addMathInline: Command; addTableColumn: Command; addTableRow: Command; bold: Command; bulletList: Command; code: Command; codeBlock: Command;
@@ -27,6 +28,7 @@ export interface BasicWysiwygEditor { destroy(): void; focus(): void; getValue()
 export interface MountBasicWysiwygEditorOptions {
     directiveAppContext?: AppContext;
     directiveComponents?: MarkdownDirectiveComponents;
+    features?: MarkdownFeatures;
     editable?: boolean; initialValue?: string; onChange?(value: string): void;
     onCancel?(): boolean; onSelectionChange?(selection: BasicWysiwygSelectionState): void; onSubmit?(): boolean;
     placeholder?: string; plugins?: readonly Plugin[]; selectionContext?: SelectionContextOptions; target: HTMLElement;

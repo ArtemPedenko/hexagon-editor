@@ -7,8 +7,8 @@ import {Schema} from 'prosemirror-model';
 import type {Mark, MarkSpec, Node as ProseMirrorNode, NodeSpec} from 'prosemirror-model';
 import type {MarkdownSerializerState, ParseSpec} from 'prosemirror-markdown';
 
-import {configureMathMarkdown, createMathNodeSpecs, mathSerializerNodes, mathTokenSpecs} from '../extensions/additional/math';
-import {configureMermaidMarkdown, createMermaidNodeSpec, mermaidTokenSpec, serializeMermaid} from '../extensions/additional/mermaid';
+import {configureMathMarkdown, mathNodeSpecs, mathSerializerNodes, mathTokenSpecs} from '../extensions/additional/math';
+import {configureMermaidMarkdown, mermaidNodeSpec, mermaidTokenSpec, serializeMermaid} from '../extensions/additional/mermaid';
 import {configureQuoteLinkMarkdown, quoteLinkNodeSpec, quoteLinkTokenSpec, serializeQuoteLink} from '../extensions/additional/quote-link';
 import {configureYfmHtmlBlockMarkdown} from '../extensions/additional/yfm-html-block';
 import {blockquoteNodeSpec, blockquoteTokenSpec, serializeBlockquote} from '../extensions/markdown/blockquote';
@@ -32,7 +32,6 @@ import {TableNode, tableNodeSpecs, tableSerializerNodes} from '../extensions/mar
 import {ExtensionsManager} from './extensions-manager';
 import type {ExtensionBuilder} from './extension-builder';
 import {defaultMarkdownSchema, MarkdownCodec} from './markdown';
-import {renderHtmlBlock, renderOptionalBlock} from './basic-editor-renderers';
 
 const basicMarks: Record<string, MarkSpec> = {
     ins: underlineMarkSpec,
@@ -45,13 +44,13 @@ const basicMarks: Record<string, MarkSpec> = {
 };
 
 const extendedMarkdownNodes: Record<string, NodeSpec> = {
-    ...createMathNodeSpecs((latex, display) => renderOptionalBlock('math', latex, display)),
-    mermaid: createMermaidNodeSpec((source) => renderOptionalBlock('mermaid', source)),
+    ...mathNodeSpecs,
+    mermaid: mermaidNodeSpec,
     definition_description: {content: 'block+', group: 'block', toDOM: () => ['dd', 0]},
     definition_list: {content: 'definition_term definition_description+', group: 'block', toDOM: () => ['dl', 0]},
     definition_term: {content: 'inline*', toDOM: () => ['dt', 0]},
     quote_link: quoteLinkNodeSpec,
-    directive: {atom: true, attrs: {content: {default: ''}, name: {default: 'note'}}, group: 'block', toDOM: (node) => node.attrs.name === 'html' ? renderHtmlBlock(node.attrs.content, 'data-directive-html') : ['div', {'data-directive': node.attrs.name}, node.attrs.content]},
+    directive: {atom: true, attrs: {content: {default: ''}, name: {default: 'note'}}, group: 'block', toDOM: (node) => ['pre', {'data-directive': node.attrs.name}, node.attrs.content]},
     raw_html: {atom: true, attrs: {html: {default: ''}}, group: 'block', toDOM: (node) => ['div', {'data-raw-html': ''}, node.attrs.html]},
     yfm_html_block: {attrs: {html: {default: ''}}, content: 'text*', group: 'block', toDOM: () => ['p', {'data-yfm-html': '', style: 'white-space: pre-wrap'}, 0]},
 };

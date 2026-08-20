@@ -1,13 +1,14 @@
-import katex from 'katex';
 import MarkdownIt from 'markdown-it';
 import type Token from 'markdown-it/lib/token.mjs';
 import deflist from 'markdown-it-deflist';
 import insPlugin from 'markdown-it-ins';
 import markPlugin from 'markdown-it-mark';
 import subPlugin from 'markdown-it-sub';
+import type {MarkdownFeatures} from '../public-types';
 
 interface RendererEnvironment {
     foldingHeadings?: number[];
+    features?: MarkdownFeatures;
 }
 
 const htmlEscape = new MarkdownIt().utils.escapeHtml;
@@ -190,8 +191,8 @@ function configureQuoteLinks(markdown: MarkdownIt): void {
 }
 
 function configureRenderer(markdown: MarkdownIt): void {
-    markdown.renderer.rules.inline_math = (tokens, index) => renderMath(tokens[index]?.content ?? '', false);
-    markdown.renderer.rules.math_block = (tokens, index) => renderMath(tokens[index]?.content ?? '', true);
+    markdown.renderer.rules.inline_math = (tokens, index, _options, environment) => renderMath(tokens[index]?.content ?? '', false, (environment as RendererEnvironment).features);
+    markdown.renderer.rules.math_block = (tokens, index, _options, environment) => renderMath(tokens[index]?.content ?? '', true, (environment as RendererEnvironment).features);
     markdown.renderer.rules.mermaid = (tokens, index) => `<div data-mermaid aria-busy="true"><pre>${htmlEscape(tokens[index]?.content ?? '')}</pre></div>\n`;
     markdown.renderer.rules.yfm_html_block = (tokens, index) => `<p data-yfm-html>:::html<br>${htmlEscape(tokens[index]?.content ?? '')}<br>:::</p>\n`;
     markdown.renderer.rules.directive = (tokens, index) => {
@@ -239,13 +240,13 @@ function configureRenderer(markdown: MarkdownIt): void {
     };
 }
 
-function renderMath(source: string, display: boolean): string {
+function renderMath(source: string, display: boolean, features: MarkdownFeatures | undefined): string {
     try {
-        return katex.renderToString(source, {displayMode: display, throwOnError: true});
+        if (features?.math !== undefined) return features.math.renderToString(source, display);
     } catch {
-        const tag = display ? 'pre' : 'span';
-        return `<${tag} data-math-error>${htmlEscape(source)}</${tag}>`;
+        return `<${display ? 'pre' : 'span'} data-math-error>${htmlEscape(display ? `$$\n${source}\n$$` : `$${source}$`)}</${display ? 'pre' : 'span'}>`;
     }
+    return `<${display ? 'pre' : 'span'} data-math-fallback>${htmlEscape(display ? `$$\n${source}\n$$` : `$${source}$`)}</${display ? 'pre' : 'span'}>`;
 }
 
 function renderKnownInlineHtml(source: string): string {
@@ -282,8 +283,8 @@ function createMarkdownRenderer(): MarkdownIt {
 
 const renderer = createMarkdownRenderer();
 
-export function renderMarkdownContent(content: string): string {
-    const environment: RendererEnvironment = {};
+export function renderMarkdownContent(content: string, features: MarkdownFeatures = {}): string {
+    const environment: RendererEnvironment = {features};
     const result = renderer.render(content, environment);
     const unclosedSections = environment.foldingHeadings?.length ?? 0;
     return result + '</details>'.repeat(unclosedSections);

@@ -25,6 +25,7 @@ import type {
     MarkdownEditorLocale,
     MarkdownEditorToolbarPreset,
     MarkdownEditorTheme,
+    MarkdownFeatures,
 } from './public-types';
 import type {MarkdownEditorToolbarConfig, MarkdownEditorToolbarItemId} from './toolbar';
 import type {MarkdownDirectiveComponents} from './directives';
@@ -61,6 +62,7 @@ const props = withDefaults(
         /** Overrides the preset with an ordered set of toolbar groups and items. */
         toolbarConfig?: MarkdownEditorToolbarConfig;
         theme?: MarkdownEditorTheme;
+        features?: MarkdownFeatures;
     }>(),
     {
         modelValue: '',
@@ -73,6 +75,7 @@ const props = withDefaults(
         toolbarPreset: 'default',
         uploadImage: undefined,
         theme: 'auto',
+        features: undefined,
     },
 );
 
@@ -397,6 +400,7 @@ function mountHosts(): void {
         visualEditor = mountBasicWysiwygEditor({
             directiveAppContext: appContext,
             directiveComponents: props.directiveComponents,
+            features: props.features,
             editable: !props.readonly,
             initialValue: value.value,
             onCancel: () => {
@@ -516,6 +520,13 @@ watch(
     },
 );
 
+watch(() => props.features, async () => {
+    const changeId = ++modeChangeId;
+    destroyHosts();
+    await nextTick();
+    if (changeId === modeChangeId) mountHosts();
+});
+
 watch(
     () => props.readonly,
     async () => {
@@ -577,6 +588,7 @@ defineExpose<MarkdownEditorExposed>({
       :text-style-label="textStyleLabel"
       :toolbar-preset="toolbarPreset"
       :toolbar-config="toolbarConfig"
+      :features="features"
       :translate="t"
       @execute="execute"
       @insert-html="insertHtmlDirective"

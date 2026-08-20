@@ -51,8 +51,6 @@ export { SchemaDynamicModifier } from './schema-dynamic-modifier';
 export type { SchemaDynamicModifierConfig } from './schema-dynamic-modifier';
 export { mountBasicMarkupEditor } from './markup-editor';
 export type { BasicMarkupEditor, MountBasicMarkupEditorOptions } from './markup-editor';
-export { configureAdvancedMarkdownRenderers, getAdvancedMarkdownRenderers } from './optional-renderers';
-export type { AdvancedMarkdownRenderers } from './optional-renderers';
 export {
 	ParserTokenRegistry,
 	ParserTokensRegistry,

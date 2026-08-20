@@ -84,16 +84,14 @@ describe('basic Markdown extensions', () => {
         });
     });
 
-    it('renders a recoverable Math error with an editing hint', () => {
+    it('renders Math source with an editing hint when no engine is configured', () => {
         const target = document.createElement('div');
         const editor = mountBasicWysiwygEditor({initialValue: '$\\invalid$', target});
 
         const formula = target.querySelector<HTMLElement>('[data-math-inline]');
-        expect(formula?.hasAttribute('data-math-error')).toBe(true);
+        expect(formula?.textContent).toBe('$\\invalid$');
         expect(formula?.getAttribute('aria-label')).toBe('Formula. Double-click to edit.');
         expect(formula?.title).toBe('Double-click to edit');
-        expect(formula?.querySelector('.markdown-editor__math-error')?.textContent).toBe('\\invalid');
-        expect(formula?.querySelector('.markdown-editor__math-hint')).toBeNull();
 
         editor.destroy();
     });
