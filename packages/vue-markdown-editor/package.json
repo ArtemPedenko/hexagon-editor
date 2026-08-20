@@ -1,110 +1,110 @@
 {
-  "name": "hexagon-editor",
-  "version": "0.1.4",
-  "description": "Vue 3 Markdown/YFM WYSIWYG and markup editor",
-  "license": "MIT",
-  "type": "module",
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    },
-    "./classname": {
-      "types": "./dist/classname.d.ts",
-      "import": "./dist/classname.js"
-    },
-    "./configure": {
-      "types": "./dist/configure.d.ts",
-      "import": "./dist/configure.js"
-    },
-    "./core": {
-      "types": "./dist/core/index.d.ts",
-      "import": "./dist/core.js"
-    },
-    "./extensions": {
-      "types": "./dist/extensions/index.d.ts",
-      "import": "./dist/extensions.js"
-    },
-    "./forms": {
-      "types": "./dist/forms/index.d.ts",
-      "import": "./dist/forms.js"
-    },
-    "./i18n": {
-      "types": "./dist/i18n/index.d.ts",
-      "import": "./dist/i18n.js"
-    },
-    "./presets": {
-      "types": "./dist/presets/index.d.ts",
-      "import": "./dist/presets.js"
-    },
-    "./renderer": {
-      "types": "./dist/renderer/index.d.ts",
-      "import": "./dist/renderer.js"
-    },
-    "./specs": {
-      "types": "./dist/extensions/specs.d.ts",
-      "import": "./dist/specs.js"
-    },
-    "./toolbar": {
-      "types": "./dist/toolbar/index.d.ts",
-      "import": "./dist/toolbar.js"
-    },
-    "./style.css": "./dist/index.css"
-  },
-  "files": [
-    "dist",
-    "LICENSE",
-    "THIRD_PARTY_NOTICES.md"
-  ],
-  "scripts": {
-    "build": "vite build",
-    "test": "vitest run",
-    "typecheck": "vue-tsc --noEmit -p tsconfig.json",
-    "lint": "eslint src --max-warnings=0"
-  },
-  "peerDependencies": {
-    "vue": "^3.5.0"
-  },
-  "dependencies": {
-    "@codemirror/commands": "^6.8.0",
-    "@codemirror/lang-markdown": "^6.3.0",
-    "@codemirror/language": "^6.10.0",
-    "@codemirror/state": "^6.5.0",
-    "@codemirror/view": "^6.36.0",
-    "@floating-ui/dom": "^1.7.0",
-    "katex": "^0.18.1",
-    "markdown-it": "^14.1.0",
-    "markdown-it-deflist": "^4.0.0",
-    "markdown-it-ins": "^4.0.0",
-    "markdown-it-mark": "^4.0.0",
-    "markdown-it-sub": "^2.0.0",
-    "mermaid": "^11.16.1",
-    "prosemirror-codemark": "^0.4.2",
-    "prosemirror-commands": "^1.6.0",
-    "prosemirror-dropcursor": "^1.8.3",
-    "prosemirror-history": "^1.4.0",
-    "prosemirror-inputrules": "^1.5.0",
-    "prosemirror-keymap": "^1.2.0",
-    "prosemirror-markdown": "^1.13.0",
-    "prosemirror-model": "^1.24.0",
-    "prosemirror-schema-list": "^1.5.0",
-    "prosemirror-state": "^1.4.0",
-    "prosemirror-tables": "^1.8.0",
-    "prosemirror-transform": "^1.12.0",
-    "prosemirror-view": "^1.38.0"
-  },
-  "devDependencies": {
-    "@types/markdown-it": "^14.1.2",
-    "@vitejs/plugin-vue": "^6.0.0",
-    "@vue/server-renderer": "^3.5.0",
-    "jsdom": "^30.0.1",
-    "vite": "^7.0.0",
-    "vite-plugin-dts": "^4.5.0",
-    "vite-plugin-lib-inject-css": "^2.2.2",
-    "vue": "^3.5.0",
-    "vue-tsc": "^3.0.0"
-  }
+	"name": "hexagon-editor",
+	"version": "0.1.5",
+	"description": "Vue 3 Markdown/YFM WYSIWYG and markup editor",
+	"license": "MIT",
+	"type": "module",
+	"main": "./dist/index.js",
+	"module": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js"
+		},
+		"./classname": {
+			"types": "./dist/classname.d.ts",
+			"import": "./dist/classname.js"
+		},
+		"./configure": {
+			"types": "./dist/configure.d.ts",
+			"import": "./dist/configure.js"
+		},
+		"./core": {
+			"types": "./dist/core/index.d.ts",
+			"import": "./dist/core.js"
+		},
+		"./extensions": {
+			"types": "./dist/extensions/index.d.ts",
+			"import": "./dist/extensions.js"
+		},
+		"./forms": {
+			"types": "./dist/forms/index.d.ts",
+			"import": "./dist/forms.js"
+		},
+		"./i18n": {
+			"types": "./dist/i18n/index.d.ts",
+			"import": "./dist/i18n.js"
+		},
+		"./presets": {
+			"types": "./dist/presets/index.d.ts",
+			"import": "./dist/presets.js"
+		},
+		"./renderer": {
+			"types": "./dist/renderer/index.d.ts",
+			"import": "./dist/renderer.js"
+		},
+		"./specs": {
+			"types": "./dist/extensions/specs.d.ts",
+			"import": "./dist/specs.js"
+		},
+		"./toolbar": {
+			"types": "./dist/toolbar/index.d.ts",
+			"import": "./dist/toolbar.js"
+		},
+		"./style.css": "./dist/index.css",
+		"./renderer.css": "./dist/renderer.css"
+	},
+	"files": [
+		"dist",
+		"LICENSE",
+		"THIRD_PARTY_NOTICES.md"
+	],
+	"scripts": {
+		"build": "vite build && vite build --mode renderer",
+		"test": "vitest run",
+		"typecheck": "vue-tsc --noEmit -p tsconfig.json",
+		"lint": "eslint src --max-warnings=0"
+	},
+	"peerDependencies": {
+		"vue": "^3.5.0"
+	},
+	"dependencies": {
+		"@codemirror/commands": "^6.8.0",
+		"@codemirror/lang-markdown": "^6.3.0",
+		"@codemirror/language": "^6.10.0",
+		"@codemirror/state": "^6.5.0",
+		"@codemirror/view": "^6.36.0",
+		"@floating-ui/dom": "^1.7.0",
+		"katex": "^0.18.1",
+		"markdown-it": "^14.1.0",
+		"markdown-it-deflist": "^4.0.0",
+		"markdown-it-ins": "^4.0.0",
+		"markdown-it-mark": "^4.0.0",
+		"markdown-it-sub": "^2.0.0",
+		"mermaid": "^11.16.1",
+		"prosemirror-codemark": "^0.4.2",
+		"prosemirror-commands": "^1.6.0",
+		"prosemirror-dropcursor": "^1.8.3",
+		"prosemirror-history": "^1.4.0",
+		"prosemirror-inputrules": "^1.5.0",
+		"prosemirror-keymap": "^1.2.0",
+		"prosemirror-markdown": "^1.13.0",
+		"prosemirror-model": "^1.24.0",
+		"prosemirror-schema-list": "^1.5.0",
+		"prosemirror-state": "^1.4.0",
+		"prosemirror-tables": "^1.8.0",
+		"prosemirror-transform": "^1.12.0",
+		"prosemirror-view": "^1.38.0"
+	},
+	"devDependencies": {
+		"@types/markdown-it": "^14.1.2",
+		"@vitejs/plugin-vue": "^6.0.0",
+		"@vue/server-renderer": "^3.5.0",
+		"jsdom": "^30.0.1",
+		"vite": "^7.0.0",
+		"vite-plugin-dts": "^4.5.0",
+		"vue": "^3.5.0",
+		"vue-tsc": "^3.0.0"
+	}
 }

@@ -151,9 +151,6 @@ importers:
       vite-plugin-dts:
         specifier: ^4.5.0
         version: 4.5.4(@types/node@24.13.3)(rollup@4.62.4)(supports-color@8.1.1)(typescript@5.9.3)(vite@7.3.6(@types/node@24.13.3))
-      vite-plugin-lib-inject-css:
-        specifier: ^2.2.2
-        version: 2.2.2(vite@7.3.6(@types/node@24.13.3))
       vue:
         specifier: ^3.5.0
         version: 3.5.41(typescript@5.9.3)
@@ -2145,11 +2142,6 @@ packages:
     peerDependenciesMeta:
       vite:
         optional: true
-
-  vite-plugin-lib-inject-css@2.2.2:
-    resolution: {integrity: sha512-NF30p0GwtfSAmVlxo2NgPXM2rEdtgV7LFi4lkzajKD7P3Ru/ZAFmI533M0Z5qyMZpvNMxVGkewzpjD0HOWtbDQ==}
-    peerDependencies:
-      vite: '*'
 
   vite@7.3.6:
     resolution: {integrity: sha512-4XP60spRGjSZFf1qYH+dJIkK2znL3zQfl9KkOV9MkkRR/3Dls0dxaBsQPTloEc5BLXWPL9vsOxopxyKoMmDueg==}
@@ -4362,13 +4354,6 @@ snapshots:
       - '@types/node'
       - rollup
       - supports-color
-
-  vite-plugin-lib-inject-css@2.2.2(vite@7.3.6(@types/node@24.13.3)):
-    dependencies:
-      '@ast-grep/napi': 0.36.3
-      magic-string: 0.30.21
-      picocolors: 1.1.1
-      vite: 7.3.6(@types/node@24.13.3)
 
   vite@7.3.6(@types/node@24.13.3):
     dependencies:

@@ -3,13 +3,15 @@ import {resolve} from 'node:path';
 import vue from '@vitejs/plugin-vue';
 import {defineConfig} from 'vitest/config';
 import dts from 'vite-plugin-dts';
-import {libInjectCss} from 'vite-plugin-lib-inject-css';
 
-export default defineConfig({
+export default defineConfig(({mode}) => {
+    const rendererBuild = mode === 'renderer';
+
+    return {
     test: {
         environment: 'jsdom',
     },
-    plugins: [vue(), libInjectCss(), dts({
+    plugins: [vue(), dts({
         entryRoot: resolve(import.meta.dirname, 'src'),
         exclude: ['vite.config.ts', 'src/**/*.test.ts'],
         outDir: resolve(import.meta.dirname, 'dist'),
@@ -17,7 +19,7 @@ export default defineConfig({
     })],
     build: {
         lib: {
-            entry: {
+            entry: rendererBuild ? resolve(import.meta.dirname, 'src/renderer/index.ts') : {
                 classname: resolve(import.meta.dirname, 'src/classname.ts'),
                 configure: resolve(import.meta.dirname, 'src/configure.ts'),
                 core: resolve(import.meta.dirname, 'src/core/index.ts'),
@@ -32,9 +34,13 @@ export default defineConfig({
             },
             formats: ['es'],
             fileName: (_format, entryName) => `${entryName}.js`,
+            cssFileName: rendererBuild ? 'renderer' : 'index',
         },
+        cssCodeSplit: false,
+        emptyOutDir: !rendererBuild,
         rollupOptions: {
             external: ['vue'],
         },
     },
+    };
 });
