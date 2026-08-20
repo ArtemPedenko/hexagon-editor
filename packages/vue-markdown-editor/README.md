@@ -12,19 +12,29 @@ Component styles are included automatically when importing the editor or rendere
 `hexagon-editor/style.css` export is available only for integrations that need to load
 the complete stylesheet explicitly.
 
+```ts
+export default defineNuxtConfig({
+	css: ['hexagon-editor/renderer.css'],
+});
+
+export default defineNuxtConfig({
+	css: ['hexagon-editor/style.css'],
+});
+```
+
 ## Read-only rendering
 
 Sites that only display documents can import the standalone renderer without bundling the editor, ProseMirror, CodeMirror, toolbar, or editor styles:
 
 ```vue
 <script setup lang="ts">
-import {MarkdownRenderer} from 'hexagon-editor/renderer';
+	import { MarkdownRenderer } from 'hexagon-editor/renderer';
 
-defineProps<{content: string}>();
+	defineProps<{ content: string }>();
 </script>
 
 <template>
-  <MarkdownRenderer :content="content" />
+	<MarkdownRenderer :content="content" />
 </template>
 ```
 
@@ -42,11 +52,13 @@ Pass local adapters through `features`; Mermaid can be loaded lazily, and KaTeX 
 ```ts
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
-import type {MarkdownFeatures} from 'hexagon-editor';
+import type { MarkdownFeatures } from 'hexagon-editor';
 
 const features: MarkdownFeatures = {
-  math: {renderToString: (latex, display) => katex.renderToString(latex, {displayMode: display, throwOnError: true})},
-  mermaid: {load: () => import('mermaid').then(({default: mermaid}) => mermaid)},
+	math: {
+		renderToString: (latex, display) => katex.renderToString(latex, { displayMode: display, throwOnError: true }),
+	},
+	mermaid: { load: () => import('mermaid').then(({ default: mermaid }) => mermaid) },
 };
 ```
 
@@ -60,20 +72,15 @@ Raw Markdown HTML and the contents of `:::html ... :::` are displayed as source 
 
 ```vue
 <script setup lang="ts">
-import {ref} from 'vue';
-import {MarkdownEditor} from 'hexagon-editor';
+	import { ref } from 'vue';
+	import { MarkdownEditor } from 'hexagon-editor';
 
-const value = ref('# Document');
-const mode = ref<'wysiwyg' | 'markup' | 'split'>('wysiwyg');
+	const value = ref('# Document');
+	const mode = ref<'wysiwyg' | 'markup' | 'split'>('wysiwyg');
 </script>
 
 <template>
-  <MarkdownEditor
-    v-model="value"
-    v-model:mode="mode"
-    locale="ru"
-    theme="auto"
-  />
+	<MarkdownEditor v-model="value" v-model:mode="mode" locale="ru" theme="auto" />
 </template>
 ```
 
