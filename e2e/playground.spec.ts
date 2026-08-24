@@ -1,5 +1,23 @@
 import {expect, test} from '@playwright/test';
 
+const documentationPages = [
+    ['getting-started', 'Getting started'],
+    ['editor-api', 'Editor component API'],
+    ['editor-modes', 'Modes, state, and component ref'],
+    ['markdown-essentials', 'Markdown essentials'],
+    ['extended-markdown', 'Extended Markdown and YFM'],
+    ['images', 'Images, uploads, and forms'],
+    ['renderer-ssr', 'Renderer, SSR, and styling'],
+    ['katex-mermaid', 'KaTeX, Mermaid, and trusted HTML'],
+    ['toolbar', 'Toolbar customization'],
+    ['directives', 'Custom directives'],
+    ['headless', 'Headless API'],
+    ['presets-extensions', 'Presets, extensions, and specs'],
+    ['core-subpaths', 'Core and public subpaths'],
+    ['configuration', 'Configuration, i18n, and class names'],
+    ['accessibility', 'Accessibility and responsive behavior'],
+] as const;
+
 async function selectEditorMode(page: import('@playwright/test').Page, name: string): Promise<void> {
     await page.locator('[data-toolbar-item="mode"]').click();
     await page.getByRole('menuitemradio', {exact: true, name}).click();
@@ -709,5 +727,39 @@ test.describe('Markdown editor playground', () => {
 
         await expect(page.locator('.ProseMirror h1#editor-demo.playground-title'))
             .toHaveText('Vue Markdown editor');
+    });
+});
+
+test.describe('Documentation', () => {
+    test('renders every registered route with its heading, active link, and typed example', async ({page}) => {
+        for (const [slug, title] of documentationPages) {
+            await page.goto(`/#/docs/${slug}`);
+            await expect(page).toHaveURL(new RegExp(`#\\/docs\\/${slug}$`));
+            await expect(page.getByRole('heading', {level: 1, name: title})).toBeVisible();
+            await expect(page.locator(`.docs-sidebar a[href="#/docs/${slug}"]`)).toHaveAttribute('aria-current', 'page');
+            await expect(page.locator('.docs-article pre code').filter({hasText: '<script setup lang="ts">'}).first()).toBeVisible();
+        }
+    });
+
+    test('handles redirects, direct reloads, and scroll restoration', async ({page}) => {
+        await page.goto('/#/docs');
+        await expect(page).toHaveURL(/#\/docs\/getting-started$/);
+        await page.goto('/#/docs/not-a-page');
+        await expect(page).toHaveURL(/#\/docs\/getting-started$/);
+        await page.goto('/#/docs/accessibility');
+        await page.reload();
+        await expect(page.getByRole('heading', {level: 1, name: 'Accessibility and responsive behavior'})).toBeVisible();
+        await page.evaluate(() => window.scrollTo({top: document.body.scrollHeight}));
+        await page.locator('.docs-sidebar a[href="#/docs/getting-started"]').click();
+        await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
+    });
+
+    test('keeps mobile documentation navigation horizontally scrollable', async ({page}) => {
+        await page.setViewportSize({height: 844, width: 390});
+        await page.goto('/#/docs/getting-started');
+        const navigation = page.getByRole('navigation', {name: 'Documentation pages'});
+        await expect(navigation).toBeVisible();
+        await expect(navigation).toHaveCSS('overflow-x', 'auto');
+        expect(await navigation.evaluate((element) => element.scrollWidth > element.clientWidth)).toBe(true);
     });
 });

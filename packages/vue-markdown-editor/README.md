@@ -8,7 +8,7 @@
 pnpm add hexagon-editor
 ```
 
-Единственная peer dependency — Vue `^3.5.0`. Стили компонента подключаются вместе с импортом редактора или рендерера. Для явного подключения используйте экспорт стилей:
+Единственная peer dependency — Vue `^3.5.0`. Подключите stylesheet явно: библиотечные JS entry point'ы не импортируют CSS как side effect.
 
 ```ts
 // nuxt.config.ts
@@ -49,7 +49,7 @@ import 'hexagon-editor/renderer.css';
 createApp(App).mount('#app');
 ```
 
-При импорте компонента стили также подключаются автоматически. Явный импорт удобен, когда стили нужно контролировать в точке входа, подключать глобально или учитывать в настройках SSR.
+Импортируйте stylesheet один раз на стороне приложения. Это особенно важно для SSR и для сборщиков, которые не добавляют CSS-asset библиотеки автоматически.
 
 ## Быстрый старт
 
@@ -76,7 +76,7 @@ const mode = ref<'wysiwyg' | 'markup' | 'split'>('wysiwyg');
 
 ## Возможности Markdown и YFM
 
-Полный preset и toolbar поддерживают следующие конструкции.
+Редактор поддерживает следующие конструкции; preset `full` добавляет кнопки для всех доступных действий панели.
 
 | Категория | Возможности |
 | --- | --- |
@@ -170,10 +170,12 @@ function save(markdown: string) {
 | `directiveComponents` | `Record<string, Component>` | Vue-компоненты для блоковых директив |
 | `uploadImage` | `(file: File) => Promise<string>` | Обработчик загрузки в форме изображения |
 
-События: `update:modelValue`, `change` (новый Markdown), `update:mode` и `mode-change` (новый режим). Компонент также принимает:
+`modelValue`, `mode`, `locale`, `toolbarPreset`, `toolbarConfig`, `theme` и `uploadImage` обновляются без перемонтирования компонента. Изменение `mode`, `readonly` или `features` пересоздаёт editor hosts, поэтому текущие selection и история undo/redo сбрасываются. `placeholder` и `directiveComponents` применяются при следующем монтировании; чтобы обновить их у уже созданного редактора, измените его `:key`.
+
+События: `update:modelValue`, `change` (новый Markdown), `update:mode` и `mode-change` (новый режим), а также `submit` и `cancel` без параметров. Последние возникают в визуальном редакторе по `Mod+Enter` и `Escape`; в режиме `markup` на них полагаться не следует. Компонент также принимает:
 
 - слот `header` — содержимое над toolbar;
-- слот `toolbar` — замена содержимого toolbar. В slot props передаётся состояние, используемое встроенной панелью.
+- слот `toolbar` — дополнительное содержимое после встроенных групп toolbar; он их не заменяет. В slot props передаются `{commands, execute}`.
 
 В режиме `readonly` исходник не меняется; `MarkdownRenderer` обычно лучше подходит для публичного отображения документов.
 
@@ -187,9 +189,9 @@ import type {MarkdownEditorExposed} from 'hexagon-editor';
 
 const editor = ref<MarkdownEditorExposed>();
 
-function insertTemplate() {
+async function insertTemplate() {
     editor.value?.append('## Новый раздел');
-    editor.value?.setMode('markup');
+    await editor.value?.setMode('markup');
     editor.value?.moveCursor('end');
     editor.value?.focus();
 }
@@ -292,6 +294,8 @@ defineProps<{content: string}>();
 
 Raw Markdown HTML отображается как исходный текст. HTML внутри директивы с пробелом после маркера — `::: html` — рендерится как HTML, а `:::html` является YFM-блоком. Передавайте в HTML только доверенный контент: пакет не санитизирует его.
 
+`MarkdownRenderer` также принимает `directiveComponents`; зарегистрированные компоненты монтируются в блоки `::: name`, получают `readonly: true`, а их `updateContent()` намеренно ничего не делает.
+
 ## Опциональные движки: KaTeX, Mermaid и HTML
 
 KaTeX и Mermaid не входят в зависимости пакета. Установите только необходимое:
@@ -305,7 +309,7 @@ import katex from 'katex';
 import 'katex/dist/katex.min.css';
 import type {MarkdownFeatures} from 'hexagon-editor';
 
-export const features: MarkdownFeatures = {
+export const editorFeatures: MarkdownFeatures = {
     math: {
         renderToString: (latex, display) => katex.renderToString(latex, {
             displayMode: display,
@@ -322,16 +326,21 @@ export const features: MarkdownFeatures = {
         return element;
     },
 };
+
+export const rendererFeatures: MarkdownFeatures = {
+    math: editorFeatures.math,
+    mermaid: editorFeatures.mermaid,
+};
 ```
 
-Передайте тот же объект в редактор и рендерер:
+Передайте адаптер `html` только редактору. Рендереру нужны только адаптеры math/Mermaid:
 
 ```vue
-<MarkdownEditor v-model="value" :features="features" toolbar-preset="full" />
-<MarkdownRenderer :content="value" :features="features" />
+<MarkdownEditor v-model="value" :features="editorFeatures" toolbar-preset="full" />
+<MarkdownRenderer :content="value" :features="rendererFeatures" />
 ```
 
-Mermaid загружается лениво, только когда в документе есть диаграмма. В браузерном приложении `features.html` вызывается для YFM HTML-блоков визуального редактора; для `MarkdownRenderer` trusted HTML из `::: html` вставляется напрямую.
+Mermaid загружается лениво, только когда в документе есть диаграмма. В браузерном приложении `features.html` вызывается для YFM HTML-блоков визуального редактора. `MarkdownRenderer` не использует этот адаптер и всегда выводит `:::html` как экранированный исходник; trusted HTML из `::: html` он вставляет напрямую.
 
 ## Пользовательские директивы
 
@@ -418,11 +427,11 @@ const extensions = new ExtensionsManager((builder) => {
 
 Корневой entry point экспортирует полный публичный API. Стабильные subpaths: `hexagon-editor/core`, `/extensions`, `/specs`, `/presets`, `/renderer`, `/toolbar`, `/forms`, `/configure`, `/classname`, `/i18n`. Внутренние пути `src/**` не входят в контракт совместимости.
 
-`configure({lang: 'en'})` устанавливает process-wide конфигурацию; `getConfig()` читает её, а `subscribeConfigure()` подписывает на изменения. `cn('editor')` из `/classname` создаёт BEM-имена с префиксом `hx-md-`.
+`configure({lang: 'en'})` устанавливает process-wide конфигурацию; `getConfig()` читает её, а `subscribeConfigure()` подписывает на изменения. Текущий `MarkdownEditor` не подписывается на неё автоматически: передавайте `locale` каждому экземпляру. `cn('editor')` из `/classname` создаёт BEM-имена с префиксом `hx-md-`.
 
 ## Доступность и адаптивность
 
-Переключатель режимов — доступный tablist: `ArrowLeft`, `ArrowRight`, `Home` и `End` меняют активную вкладку. У toolbar-кнопок есть доступные подписи. На узком экране toolbar прокручивается горизонтально, а split-режим становится вертикальным.
+У toolbar-кнопок и меню переключения режима есть доступные подписи и ARIA-роли. На узком экране toolbar прокручивается горизонтально, а split-режим становится вертикальным. Переключатель режимов реализован как меню, а не как tablist; специальные сочетания `ArrowLeft`, `ArrowRight`, `Home` и `End` для него не поддерживаются.
 
 ## Локальный playground
 
