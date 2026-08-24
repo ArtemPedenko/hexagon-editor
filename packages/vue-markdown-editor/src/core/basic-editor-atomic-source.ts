@@ -7,9 +7,6 @@ import type {EditorView} from 'prosemirror-view';
 import {mountBasicMarkupEditor} from './markup-editor';
 
 export const atomicSourcePluginKey = new PluginKey<number | null>("atomic-source-editor");
-const tablePopoverPluginKey = new PluginKey<number | null>("table-popover");
-const tablePopoverCleanups = new WeakMap<HTMLElement, () => void>();
-const TABLE_LONG_PRESS_DELAY = 500;
 const atomicSourceNodeNames = new Set([
   "directive",
   "inline_math",

@@ -4,16 +4,13 @@ import {
   toggleMark,
 } from "prosemirror-commands";
 import { keymap } from "prosemirror-keymap";
-import type { Node as ProseMirrorNode } from "prosemirror-model";
-import { EditorState, NodeSelection, Plugin, PluginKey, TextSelection } from "prosemirror-state";
-import type {Transaction} from "prosemirror-state";
-import type { Command } from "prosemirror-state";
+import { EditorState, NodeSelection, TextSelection } from "prosemirror-state";
+import type {Plugin, Transaction} from "prosemirror-state";
 import {
   liftListItem,
   splitListItem,
 } from "prosemirror-schema-list";
-import {tableEditing} from "prosemirror-tables";
-import { Decoration, DecorationSet, EditorView } from "prosemirror-view";
+import { DecorationSet, EditorView } from "prosemirror-view";
 import type {NodeViewConstructor} from "prosemirror-view";
 import {h, reactive, render} from "vue";
 import type {AppContext} from "vue";
@@ -99,48 +96,6 @@ import {createFeatureNodeViews} from './basic-editor-renderers';
 
 export function createMarkdownTablePastePlugin(): Plugin {
   return createTablePastePlugin(basicMarkdownCodec);
-}
-
-const foldingPluginKey = new PluginKey<DecorationSet>("legacy-folding-heading");
-function createFoldingPlugin(): Plugin<DecorationSet> {
-  const createDecorations = (document: ProseMirrorNode): DecorationSet => {
-    const decorations: Decoration[] = [];
-    let foldedLevel: number | undefined;
-
-    document.forEach((node, offset) => {
-      if (node.type.name === "heading") {
-        const level = Number(node.attrs.level);
-        if (foldedLevel !== undefined && level <= foldedLevel) {
-          foldedLevel = undefined;
-        }
-        if (node.attrs.folding === true) {
-          foldedLevel = level;
-        }
-      } else if (foldedLevel !== undefined) {
-        decorations.push(
-          Decoration.node(offset, offset + node.nodeSize, {
-            class: "markdown-editor__folded-content",
-          }),
-        );
-      }
-    });
-
-    return DecorationSet.create(document, decorations);
-  };
-
-  return new Plugin({
-    key: foldingPluginKey,
-    props: {
-      decorations: (state) => foldingPluginKey.getState(state),
-    },
-    state: {
-      apply: (transaction, previous) =>
-        transaction.docChanged
-          ? createDecorations(transaction.doc)
-          : previous.map(transaction.mapping, transaction.doc),
-      init: (_config, state) => createDecorations(state.doc),
-    },
-  });
 }
 
 const toggleHeadingFolding = toggleFoldingHeading;

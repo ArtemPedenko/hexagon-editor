@@ -92,7 +92,7 @@ export class ExtensionBuilder {
         return this;
     }
 
-    addNode(name: string, factory: () => ExtensionNodeSpec, priority = ExtensionPriority.Medium): this {
+    addNode(name: string, factory: () => ExtensionNodeSpec): this {
         this.assertUnique(this.#nodes, name, 'node');
         this.#nodes.set(name, factory());
         return this;
@@ -156,7 +156,7 @@ export class ExtensionBuilder {
 
     /** Upstream granular extension API for a schema-only node declaration. */
     addNodeSpec(name: string, factory: () => NodeSpec): this {
-        return this.addNode(name, () => ({spec: factory()}), ExtensionPriority.Lowest);
+        return this.addNode(name, () => ({spec: factory()}));
     }
 
     /** Upstream granular extension API for a schema-only mark declaration. */

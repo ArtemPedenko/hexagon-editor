@@ -7,7 +7,6 @@ import {
     collapseListsPlugin,
     createListsInputRules,
     joinPrevList,
-    liftEmptyListItem,
     mergeListsPlugin,
     sinkOnlySelectedListItem,
     toList,
