@@ -73,12 +73,10 @@ export const ClicksOnEdges: ExtensionAuto = (builder) => {
             props: {
                 handleClick: (view, _position, event) => {
                     if (event.target !== view.dom) return false;
-                    const {firstChild, lastChild} = view.dom;
-                    if (!(firstChild instanceof Element) || !(lastChild instanceof Element)) return false;
+                    const {lastChild} = view.dom;
+                    if (!(lastChild instanceof Element)) return false;
                     const targetRect = view.dom.getBoundingClientRect();
-                    const firstOffsetTop = firstChild.getBoundingClientRect().top - targetRect.y;
                     const lastOffsetBottom = lastChild.getBoundingClientRect().bottom - targetRect.y;
-                    if (event.offsetY < firstOffsetTop) return addParagraphToStart(view.state, view.dispatch);
                     if (event.offsetY > lastOffsetBottom) return addParagraphToEnd(view.state, view.dispatch);
                     return false;
                 },
