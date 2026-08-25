@@ -4,7 +4,7 @@ import { ref } from 'vue';
 import type { BasicWysiwygSelectionState } from '../core';
 import type { MarkdownEditorMessageKey } from '../i18n';
 import type { MarkdownEditorMode, MarkdownEditorTheme } from '../public-types';
-import { textColorCssVariables, textColorMessageKeys, textColorNames } from '../extensions/markdown/color';
+import { textColorCssVariables, textColorMenuNames, textColorMessageKeys } from '../extensions/markdown/color';
 import type { TextColorName } from '../extensions/markdown/color';
 import ToolbarIcon from './MarkdownEditorToolbarIcon.vue';
 
@@ -68,7 +68,7 @@ defineExpose({
 		:aria-label="translate('color')"
 	>
 		<button
-			v-for="colorName in textColorNames"
+			v-for="colorName in textColorMenuNames"
 			:key="colorName"
 			role="menuitemradio"
 			type="button"
@@ -77,7 +77,7 @@ defineExpose({
 		>
 			<span
 				class="markdown-editor__floating-menu-icon"
-				:style="{ color: `var(${textColorCssVariables[colorName]})` }"
+				:style="colorName === 'default' ? undefined : { color: `var(${textColorCssVariables[colorName]})` }"
 			>A</span>
 			<span>{{ translate(textColorMessageKeys[colorName]) }}</span>
 		</button>

@@ -53,9 +53,12 @@ export function setColorCommand(schema: Schema, color: TextColorName): Command {
 		const mark = getBasicMarkType(schema, 'color');
 		if (dispatch !== undefined) {
 			const { empty, from, to } = state.selection;
-			const transaction = empty
-				? state.tr.removeStoredMark(mark).addStoredMark(mark.create({ color }))
-				: state.tr.removeMark(from, to, mark).addMark(from, to, mark.create({ color }));
+			const transaction = state.tr.removeStoredMark(mark);
+			if (!empty) transaction.removeMark(from, to, mark);
+			if (color !== 'default') {
+				if (empty) transaction.addStoredMark(mark.create({ color }));
+				else transaction.addMark(from, to, mark.create({ color }));
+			}
 			dispatch(transaction.scrollIntoView());
 		}
 		return true;

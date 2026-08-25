@@ -3,9 +3,11 @@ import type { MarkSpec } from 'prosemirror-model';
 import type { ParseSpec } from 'prosemirror-markdown';
 
 export const textColorNames = ['gray', 'yellow', 'orange', 'red', 'green', 'blue', 'violet'] as const;
+export const textColorMenuNames = ['default', ...textColorNames] as const;
 
-export type TextColorName = (typeof textColorNames)[number];
+export type TextColorName = (typeof textColorMenuNames)[number];
 type TextColorMessageKey =
+	| 'colorDefault'
 	| 'colorGray'
 	| 'colorYellow'
 	| 'colorOrange'
@@ -15,6 +17,7 @@ type TextColorMessageKey =
 	| 'colorViolet';
 
 export const textColorMessageKeys: Record<TextColorName, TextColorMessageKey> = {
+	default: 'colorDefault',
 	gray: 'colorGray',
 	yellow: 'colorYellow',
 	orange: 'colorOrange',
