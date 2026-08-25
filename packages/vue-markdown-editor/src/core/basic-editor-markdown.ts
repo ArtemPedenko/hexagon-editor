@@ -336,7 +336,7 @@ const basicMarkdownSerializerMarks = {
 	},
 	mark: { close: '==', open: '==' },
 	strikethrough: { close: '~~', open: '~~' },
-	underline: { close: '</u>', open: '<u>' },
+	underline: { close: '++', open: '++' },
 };
 
 const basicMarkdownSerializer = ExtensionsManager.process(
