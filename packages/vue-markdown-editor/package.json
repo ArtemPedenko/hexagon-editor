@@ -1,6 +1,6 @@
 {
 	"name": "hexagon-editor",
-	"version": "0.1.7",
+	"version": "0.1.8",
 	"description": "Vue 3 Markdown/YFM WYSIWYG and markup editor",
 	"license": "MIT",
 	"type": "module",
