@@ -2,6 +2,7 @@ import type { Schema } from 'prosemirror-model';
 import type { Command } from 'prosemirror-state';
 
 import { setImageDisplay } from '../extensions/markdown/image';
+import type { TextColorName } from '../extensions/markdown/color';
 import type { ImageObjectFit } from '../extensions/markdown/image';
 import { insertTable } from '../extensions/markdown/table';
 
@@ -47,7 +48,7 @@ export function insertImageCommand(schema: Schema, src: string, alt: string, tit
 	};
 }
 
-export function setColorCommand(schema: Schema, color: string): Command {
+export function setColorCommand(schema: Schema, color: TextColorName): Command {
 	return (state, dispatch) => {
 		const mark = getBasicMarkType(schema, 'color');
 		if (dispatch !== undefined) {

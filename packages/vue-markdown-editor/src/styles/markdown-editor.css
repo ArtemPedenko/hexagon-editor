@@ -5,6 +5,14 @@
 	--markdown-text: #202125;
 	--markdown-focus-background: #e9efff;
 	--markdown-focus-text: #1d3c93;
+	--markdown-editor-color-gray: #a6a6a6;
+	--markdown-editor-color-yellow: #f2d600;
+	--markdown-editor-color-orange: #e87b00;
+	--markdown-editor-color-red: #e65c5c;
+	--markdown-editor-color-green: #62be79;
+	--markdown-editor-color-blue: #7197e8;
+	--markdown-editor-color-violet: #a774d7;
+
 	display: flex;
 	flex-direction: column;
 	height: 100%;
@@ -95,25 +103,13 @@
 	grid-column: 1 / -1;
 }
 
-.markdown-editor__color {
+.markdown-editor__color-trigger {
 	display: inline-flex;
-	width: 2rem;
-	height: 2rem;
-	padding: 0.25rem;
-	border-radius: 0.25rem;
-}
-
-.markdown-editor__color:focus-within,
-.markdown-editor__color:hover {
-	background: var(--markdown-focus-background);
-}
-
-.markdown-editor__color input {
-	width: 100%;
-	padding: 0;
-	border: 0;
-	background: transparent;
-	cursor: pointer;
+	align-items: center;
+	justify-content: center;
+	line-height: 1;
+	padding-bottom: 0.125rem;
+	border-bottom: 0.125rem solid var(--markdown-editor-color-blue);
 }
 
 .markdown-editor__code-language {

@@ -29,6 +29,7 @@ import type {
 } from './public-types';
 import type { MarkdownEditorToolbarConfig, MarkdownEditorToolbarItemId } from './toolbar';
 import type { MarkdownDirectiveComponents } from './directives';
+import type { TextColorName } from './extensions/markdown/color';
 
 export interface MarkdownEditorExposed {
 	append(markup: string): void;
@@ -130,6 +131,7 @@ const linkForm = ref<InstanceType<typeof MarkdownEditorLinkForm>>();
 const floatingMenus = ref<InstanceType<typeof MarkdownEditorFloatingMenus>>();
 const imageActions = ref<InstanceType<typeof MarkdownEditorImageActions>>();
 const codePanel = useFloatingPanel(() => floatingMenus.value?.getElement('code'));
+const colorPanel = useFloatingPanel(() => floatingMenus.value?.getElement('color'));
 const formulaPanel = useFloatingPanel(() => floatingMenus.value?.getElement('formula'));
 const headingPanel = useFloatingPanel(() => floatingMenus.value?.getElement('heading'));
 const imagePanel = useFloatingPanel(() => imageForm.value?.element);
@@ -273,6 +275,17 @@ async function toggleCodeMenu(reference: HTMLElement): Promise<void> {
 	await codePanel.toggle(reference);
 }
 
+async function toggleColorMenu(reference: HTMLElement): Promise<void> {
+	if (shouldRunMarkupCommand()) return;
+	await colorPanel.toggle(reference);
+}
+
+function selectColor(color: TextColorName): void {
+	colorPanel.close();
+	if (shouldRunMarkupCommand()) return;
+	visualEditor?.run(commands.setColor(color));
+}
+
 function executeCodeCommand(
 	command: Parameters<BasicWysiwygEditor['run']>[0],
 	markupCommand: 'code' | 'codeBlock',
@@ -402,6 +415,7 @@ function closeFloatingPanels(event: PointerEvent): void {
 	for (const panel of [
 		headingPanel,
 		codePanel,
+		colorPanel,
 		formulaPanel,
 		linkPanel,
 		listPanel,
@@ -418,6 +432,7 @@ function closePanelsOnEscape(event: KeyboardEvent): void {
 	for (const panel of [
 		headingPanel,
 		codePanel,
+		colorPanel,
 		formulaPanel,
 		linkPanel,
 		listPanel,
@@ -618,6 +633,7 @@ defineExpose<MarkdownEditorExposed>({
 		<MarkdownEditorToolbar
 			v-if="!readonly"
 			:commands="commands"
+			:color-menu-visible="colorPanel.visible.value"
 			:code-menu-visible="codePanel.visible.value"
 			:formula-menu-visible="formulaPanel.visible.value"
 			:heading-menu-visible="headingPanel.visible.value"
@@ -636,6 +652,7 @@ defineExpose<MarkdownEditorExposed>({
 			@insert-html="insertHtmlDirective"
 			@toggle-formula-menu="toggleFormulaMenu"
 			@toggle-code-menu="toggleCodeMenu"
+			@toggle-color-menu="toggleColorMenu"
 			@toggle-heading-menu="showHeadingMenu"
 			@toggle-image-editor="toggleImageEditor"
 			@toggle-link-editor="toggleLinkEditor"
@@ -654,6 +671,7 @@ defineExpose<MarkdownEditorExposed>({
 			<MarkdownEditorFloatingMenus
 				ref="floatingMenus"
 				:code-visible="codePanel.visible.value"
+				:color-visible="colorPanel.visible.value"
 				:formula-visible="formulaPanel.visible.value"
 				:heading-visible="headingPanel.visible.value"
 				:list-visible="listPanel.visible.value"
@@ -665,6 +683,7 @@ defineExpose<MarkdownEditorExposed>({
 				:translate="t"
 				@bullet-list="executeListCommand(commands.bulletList, 'bulletList')"
 				@code-block="executeCodeCommand(commands.codeBlock, 'codeBlock')"
+				@select-color="selectColor"
 				@indent-list="executeListCommand(commands.sinkListItem, 'indentList')"
 				@inline-code="executeCodeCommand(commands.code, 'code')"
 				@inline-formula="insertInlineMath"

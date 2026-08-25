@@ -4,10 +4,13 @@ import { ref } from 'vue';
 import type { BasicWysiwygSelectionState } from '../core';
 import type { MarkdownEditorMessageKey } from '../i18n';
 import type { MarkdownEditorMode, MarkdownEditorTheme } from '../public-types';
+import { textColorCssVariables, textColorMessageKeys, textColorNames } from '../extensions/markdown/color';
+import type { TextColorName } from '../extensions/markdown/color';
 import ToolbarIcon from './MarkdownEditorToolbarIcon.vue';
 
 defineProps<{
 	codeVisible: boolean;
+	colorVisible: boolean;
 	formulaVisible: boolean;
 	headingVisible: boolean;
 	listVisible: boolean;
@@ -21,6 +24,7 @@ defineProps<{
 
 const emit = defineEmits<{
 	'code-block': [];
+	'select-color': [color: TextColorName];
 	'inline-code': [];
 	'inline-formula': [];
 	'math-block': [];
@@ -33,6 +37,7 @@ const emit = defineEmits<{
 }>();
 
 const code = ref<HTMLElement>();
+const color = ref<HTMLElement>();
 const formula = ref<HTMLElement>();
 const heading = ref<HTMLElement>();
 const list = ref<HTMLElement>();
@@ -40,9 +45,10 @@ const modeMenu = ref<HTMLElement>();
 const editorModes: MarkdownEditorMode[] = ['wysiwyg', 'markup', 'split'];
 
 defineExpose({
-	getElement(name: 'code' | 'formula' | 'heading' | 'list' | 'mode'): HTMLElement | undefined {
+	getElement(name: 'code' | 'color' | 'formula' | 'heading' | 'list' | 'mode'): HTMLElement | undefined {
 		return {
 			code: code.value,
+			color: color.value,
 			formula: formula.value,
 			heading: heading.value,
 			list: list.value,
@@ -53,6 +59,29 @@ defineExpose({
 </script>
 
 <template>
+	<div
+		v-if="colorVisible"
+		ref="color"
+		class="markdown-editor__floating-menu"
+		:data-theme="theme"
+		role="menu"
+		:aria-label="translate('color')"
+	>
+		<button
+			v-for="colorName in textColorNames"
+			:key="colorName"
+			role="menuitemradio"
+			type="button"
+			@mousedown.prevent
+			@click="emit('select-color', colorName)"
+		>
+			<span
+				class="markdown-editor__floating-menu-icon"
+				:style="{ color: `var(${textColorCssVariables[colorName]})` }"
+			>A</span>
+			<span>{{ translate(textColorMessageKeys[colorName]) }}</span>
+		</button>
+	</div>
 	<div
 		v-if="codeVisible"
 		ref="code"

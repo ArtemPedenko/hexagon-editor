@@ -4,6 +4,7 @@ import deflist from 'markdown-it-deflist';
 import insPlugin from 'markdown-it-ins';
 import markPlugin from 'markdown-it-mark';
 import subPlugin from 'markdown-it-sub';
+import { configureColorMarkdown } from '../extensions/markdown/color';
 import type { MarkdownFeatures } from '../public-types';
 
 interface RendererEnvironment {
@@ -304,6 +305,7 @@ function createMarkdownRenderer(): MarkdownIt {
 	configureBlocks(markdown);
 	configureTokenTransforms(markdown);
 	configureQuoteLinks(markdown);
+	configureColorMarkdown(markdown);
 	configureRenderer(markdown);
 	return markdown;
 }

@@ -29,6 +29,13 @@ describe('renderMarkdownContent', () => {
 		expect(result).toContain('target="_blank" rel="noopener noreferrer"');
 	});
 
+	it('renders named text colors through CSS variables', () => {
+		const result = renderMarkdownContent('{red}(красный **жирный**)');
+
+		expect(result).toContain('style="color: var(--markdown-editor-color-red)"');
+		expect(result).toContain('<strong>жирный</strong>');
+	});
+
 	it('renders only the spaced HTML directive and keeps other HTML as source', () => {
 		const result = renderMarkdownContent(
 			[

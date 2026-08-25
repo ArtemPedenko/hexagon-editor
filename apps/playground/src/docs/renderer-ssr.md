@@ -32,12 +32,12 @@ export default defineNuxtConfig({css: ['hexagon-editor/renderer.css']})
 
 Server rendering produces Markdown HTML and Mermaid source fallback. During hydration directive targets mount with the Vue app context; changing content unmounts/replaces them. Mermaid loaders run only on the client and only where a diagram exists; load or render failure leaves source visible. Code blocks have no syntax highlighter—integrate one before display without making HTML trusted.
 
-The editor uses `--markdown-background`, `--markdown-border`, `--markdown-muted-border`, `--markdown-text`, `--markdown-focus-background`, and `--markdown-focus-text`. Floating panels copy the relevant surface variables when they open; teleported forms have their own theme defaults, including `--markdown-error` and `--markdown-muted-text`. Renderer hooks include `--markdown-renderer-link` and `--markdown-renderer-code-background`.
+The editor uses `--markdown-background`, `--markdown-border`, `--markdown-muted-border`, `--markdown-text`, `--markdown-focus-background`, and `--markdown-focus-text`. Floating panels copy the relevant surface variables when they open; teleported forms have their own theme defaults, including `--markdown-error` and `--markdown-muted-text`. Renderer hooks include `--markdown-renderer-link`, `--markdown-renderer-code-background`, and `--markdown-editor-color-gray`, `--markdown-editor-color-yellow`, `--markdown-editor-color-orange`, `--markdown-editor-color-red`, `--markdown-editor-color-green`, `--markdown-editor-color-blue`, `--markdown-editor-color-violet` for `{color}(text)` Markdown.
 
 ```css
 .article { color-scheme: light dark; }
-.article .markdown-renderer { --markdown-renderer-link: #075bc7; --markdown-renderer-code-background: #eef4ff; }
-@media (prefers-color-scheme: dark) { .article .markdown-renderer { --markdown-renderer-link: #9dc2ff; --markdown-renderer-code-background: #202a3a; } }
+.article .markdown-renderer { --markdown-renderer-link: #075bc7; --markdown-renderer-code-background: #eef4ff; --markdown-editor-color-red: #d64545; }
+@media (prefers-color-scheme: dark) { .article .markdown-renderer { --markdown-renderer-link: #9dc2ff; --markdown-renderer-code-background: #202a3a; --markdown-editor-color-red: #ff8d8d; } }
 ```
 
 Keep overrides application-scoped. CSP must allow approved image/font/style sources; trusted `::: html` is unsanitized and is unsafe for untrusted authors.

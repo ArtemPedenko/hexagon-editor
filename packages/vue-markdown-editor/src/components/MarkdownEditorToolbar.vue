@@ -5,8 +5,8 @@ import type { MarkdownEditorMode } from '../public-types';
 import type { MarkdownFeatures } from '../public-types';
 import {
 	getToolbarConfig,
-	isToolbarItemAvailable,
 	isToolbarItemActive,
+	isToolbarItemAvailable,
 	isToolbarItemEnabled,
 	normalizeToolbarItem,
 } from '../toolbar';
@@ -18,6 +18,7 @@ type ToolbarCommand = Parameters<BasicWysiwygEditor['run']>[0];
 
 const props = defineProps<{
 	commands: BasicEditorCommands;
+	colorMenuVisible: boolean;
 	codeMenuVisible: boolean;
 	formulaMenuVisible: boolean;
 	headingMenuVisible: boolean;
@@ -56,6 +57,7 @@ const emit = defineEmits<{
 	'insert-html': [];
 	'toggle-formula-menu': [reference: HTMLElement];
 	'toggle-code-menu': [reference: HTMLElement];
+	'toggle-color-menu': [reference: HTMLElement];
 	'toggle-heading-menu': [reference: HTMLElement];
 	'toggle-image-editor': [reference: HTMLElement];
 	'toggle-link-editor': [reference: HTMLElement];
@@ -262,20 +264,19 @@ function getButton(event: MouseEvent): HTMLElement {
 					>
 						<ToolbarIcon name="link" />
 					</button>
-					<label
+					<button
 						v-else-if="toolbarItem.id === 'color'"
 						data-toolbar-item="color"
-						class="markdown-editor__color"
+						:aria-expanded="colorMenuVisible"
+						:aria-label="translate('color')"
 						:title="translate('color')"
+						type="button"
+						@mousedown.prevent
+						@click="emit('toggle-color-menu', getButton($event))"
 					>
-						<input
-							:aria-label="translate('color')"
-							type="color"
-							value="#202125"
-							@mousedown.prevent
-							@input="emit('execute', 'color', commands.setColor(($event.target as HTMLInputElement).value))"
-						/>
-					</label>
+						<span class="markdown-editor__color-trigger">A</span>
+						<ToolbarIcon name="chevronDown" />
+					</button>
 					<button
 						v-else-if="toolbarItem.id === 'image'"
 						data-toolbar-item="image"
@@ -453,31 +454,12 @@ select {
 select:hover {
 	background: color-mix(in srgb, var(--markdown-text) 10%, transparent);
 }
-.markdown-editor__color {
-	position: relative;
+.markdown-editor__color-trigger {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	width: 1.75rem;
-	height: 1.75rem;
-	border-radius: 0.375rem;
-	cursor: pointer;
-}
-.markdown-editor__color::before {
-	content: 'A';
 	line-height: 1;
 	padding-bottom: 0.125rem;
-	border-bottom: 0.125rem solid currentColor;
-}
-.markdown-editor__color:hover {
-	background: color-mix(in srgb, var(--markdown-text) 10%, transparent);
-}
-.markdown-editor__color input {
-	position: absolute;
-	inset: 0;
-	width: 100%;
-	height: 100%;
-	opacity: 0;
-	cursor: pointer;
+	border-bottom: 0.125rem solid var(--markdown-editor-color-blue);
 }
 </style>

@@ -7,6 +7,8 @@ import { Schema } from 'prosemirror-model';
 import type { Mark, MarkSpec, Node as ProseMirrorNode, NodeSpec } from 'prosemirror-model';
 import type { MarkdownSerializerState, ParseSpec } from 'prosemirror-markdown';
 
+import { colorMarkSpec, colorTokenSpec, configureColorMarkdown } from '../extensions/markdown/color';
+
 import {
 	configureMathMarkdown,
 	mathNodeSpecs,
@@ -62,11 +64,7 @@ const basicMarks: Record<string, MarkSpec> = {
 	ins: underlineMarkSpec,
 	sub: subscriptMarkSpec,
 	strike: strikeMarkSpec,
-	color: {
-		attrs: { color: {} },
-		parseDOM: [{ style: 'color', getAttrs: (color) => ({ color }) }],
-		toDOM: (mark) => ['span', { style: `color: ${mark.attrs.color}` }, 0],
-	},
+	color: colorMarkSpec,
 	mark: {
 		parseDOM: [{ tag: 'mark' }, { tag: 'span[data-mark]' }],
 		toDOM: () => ['mark', 0],
@@ -155,6 +153,7 @@ export const basicMarkdownSchema: Schema = new Schema({
 
 const tableTokenSpecs: Record<string, ParseSpec> = {
 	blockquote: blockquoteTokenSpec,
+	color: colorTokenSpec,
 	code_inline: codeTokenSpec,
 	...codeBlockTokenSpecs,
 	em: italicTokenSpec,
@@ -202,6 +201,7 @@ export function createExtendedMarkdownIt(markdown = new MarkdownIt('commonmark',
 	configureYfmHtmlBlockMarkdown(markdown);
 	configureImageMarkdown(markdown);
 	configureLinkMarkdown(markdown);
+	configureColorMarkdown(markdown);
 	markdown.core.ruler.after('block', 'yfm_html_source', (state) => {
 		for (const token of state.tokens) {
 			if (token.type === 'yfm_html_block') token.content = `:::html\n${token.content}\n:::`;
@@ -330,8 +330,9 @@ const basicMarkdownSerializerMarks = {
 	link: serializeLink,
 	strong: serializeBold,
 	color: {
-		close: '</span>',
-		open: (_state: MarkdownSerializerState, mark: Mark) => `<span style="color: ${mark.attrs.color}">`,
+		close: ')',
+		mixable: true,
+		open: (_state: MarkdownSerializerState, mark: Mark) => `{${mark.attrs.color}}(`,
 	},
 	mark: { close: '==', open: '==' },
 	strikethrough: { close: '~~', open: '~~' },

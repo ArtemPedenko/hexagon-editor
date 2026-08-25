@@ -110,9 +110,16 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-.markdown-renderer {
+:where(.markdown-renderer) {
 	--markdown-renderer-code-background: #eef1f5;
 	--markdown-renderer-link: #1d5fd1;
+	--markdown-editor-color-gray: #a6a6a6;
+	--markdown-editor-color-yellow: #f2d600;
+	--markdown-editor-color-orange: #e87b00;
+	--markdown-editor-color-red: #e65c5c;
+	--markdown-editor-color-green: #62be79;
+	--markdown-editor-color-blue: #7197e8;
+	--markdown-editor-color-violet: #a774d7;
 }
 
 .markdown-renderer :deep(h1),

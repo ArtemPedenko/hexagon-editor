@@ -4,6 +4,7 @@ import type { AppContext } from 'vue';
 import type { MarkdownDirectiveComponents } from '../directives';
 import type { SelectionContextOptions } from '../extensions/behavior/selection-context';
 import type { ImageObjectFit } from '../extensions/markdown/image';
+import type { TextColorName } from '../extensions/markdown/color';
 import type { MarkdownFeatures } from '../public-types';
 
 export interface BasicEditorCommands {
@@ -38,7 +39,7 @@ export interface BasicEditorCommands {
 	paragraph: Command;
 	quote: Command;
 	redo: Command;
-	setColor(color: string): Command;
+	setColor(color: TextColorName): Command;
 	sinkListItem: Command;
 	splitListItem: Command;
 	strikethrough: Command;

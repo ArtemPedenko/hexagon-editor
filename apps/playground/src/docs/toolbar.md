@@ -10,7 +10,7 @@
 | `minimal` | history; text: `heading`, `bold`, `italic`, `underline`, `strike`; blocks: `bullet-list`, `ordered-list`, `quote`, `fold-heading`; links: `link` |
 | `full` | history; text: `heading`, `bold`, `italic`, `underline`, `strike`, `mark`, `code`; blocks: `bullet-list`, `ordered-list`, `quote`, `fold-heading`, `code-block`; links: `color`, `link`, `image`; insert: `formula`, `mermaid`, `html`, `horizontal-rule`, `table` |
 
-`bullet-list` and `ordered-list` open one list menu; `code` and `code-block` share one code menu. `code-language` is local to a selected code block and intentionally cannot appear in the main toolbar.
+`bullet-list` and `ordered-list` open one list menu; `code` and `code-block` share one code menu. `color` opens a palette of `gray`, `yellow`, `orange`, `red`, `green`, `blue`, and `violet`; it applies the chosen color to the current selection or to subsequently typed text. `code-language` is local to a selected code block and intentionally cannot appear in the main toolbar.
 
 ```vue
 <script setup lang="ts">
