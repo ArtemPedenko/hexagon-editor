@@ -29,6 +29,7 @@ import type {
 } from './public-types';
 import type { MarkdownEditorToolbarConfig, MarkdownEditorToolbarItemId } from './toolbar';
 import type { MarkdownDirectiveComponents } from './directives';
+import type { TextBackgroundColorName } from './extensions/markdown/background-color';
 import type { TextColorName } from './extensions/markdown/color';
 
 export interface MarkdownEditorExposed {
@@ -131,6 +132,7 @@ const linkForm = ref<InstanceType<typeof MarkdownEditorLinkForm>>();
 const floatingMenus = ref<InstanceType<typeof MarkdownEditorFloatingMenus>>();
 const imageActions = ref<InstanceType<typeof MarkdownEditorImageActions>>();
 const codePanel = useFloatingPanel(() => floatingMenus.value?.getElement('code'));
+const backgroundColorPanel = useFloatingPanel(() => floatingMenus.value?.getElement('background-color'));
 const colorPanel = useFloatingPanel(() => floatingMenus.value?.getElement('color'));
 const formulaPanel = useFloatingPanel(() => floatingMenus.value?.getElement('formula'));
 const headingPanel = useFloatingPanel(() => floatingMenus.value?.getElement('heading'));
@@ -280,6 +282,17 @@ async function toggleColorMenu(reference: HTMLElement): Promise<void> {
 	await colorPanel.toggle(reference);
 }
 
+async function toggleBackgroundColorMenu(reference: HTMLElement): Promise<void> {
+	if (shouldRunMarkupCommand()) return;
+	await backgroundColorPanel.toggle(reference);
+}
+
+function selectBackgroundColor(color: TextBackgroundColorName): void {
+	backgroundColorPanel.close();
+	if (shouldRunMarkupCommand()) return;
+	visualEditor?.run(commands.setBackgroundColor(color));
+}
+
 function selectColor(color: TextColorName): void {
 	colorPanel.close();
 	if (shouldRunMarkupCommand()) return;
@@ -415,6 +428,7 @@ function closeFloatingPanels(event: PointerEvent): void {
 	for (const panel of [
 		headingPanel,
 		codePanel,
+		backgroundColorPanel,
 		colorPanel,
 		formulaPanel,
 		linkPanel,
@@ -432,6 +446,7 @@ function closePanelsOnEscape(event: KeyboardEvent): void {
 	for (const panel of [
 		headingPanel,
 		codePanel,
+		backgroundColorPanel,
 		colorPanel,
 		formulaPanel,
 		linkPanel,
@@ -633,6 +648,7 @@ defineExpose<MarkdownEditorExposed>({
 		<MarkdownEditorToolbar
 			v-if="!readonly"
 			:commands="commands"
+			:background-color-menu-visible="backgroundColorPanel.visible.value"
 			:color-menu-visible="colorPanel.visible.value"
 			:code-menu-visible="codePanel.visible.value"
 			:formula-menu-visible="formulaPanel.visible.value"
@@ -652,6 +668,7 @@ defineExpose<MarkdownEditorExposed>({
 			@insert-html="insertHtmlDirective"
 			@toggle-formula-menu="toggleFormulaMenu"
 			@toggle-code-menu="toggleCodeMenu"
+			@toggle-background-color-menu="toggleBackgroundColorMenu"
 			@toggle-color-menu="toggleColorMenu"
 			@toggle-heading-menu="showHeadingMenu"
 			@toggle-image-editor="toggleImageEditor"
@@ -671,6 +688,7 @@ defineExpose<MarkdownEditorExposed>({
 			<MarkdownEditorFloatingMenus
 				ref="floatingMenus"
 				:code-visible="codePanel.visible.value"
+				:background-color-visible="backgroundColorPanel.visible.value"
 				:color-visible="colorPanel.visible.value"
 				:formula-visible="formulaPanel.visible.value"
 				:heading-visible="headingPanel.visible.value"
@@ -683,6 +701,7 @@ defineExpose<MarkdownEditorExposed>({
 				:translate="t"
 				@bullet-list="executeListCommand(commands.bulletList, 'bulletList')"
 				@code-block="executeCodeCommand(commands.codeBlock, 'codeBlock')"
+				@select-background-color="selectBackgroundColor"
 				@select-color="selectColor"
 				@indent-list="executeListCommand(commands.sinkListItem, 'indentList')"
 				@inline-code="executeCodeCommand(commands.code, 'code')"

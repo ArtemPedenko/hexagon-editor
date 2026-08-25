@@ -36,6 +36,13 @@ describe('renderMarkdownContent', () => {
 		expect(result).toContain('<strong>жирный</strong>');
 	});
 
+	it('renders named text backgrounds through CSS variables', () => {
+		const result = renderMarkdownContent('{bg-yellow}(подсвеченный **жирный**)');
+
+		expect(result).toContain('style="background-color: var(--markdown-editor-background-color-yellow)"');
+		expect(result).toContain('<strong>жирный</strong>');
+	});
+
 	it('renders only the spaced HTML directive and keeps other HTML as source', () => {
 		const result = renderMarkdownContent(
 			[

@@ -120,6 +120,13 @@ onBeforeUnmount(() => {
 	--markdown-editor-color-green: #62be79;
 	--markdown-editor-color-blue: #7197e8;
 	--markdown-editor-color-violet: #a774d7;
+	--markdown-editor-background-color-gray: #e5e7eb;
+	--markdown-editor-background-color-yellow: #fff3a3;
+	--markdown-editor-background-color-orange: #ffd6a3;
+	--markdown-editor-background-color-red: #ffc3c3;
+	--markdown-editor-background-color-green: #c5ebcf;
+	--markdown-editor-background-color-blue: #cbdcff;
+	--markdown-editor-background-color-violet: #e0c8fa;
 }
 
 .markdown-renderer :deep(h1),

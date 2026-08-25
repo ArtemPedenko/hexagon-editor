@@ -4,12 +4,19 @@ import { ref } from 'vue';
 import type { BasicWysiwygSelectionState } from '../core';
 import type { MarkdownEditorMessageKey } from '../i18n';
 import type { MarkdownEditorMode, MarkdownEditorTheme } from '../public-types';
+import {
+	textBackgroundColorCssVariables,
+	textBackgroundColorMenuNames,
+	textBackgroundColorMessageKeys,
+} from '../extensions/markdown/background-color';
+import type { TextBackgroundColorName } from '../extensions/markdown/background-color';
 import { textColorCssVariables, textColorMenuNames, textColorMessageKeys } from '../extensions/markdown/color';
 import type { TextColorName } from '../extensions/markdown/color';
 import ToolbarIcon from './MarkdownEditorToolbarIcon.vue';
 
 defineProps<{
 	codeVisible: boolean;
+	backgroundColorVisible: boolean;
 	colorVisible: boolean;
 	formulaVisible: boolean;
 	headingVisible: boolean;
@@ -24,6 +31,7 @@ defineProps<{
 
 const emit = defineEmits<{
 	'code-block': [];
+	'select-background-color': [color: TextBackgroundColorName];
 	'select-color': [color: TextColorName];
 	'inline-code': [];
 	'inline-formula': [];
@@ -37,6 +45,7 @@ const emit = defineEmits<{
 }>();
 
 const code = ref<HTMLElement>();
+const backgroundColor = ref<HTMLElement>();
 const color = ref<HTMLElement>();
 const formula = ref<HTMLElement>();
 const heading = ref<HTMLElement>();
@@ -45,8 +54,11 @@ const modeMenu = ref<HTMLElement>();
 const editorModes: MarkdownEditorMode[] = ['wysiwyg', 'markup', 'split'];
 
 defineExpose({
-	getElement(name: 'code' | 'color' | 'formula' | 'heading' | 'list' | 'mode'): HTMLElement | undefined {
+	getElement(
+		name: 'background-color' | 'code' | 'color' | 'formula' | 'heading' | 'list' | 'mode',
+	): HTMLElement | undefined {
 		return {
+			'background-color': backgroundColor.value,
 			code: code.value,
 			color: color.value,
 			formula: formula.value,
@@ -59,6 +71,35 @@ defineExpose({
 </script>
 
 <template>
+	<div
+		v-if="backgroundColorVisible"
+		ref="backgroundColor"
+		class="markdown-editor__floating-menu"
+		:data-theme="theme"
+		role="menu"
+		:aria-label="translate('backgroundColor')"
+	>
+		<button
+			v-for="colorName in textBackgroundColorMenuNames"
+			:key="colorName"
+			role="menuitemradio"
+			type="button"
+			@mousedown.prevent
+			@click="emit('select-background-color', colorName)"
+		>
+			<span
+				class="markdown-editor__floating-menu-icon markdown-editor__background-color-icon"
+				:style="
+					colorName === 'default'
+						? undefined
+						: { backgroundColor: `var(${textBackgroundColorCssVariables[colorName]})` }
+				"
+			>
+				A
+			</span>
+			<span>{{ translate(textBackgroundColorMessageKeys[colorName]) }}</span>
+		</button>
+	</div>
 	<div
 		v-if="colorVisible"
 		ref="color"
@@ -78,7 +119,9 @@ defineExpose({
 			<span
 				class="markdown-editor__floating-menu-icon"
 				:style="colorName === 'default' ? undefined : { color: `var(${textColorCssVariables[colorName]})` }"
-			>A</span>
+			>
+				A
+			</span>
 			<span>{{ translate(textColorMessageKeys[colorName]) }}</span>
 		</button>
 	</div>
@@ -237,6 +280,14 @@ defineExpose({
 	--markdown-focus-background: #526da8;
 	--markdown-focus-text: #fff;
 	--markdown-text: #202125;
+	--markdown-editor-background-color-gray: #e5e7eb;
+	--markdown-editor-background-color-yellow: #fff3a3;
+	--markdown-editor-background-color-orange: #ffd6a3;
+	--markdown-editor-background-color-red: #ffc3c3;
+	--markdown-editor-background-color-green: #c5ebcf;
+	--markdown-editor-background-color-blue: #cbdcff;
+	--markdown-editor-background-color-violet: #e0c8fa;
+	--markdown-editor-background-color-text: #202125;
 	z-index: 10;
 	display: grid;
 	gap: 0.125rem;
@@ -313,6 +364,11 @@ defineExpose({
 	font-size: 0.75rem;
 	font-weight: 500;
 	text-align: center;
+}
+
+.markdown-editor__background-color-icon {
+	border-radius: 0.125rem;
+	color: var(--markdown-editor-background-color-text);
 }
 .markdown-editor__floating-menu--list button {
 	grid-template-columns: 1.5rem minmax(10rem, 1fr) auto;

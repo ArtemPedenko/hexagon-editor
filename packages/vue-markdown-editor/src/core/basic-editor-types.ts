@@ -5,6 +5,7 @@ import type { MarkdownDirectiveComponents } from '../directives';
 import type { SelectionContextOptions } from '../extensions/behavior/selection-context';
 import type { ImageObjectFit } from '../extensions/markdown/image';
 import type { TextColorName } from '../extensions/markdown/color';
+import type { TextBackgroundColorName } from '../extensions/markdown/background-color';
 import type { MarkdownFeatures } from '../public-types';
 
 export interface BasicEditorCommands {
@@ -40,6 +41,7 @@ export interface BasicEditorCommands {
 	quote: Command;
 	redo: Command;
 	setColor(color: TextColorName): Command;
+	setBackgroundColor(color: TextBackgroundColorName): Command;
 	sinkListItem: Command;
 	splitListItem: Command;
 	strikethrough: Command;

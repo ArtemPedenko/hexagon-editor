@@ -15,6 +15,7 @@ export * from './behavior/selection';
 export * from './behavior/selection-context';
 export * from './markdown/blockquote';
 export * from './markdown/bold';
+export * from './markdown/background-color';
 export * from './markdown/breaks';
 export * from './markdown/code';
 export * from './markdown/code-block';

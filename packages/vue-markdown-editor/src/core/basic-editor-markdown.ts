@@ -8,6 +8,11 @@ import type { Mark, MarkSpec, Node as ProseMirrorNode, NodeSpec } from 'prosemir
 import type { MarkdownSerializerState, ParseSpec } from 'prosemirror-markdown';
 
 import { colorMarkSpec, colorTokenSpec, configureColorMarkdown } from '../extensions/markdown/color';
+import {
+	backgroundColorMarkSpec,
+	backgroundColorTokenSpec,
+	configureBackgroundColorMarkdown,
+} from '../extensions/markdown/background-color';
 
 import {
 	configureMathMarkdown,
@@ -64,6 +69,7 @@ const basicMarks: Record<string, MarkSpec> = {
 	ins: underlineMarkSpec,
 	sub: subscriptMarkSpec,
 	strike: strikeMarkSpec,
+	background_color: backgroundColorMarkSpec,
 	color: colorMarkSpec,
 	mark: {
 		parseDOM: [{ tag: 'mark' }, { tag: 'span[data-mark]' }],
@@ -153,6 +159,7 @@ export const basicMarkdownSchema: Schema = new Schema({
 
 const tableTokenSpecs: Record<string, ParseSpec> = {
 	blockquote: blockquoteTokenSpec,
+	background_color: backgroundColorTokenSpec,
 	color: colorTokenSpec,
 	code_inline: codeTokenSpec,
 	...codeBlockTokenSpecs,
@@ -201,6 +208,7 @@ export function createExtendedMarkdownIt(markdown = new MarkdownIt('commonmark',
 	configureYfmHtmlBlockMarkdown(markdown);
 	configureImageMarkdown(markdown);
 	configureLinkMarkdown(markdown);
+	configureBackgroundColorMarkdown(markdown);
 	configureColorMarkdown(markdown);
 	markdown.core.ruler.after('block', 'yfm_html_source', (state) => {
 		for (const token of state.tokens) {
@@ -329,6 +337,11 @@ const basicMarkdownSerializerMarks = {
 	em: serializeItalic,
 	link: serializeLink,
 	strong: serializeBold,
+	background_color: {
+		close: ')',
+		mixable: true,
+		open: (_state: MarkdownSerializerState, mark: Mark) => `{bg-${mark.attrs.color}}(`,
+	},
 	color: {
 		close: ')',
 		mixable: true,

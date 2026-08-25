@@ -23,6 +23,7 @@ import {
 	getBasicNodeType,
 	insertFileCommand,
 	insertImageCommand,
+	setBackgroundColorCommand,
 	setColorCommand,
 	setImageDisplayCommand,
 } from './basic-editor-command-helpers';
@@ -163,6 +164,7 @@ export function createBasicEditorCommands(): BasicEditorCommands {
 		paragraph: setBlockType(getBasicNodeType(basicMarkdownSchema, 'paragraph')),
 		quote: toggleQuote,
 		redo: historyActions.redo,
+		setBackgroundColor: (color) => setBackgroundColorCommand(basicMarkdownSchema, color),
 		setColor: (color) => setColorCommand(basicMarkdownSchema, color),
 		liftListItem: liftListItem(listItem),
 		sinkListItem: sinkOnlySelectedListItem(listItem),

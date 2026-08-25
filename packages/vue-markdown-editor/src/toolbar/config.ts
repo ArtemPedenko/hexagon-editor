@@ -19,6 +19,7 @@ export const markdownEditorToolbarItemIds = [
 	'code-language',
 	'link',
 	'color',
+	'background-color',
 	'image',
 	'formula',
 	'mermaid',
@@ -95,7 +96,7 @@ export const fullToolbarConfig = createToolbarConfig([
 	createToolbarGroup('history', ['undo', 'redo']),
 	createToolbarGroup('text', ['heading', 'bold', 'italic', 'underline', 'strike', 'mark', 'code']),
 	createToolbarGroup('blocks', ['bullet-list', 'ordered-list', 'quote', 'fold-heading', 'code-block']),
-	createToolbarGroup('links', ['color', 'link', 'image']),
+	createToolbarGroup('links', ['color', 'background-color', 'link', 'image']),
 	createToolbarGroup('insert', ['formula', 'mermaid', 'html', 'horizontal-rule', 'table']),
 ]);
 

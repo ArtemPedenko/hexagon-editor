@@ -18,6 +18,7 @@ type ToolbarCommand = Parameters<BasicWysiwygEditor['run']>[0];
 
 const props = defineProps<{
 	commands: BasicEditorCommands;
+	backgroundColorMenuVisible: boolean;
 	colorMenuVisible: boolean;
 	codeMenuVisible: boolean;
 	formulaMenuVisible: boolean;
@@ -57,6 +58,7 @@ const emit = defineEmits<{
 	'insert-html': [];
 	'toggle-formula-menu': [reference: HTMLElement];
 	'toggle-code-menu': [reference: HTMLElement];
+	'toggle-background-color-menu': [reference: HTMLElement];
 	'toggle-color-menu': [reference: HTMLElement];
 	'toggle-heading-menu': [reference: HTMLElement];
 	'toggle-image-editor': [reference: HTMLElement];
@@ -265,6 +267,19 @@ function getButton(event: MouseEvent): HTMLElement {
 						<ToolbarIcon name="link" />
 					</button>
 					<button
+						v-else-if="toolbarItem.id === 'background-color'"
+						data-toolbar-item="background-color"
+						:aria-expanded="backgroundColorMenuVisible"
+						:aria-label="translate('backgroundColor')"
+						:title="translate('backgroundColor')"
+						type="button"
+						@mousedown.prevent
+						@click="emit('toggle-background-color-menu', getButton($event))"
+					>
+						<span class="markdown-editor__background-color-trigger">A</span>
+						<ToolbarIcon name="chevronDown" />
+					</button>
+					<button
 						v-else-if="toolbarItem.id === 'color'"
 						data-toolbar-item="color"
 						:aria-expanded="colorMenuVisible"
@@ -461,5 +476,15 @@ select:hover {
 	line-height: 1;
 	padding-bottom: 0.125rem;
 	border-bottom: 0.125rem solid var(--markdown-editor-color-blue);
+}
+.markdown-editor__background-color-trigger {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	line-height: 1;
+	padding: 0.0625rem 0.125rem;
+	border-radius: 0.125rem;
+	color: var(--markdown-editor-background-color-text);
+	background: var(--markdown-editor-background-color-yellow);
 }
 </style>
