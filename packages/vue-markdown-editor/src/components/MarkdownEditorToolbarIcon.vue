@@ -18,17 +18,48 @@ import strike from '../assets/toolbar-icons/strikethrough.svg?raw';
 import table from '../assets/toolbar-icons/layout-cells.svg?raw';
 import underline from '../assets/toolbar-icons/underline.svg?raw';
 
-const icons = {arrowLeft, arrowRight, bold, bulletList, chevronDown, code, function: functionIcon, gear, horizontalRule, image, italic, link, mermaid, orderedList, quote, strike, table, underline} as const;
+const icons = {
+	arrowLeft,
+	arrowRight,
+	bold,
+	bulletList,
+	chevronDown,
+	code,
+	function: functionIcon,
+	gear,
+	horizontalRule,
+	image,
+	italic,
+	link,
+	mermaid,
+	orderedList,
+	quote,
+	strike,
+	table,
+	underline,
+} as const;
 
-const props = defineProps<{name: keyof typeof icons}>();
+const props = defineProps<{ name: keyof typeof icons }>();
 </script>
 
 <template>
-  <!-- eslint-disable-next-line vue/no-v-html -- Static SVG sources are bundled with the editor. -->
-  <span class="markdown-editor__toolbar-icon" aria-hidden="true" v-html="icons[props.name]" />
+	<!-- eslint-disable-next-line vue/no-v-html -- Static SVG sources are bundled with the editor. -->
+	<span
+		class="markdown-editor__toolbar-icon"
+		aria-hidden="true"
+		v-html="icons[props.name]"
+	/>
 </template>
 
 <style scoped>
-.markdown-editor__toolbar-icon { display: inline-flex; width: 1rem; height: 1rem; }
-.markdown-editor__toolbar-icon :deep(svg) { display: block; width: 100%; height: 100%; }
+.markdown-editor__toolbar-icon {
+	display: inline-flex;
+	width: 1rem;
+	height: 1rem;
+}
+.markdown-editor__toolbar-icon :deep(svg) {
+	display: block;
+	width: 100%;
+	height: 100%;
+}
 </style>

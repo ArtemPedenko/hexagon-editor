@@ -1,7 +1,7 @@
 declare module 'markdown-it-deflist' {
-    import type {PluginSimple} from 'markdown-it';
+	import type { PluginSimple } from 'markdown-it';
 
-    const deflist: PluginSimple;
+	const deflist: PluginSimple;
 
-    export default deflist;
+	export default deflist;
 }

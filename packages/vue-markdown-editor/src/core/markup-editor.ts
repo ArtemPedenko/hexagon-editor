@@ -49,7 +49,7 @@ export function mountBasicMarkupEditor({
 				// it does not insert newline characters into the document.
 				EditorView.lineWrapping,
 				keymap.of([indentWithTab, ...defaultKeymap, ...historyKeymap]),
-				EditorView.updateListener.of(update => {
+				EditorView.updateListener.of((update) => {
 					if (update.docChanged && !syncingExternalValue) {
 						onChange?.(update.state.doc.toString());
 					}
@@ -74,13 +74,17 @@ export function mountBasicMarkupEditor({
 		},
 		getValue: () => view.state.doc.toString(),
 		hasFocus: () => view.hasFocus,
-		insert: markup => {
+		insert: (markup) => {
 			if (destroyed) return;
 			view.dispatch({
-				changes: { from: view.state.selection.main.from, to: view.state.selection.main.to, insert: markup },
+				changes: {
+					from: view.state.selection.main.from,
+					to: view.state.selection.main.to,
+					insert: markup,
+				},
 			});
 		},
-		moveCursor: position => {
+		moveCursor: (position) => {
 			if (destroyed) return;
 			const anchor =
 				typeof position === 'object'
@@ -96,10 +100,12 @@ export function mountBasicMarkupEditor({
 				redo(view);
 			}
 		},
-		setValue: value => {
+		setValue: (value) => {
 			if (!destroyed && value !== view.state.doc.toString()) {
 				syncingExternalValue = true;
-				view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: value } });
+				view.dispatch({
+					changes: { from: 0, to: view.state.doc.length, insert: value },
+				});
 				syncingExternalValue = false;
 			}
 		},
@@ -108,7 +114,7 @@ export function mountBasicMarkupEditor({
 				undo(view);
 			}
 		},
-		run: command => {
+		run: (command) => {
 			if (destroyed) {
 				return false;
 			}

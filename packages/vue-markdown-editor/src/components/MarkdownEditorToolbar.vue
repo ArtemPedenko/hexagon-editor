@@ -1,77 +1,81 @@
 <script setup lang="ts">
-	import type { BasicEditorCommands, BasicWysiwygEditor, BasicWysiwygSelectionState } from '../core';
-	import type { MarkdownEditorToolbarPreset } from '../public-types';
-	import type { MarkdownEditorMode } from '../public-types';
-	import type { MarkdownFeatures } from '../public-types';
-	import {
-		getToolbarConfig,
-		isToolbarItemAvailable,
-		isToolbarItemActive,
-		isToolbarItemEnabled,
-		normalizeToolbarItem,
-	} from '../toolbar';
-	import type { MarkdownEditorToolbarConfig, MarkdownEditorToolbarItem, MarkdownEditorToolbarItemId } from '../toolbar';
-	import ToolbarIcon from './MarkdownEditorToolbarIcon.vue';
-	import type { MarkdownEditorMessageKey } from '../i18n';
+import type { BasicEditorCommands, BasicWysiwygEditor, BasicWysiwygSelectionState } from '../core';
+import type { MarkdownEditorToolbarPreset } from '../public-types';
+import type { MarkdownEditorMode } from '../public-types';
+import type { MarkdownFeatures } from '../public-types';
+import {
+	getToolbarConfig,
+	isToolbarItemAvailable,
+	isToolbarItemActive,
+	isToolbarItemEnabled,
+	normalizeToolbarItem,
+} from '../toolbar';
+import type { MarkdownEditorToolbarConfig, MarkdownEditorToolbarItem, MarkdownEditorToolbarItemId } from '../toolbar';
+import ToolbarIcon from './MarkdownEditorToolbarIcon.vue';
+import type { MarkdownEditorMessageKey } from '../i18n';
 
-	type ToolbarCommand = Parameters<BasicWysiwygEditor['run']>[0];
+type ToolbarCommand = Parameters<BasicWysiwygEditor['run']>[0];
 
-	const props = defineProps<{
-		commands: BasicEditorCommands;
-		codeMenuVisible: boolean;
-		formulaMenuVisible: boolean;
-		headingMenuVisible: boolean;
-		imageEditorVisible: boolean;
-		linkEditorVisible: boolean;
-		listMenuVisible: boolean;
-		mode: MarkdownEditorMode;
-		modeMenuVisible: boolean;
-		state: BasicWysiwygSelectionState;
-		textStyleLabel: string;
-		toolbarPreset: MarkdownEditorToolbarPreset;
-		toolbarConfig?: MarkdownEditorToolbarConfig;
-		features?: MarkdownFeatures;
-		translate: (key: MarkdownEditorMessageKey) => string;
-	}>();
+const props = defineProps<{
+	commands: BasicEditorCommands;
+	codeMenuVisible: boolean;
+	formulaMenuVisible: boolean;
+	headingMenuVisible: boolean;
+	imageEditorVisible: boolean;
+	linkEditorVisible: boolean;
+	listMenuVisible: boolean;
+	mode: MarkdownEditorMode;
+	modeMenuVisible: boolean;
+	state: BasicWysiwygSelectionState;
+	textStyleLabel: string;
+	toolbarPreset: MarkdownEditorToolbarPreset;
+	toolbarConfig?: MarkdownEditorToolbarConfig;
+	features?: MarkdownFeatures;
+	translate: (key: MarkdownEditorMessageKey) => string;
+}>();
 
-	function availableItems(items: MarkdownEditorToolbarConfig['groups'][number]['items']): MarkdownEditorToolbarItem[] {
-		return items.map(normalizeToolbarItem).filter(toolbarItem =>
-			isToolbarItemAvailable(toolbarItem, props.state));
+function availableItems(items: MarkdownEditorToolbarConfig['groups'][number]['items']): MarkdownEditorToolbarItem[] {
+	return items.map(normalizeToolbarItem).filter((toolbarItem) => isToolbarItemAvailable(toolbarItem, props.state));
+}
+
+function runItem(toolbarItem: MarkdownEditorToolbarItem, command: ToolbarCommand): void {
+	if (!isToolbarItemEnabled(toolbarItem, props.state)) return;
+	if (toolbarItem.action) {
+		toolbarItem.action.run({
+			commands: props.commands,
+			execute: (nextCommand) => emit('execute', toolbarItem.id, nextCommand),
+			state: props.state,
+		});
+	} else {
+		emit('execute', toolbarItem.id, command);
 	}
+}
 
-	function runItem(toolbarItem: MarkdownEditorToolbarItem, command: ToolbarCommand): void {
-		if (!isToolbarItemEnabled(toolbarItem, props.state)) return;
-		if (toolbarItem.action) {
-			toolbarItem.action.run({
-				commands: props.commands,
-				execute: nextCommand => emit('execute', toolbarItem.id, nextCommand),
-				state: props.state,
-			});
-		} else {
-			emit('execute', toolbarItem.id, command);
-		}
-	}
+const emit = defineEmits<{
+	execute: [id: MarkdownEditorToolbarItemId | undefined, command: ToolbarCommand];
+	'insert-html': [];
+	'toggle-formula-menu': [reference: HTMLElement];
+	'toggle-code-menu': [reference: HTMLElement];
+	'toggle-heading-menu': [reference: HTMLElement];
+	'toggle-image-editor': [reference: HTMLElement];
+	'toggle-link-editor': [reference: HTMLElement];
+	'toggle-list-menu': [reference: HTMLElement];
+	'toggle-mode-menu': [reference: HTMLElement];
+}>();
 
-	const emit = defineEmits<{
-		execute: [id: MarkdownEditorToolbarItemId | undefined, command: ToolbarCommand];
-		'insert-html': [];
-		'toggle-formula-menu': [reference: HTMLElement];
-		'toggle-code-menu': [reference: HTMLElement];
-		'toggle-heading-menu': [reference: HTMLElement];
-		'toggle-image-editor': [reference: HTMLElement];
-		'toggle-link-editor': [reference: HTMLElement];
-		'toggle-list-menu': [reference: HTMLElement];
-		'toggle-mode-menu': [reference: HTMLElement];
-	}>();
-
-	function getButton(event: MouseEvent): HTMLElement {
-		return event.currentTarget as HTMLElement;
-	}
+function getButton(event: MouseEvent): HTMLElement {
+	return event.currentTarget as HTMLElement;
+}
 </script>
 
 <!-- eslint-disable vue/html-indent -->
 <template>
-	<div class="markdown-editor__toolbar" data-markdown-editor-toolbar role="toolbar" :aria-label="translate('toolbar')">
+	<div
+		class="markdown-editor__toolbar"
+		data-markdown-editor-toolbar
+		role="toolbar"
+		:aria-label="translate('toolbar')"
+	>
 		<div class="markdown-editor__toolbar-buttons">
 			<div
 				v-for="group in (toolbarConfig ?? getToolbarConfig(toolbarPreset)).groups"
@@ -80,7 +84,10 @@
 				role="group"
 				:data-toolbar-group="group.id"
 			>
-				<template v-for="toolbarItem in availableItems(group.items)" :key="toolbarItem.id">
+				<template
+					v-for="toolbarItem in availableItems(group.items)"
+					:key="toolbarItem.id"
+				>
 					<button
 						v-if="toolbarItem.id === 'undo'"
 						data-toolbar-item="undo"
@@ -265,6 +272,7 @@
 							:aria-label="translate('color')"
 							type="color"
 							value="#202125"
+							@mousedown.prevent
 							@input="emit('execute', 'color', commands.setColor(($event.target as HTMLInputElement).value))"
 						/>
 					</label>
@@ -340,7 +348,10 @@
 					</button>
 				</template>
 			</div>
-			<slot :commands="commands" :execute="(command: ToolbarCommand) => emit('execute', undefined, command)" />
+			<slot
+				:commands="commands"
+				:execute="(command: ToolbarCommand) => emit('execute', undefined, command)"
+			/>
 		</div>
 		<button
 			class="markdown-editor__toolbar-mode"
@@ -359,114 +370,114 @@
 </template>
 
 <style scoped>
-	.markdown-editor__toolbar-buttons {
-		display: flex;
-		flex: 1;
-		flex-wrap: wrap;
-	}
-	.markdown-editor__toolbar-group {
-		display: contents;
-	}
-	.markdown-editor__toolbar-group + .markdown-editor__toolbar-group > :first-child {
-		position: relative;
-		margin-inline-start: 0.625rem;
-	}
-	.markdown-editor__toolbar-group + .markdown-editor__toolbar-group > :first-child::after {
-		position: absolute;
-		inset-block: 0.125rem;
-		inset-inline-start: -0.375rem;
-		border-inline-start: 1px solid color-mix(in srgb, var(--markdown-border) 75%, transparent);
-		content: '';
-	}
-	button {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		min-width: 1.75rem;
-		height: 1.75rem;
-		padding: 0 0.375rem;
-		border: 0;
-		border-radius: 0.375rem;
-		color: color-mix(in srgb, var(--markdown-text) 88%, transparent);
-		background: transparent;
-		font: inherit;
-		cursor: pointer;
-	}
-	button:hover {
-		color: var(--markdown-text);
-		background: color-mix(in srgb, var(--markdown-text) 10%, transparent);
-	}
-	button:focus-visible {
-		outline: 2px solid var(--markdown-focus-text);
-		outline-offset: 1px;
-	}
-	button[aria-pressed='true'],
-	button[aria-expanded='true'] {
-		color: var(--markdown-text);
-		background: color-mix(in srgb, var(--markdown-text) 22%, transparent);
-	}
-	button:disabled {
-		cursor: default;
-		opacity: 0.35;
-	}
-	.markdown-editor__toolbar-heading {
-		gap: 0.125rem;
-		min-width: 2.75rem;
-	}
-	.markdown-editor__toolbar-heading :deep(.markdown-editor__toolbar-icon),
-	.markdown-editor__toolbar-list :deep(.markdown-editor__toolbar-icon:last-child),
-	.markdown-editor__toolbar-code :deep(.markdown-editor__toolbar-icon:last-child) {
-		width: 0.75rem;
-		height: 0.75rem;
-	}
-	.markdown-editor__toolbar-list,
-	.markdown-editor__toolbar-code {
-		gap: 0.1875rem;
-	}
-	.markdown-editor__toolbar-mode {
-		gap: 0.1875rem;
-		margin-inline-start: auto;
-	}
-	.markdown-editor__toolbar-mode :deep(.markdown-editor__toolbar-icon:last-child) {
-		width: 0.75rem;
-		height: 0.75rem;
-	}
-	select {
-		height: 1.75rem;
-		border: 0;
-		border-radius: 0.375rem;
-		color: var(--markdown-text);
-		background: transparent;
-		font: inherit;
-	}
-	select:hover {
-		background: color-mix(in srgb, var(--markdown-text) 10%, transparent);
-	}
-	.markdown-editor__color {
-		position: relative;
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 1.75rem;
-		height: 1.75rem;
-		border-radius: 0.375rem;
-		cursor: pointer;
-	}
-	.markdown-editor__color::before {
-		content: 'A';
-		line-height: 1;
-		padding-bottom: 0.125rem;
-		border-bottom: 0.125rem solid currentColor;
-	}
-	.markdown-editor__color:hover {
-		background: color-mix(in srgb, var(--markdown-text) 10%, transparent);
-	}
-	.markdown-editor__color input {
-		position: absolute;
-		inset: 0;
-		width: 100%;
-		height: 100%;
-		opacity: 0;
-		cursor: pointer;
-	}
+.markdown-editor__toolbar-buttons {
+	display: flex;
+	flex: 1;
+	flex-wrap: wrap;
+}
+.markdown-editor__toolbar-group {
+	display: contents;
+}
+.markdown-editor__toolbar-group + .markdown-editor__toolbar-group > :first-child {
+	position: relative;
+	margin-inline-start: 0.625rem;
+}
+.markdown-editor__toolbar-group + .markdown-editor__toolbar-group > :first-child::after {
+	position: absolute;
+	inset-block: 0.125rem;
+	inset-inline-start: -0.375rem;
+	border-inline-start: 1px solid color-mix(in srgb, var(--markdown-border) 75%, transparent);
+	content: '';
+}
+button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 1.75rem;
+	height: 1.75rem;
+	padding: 0 0.375rem;
+	border: 0;
+	border-radius: 0.375rem;
+	color: color-mix(in srgb, var(--markdown-text) 88%, transparent);
+	background: transparent;
+	font: inherit;
+	cursor: pointer;
+}
+button:hover {
+	color: var(--markdown-text);
+	background: color-mix(in srgb, var(--markdown-text) 10%, transparent);
+}
+button:focus-visible {
+	outline: 2px solid var(--markdown-focus-text);
+	outline-offset: 1px;
+}
+button[aria-pressed='true'],
+button[aria-expanded='true'] {
+	color: var(--markdown-text);
+	background: color-mix(in srgb, var(--markdown-text) 22%, transparent);
+}
+button:disabled {
+	cursor: default;
+	opacity: 0.35;
+}
+.markdown-editor__toolbar-heading {
+	gap: 0.125rem;
+	min-width: 2.75rem;
+}
+.markdown-editor__toolbar-heading :deep(.markdown-editor__toolbar-icon),
+.markdown-editor__toolbar-list :deep(.markdown-editor__toolbar-icon:last-child),
+.markdown-editor__toolbar-code :deep(.markdown-editor__toolbar-icon:last-child) {
+	width: 0.75rem;
+	height: 0.75rem;
+}
+.markdown-editor__toolbar-list,
+.markdown-editor__toolbar-code {
+	gap: 0.1875rem;
+}
+.markdown-editor__toolbar-mode {
+	gap: 0.1875rem;
+	margin-inline-start: auto;
+}
+.markdown-editor__toolbar-mode :deep(.markdown-editor__toolbar-icon:last-child) {
+	width: 0.75rem;
+	height: 0.75rem;
+}
+select {
+	height: 1.75rem;
+	border: 0;
+	border-radius: 0.375rem;
+	color: var(--markdown-text);
+	background: transparent;
+	font: inherit;
+}
+select:hover {
+	background: color-mix(in srgb, var(--markdown-text) 10%, transparent);
+}
+.markdown-editor__color {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 1.75rem;
+	height: 1.75rem;
+	border-radius: 0.375rem;
+	cursor: pointer;
+}
+.markdown-editor__color::before {
+	content: 'A';
+	line-height: 1;
+	padding-bottom: 0.125rem;
+	border-bottom: 0.125rem solid currentColor;
+}
+.markdown-editor__color:hover {
+	background: color-mix(in srgb, var(--markdown-text) 10%, transparent);
+}
+.markdown-editor__color input {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	opacity: 0;
+	cursor: pointer;
+}
 </style>

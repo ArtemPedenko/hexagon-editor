@@ -35,7 +35,7 @@ export interface BasicMarkupCommands {
 }
 
 function wrap(open: string, close = open): MarkupCommand {
-	return view => {
+	return (view) => {
 		const { from, to } = view.state.selection.main;
 		const doc = view.state.doc;
 		const selected = doc.sliceString(from, to);
@@ -128,14 +128,16 @@ function replaceSelectedLines(view: EditorView, transform: (line: string, index:
 			commonPrefix < sourceLine.length &&
 			commonPrefix < resultLine.length &&
 			sourceLine[commonPrefix] === resultLine[commonPrefix]
-		) commonPrefix += 1;
+		)
+			commonPrefix += 1;
 
 		let commonSuffix = 0;
 		while (
 			commonSuffix < sourceLine.length - commonPrefix &&
 			commonSuffix < resultLine.length - commonPrefix &&
 			sourceLine[sourceLine.length - commonSuffix - 1] === resultLine[resultLine.length - commonSuffix - 1]
-		) commonSuffix += 1;
+		)
+			commonSuffix += 1;
 
 		let mappedColumn: number;
 		if (sourceLine.length === 0) mappedColumn = resultLine.length;
@@ -174,9 +176,9 @@ function toggleBulletList(view: EditorView): boolean {
 	const source = doc.sliceString(first.from, last.to);
 	const lines = source.split('\n');
 
-	const allBullet = lines.every(line => /^\s*[-*+]\s+/.test(line));
+	const allBullet = lines.every((line) => /^\s*[-*+]\s+/.test(line));
 
-	return replaceSelectedLines(view, line => {
+	return replaceSelectedLines(view, (line) => {
 		if (allBullet) {
 			return line.replace(/^(\s*)[-*+]\s+/, '$1');
 		}
@@ -200,7 +202,7 @@ function toggleOrderedList(view: EditorView): boolean {
 	const source = doc.sliceString(first.from, last.to);
 	const lines = source.split('\n');
 
-	const allOrdered = lines.every(line => /^\s*\d+[.)]\s+/.test(line));
+	const allOrdered = lines.every((line) => /^\s*\d+[.)]\s+/.test(line));
 
 	return replaceSelectedLines(view, (line, index) => {
 		if (allOrdered) {
@@ -225,9 +227,9 @@ function toggleQuote(view: EditorView): boolean {
 
 	const source = doc.sliceString(first.from, last.to);
 
-	const allQuoted = source.split('\n').every(line => /^\s*>\s?/.test(line));
+	const allQuoted = source.split('\n').every((line) => /^\s*>\s?/.test(line));
 
-	return replaceSelectedLines(view, line => {
+	return replaceSelectedLines(view, (line) => {
 		if (allQuoted) {
 			return line.replace(/^(\s*)>\s?/, '$1');
 		}
@@ -237,18 +239,18 @@ function toggleQuote(view: EditorView): boolean {
 }
 
 function setHeading(level: number): MarkupCommand {
-	return view =>
-		replaceSelectedLines(view, line => {
+	return (view) =>
+		replaceSelectedLines(view, (line) => {
 			const content = line.replace(/^#{1,6}\+?\s+/, '');
 
 			return `${'#'.repeat(level)} ${content}`;
 		});
 }
 
-const setParagraph: MarkupCommand = view => replaceSelectedLines(view, line => line.replace(/^#{1,6}\+?\s+/, ''));
+const setParagraph: MarkupCommand = (view) => replaceSelectedLines(view, (line) => line.replace(/^#{1,6}\+?\s+/, ''));
 
-const toggleHeadingFolding: MarkupCommand = view =>
-	replaceSelectedLines(view, line => {
+const toggleHeadingFolding: MarkupCommand = (view) =>
+	replaceSelectedLines(view, (line) => {
 		const match = line.match(/^(#{1,6})(\+)?\s+(.*)$/);
 
 		if (!match) {
@@ -260,7 +262,7 @@ const toggleHeadingFolding: MarkupCommand = view =>
 		return `${hashes}${folding ? '' : '+'} ${content}`;
 	});
 
-const toggleCodeBlock: MarkupCommand = view => {
+const toggleCodeBlock: MarkupCommand = (view) => {
 	const { from, to } = view.state.selection.main;
 	const selected = view.state.doc.sliceString(from, to);
 
@@ -307,7 +309,7 @@ const toggleCodeBlock: MarkupCommand = view => {
 };
 
 function insertBlock(markup: string): MarkupCommand {
-	return view => {
+	return (view) => {
 		const { from, to } = view.state.selection.main;
 		const doc = view.state.doc;
 
@@ -337,14 +339,14 @@ function insertBlock(markup: string): MarkupCommand {
 }
 
 function insertLink(href: string, title?: string, text?: string, openInNewWindow = false): MarkupCommand {
-	return view => {
+	return (view) => {
 		const { from, to } = view.state.selection.main;
 
 		const selected = view.state.doc.sliceString(from, to);
 
 		const label = text?.trim() || selected || href;
 
-		const escapedHref = href.replaceAll(/[()]/g, character => `\\${character}`);
+		const escapedHref = href.replaceAll(/[()]/g, (character) => `\\${character}`);
 
 		const titlePart = title && title !== label ? ` "${title.replaceAll('"', '\\"')}"` : '';
 
@@ -402,8 +404,8 @@ export function createBasicMarkupCommands(): BasicMarkupCommands {
 
 		horizontalRule: insertBlock('---'),
 
-		indentList: view => indentMore(view),
-		outdentList: view => indentLess(view),
+		indentList: (view) => indentMore(view),
+		outdentList: (view) => indentLess(view),
 
 		insertHtml: insertBlock(['::: html', '<div>Add HTML code here</div>', ':::'].join('\n')),
 
@@ -427,7 +429,7 @@ export function createBasicMarkupCommands(): BasicMarkupCommands {
 
 		quote: toggleQuote,
 
-		redo: view => redo(view),
+		redo: (view) => redo(view),
 
 		setLink: insertLink,
 
@@ -437,6 +439,6 @@ export function createBasicMarkupCommands(): BasicMarkupCommands {
 
 		underline: wrap('++'),
 
-		undo: view => undo(view),
+		undo: (view) => undo(view),
 	};
 }

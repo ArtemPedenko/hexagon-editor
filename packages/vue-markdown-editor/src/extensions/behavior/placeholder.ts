@@ -1,9 +1,9 @@
-import {Plugin} from 'prosemirror-state';
+import { Plugin } from 'prosemirror-state';
 
-import type {ExtensionAuto} from '../../core/extension-builder';
+import type { ExtensionAuto } from '../../core/extension-builder';
 
 export interface PlaceholderOptions {
-    content?: string;
+	content?: string;
 }
 
 /**
@@ -12,11 +12,16 @@ export interface PlaceholderOptions {
  * document-level placeholder contract through ProseMirror view attributes.
  */
 export const Placeholder: ExtensionAuto<PlaceholderOptions> = (builder, options) => {
-    builder.addPlugin(() => new Plugin({
-        props: {
-            attributes: () => options?.content === undefined || options.content.length === 0
-                ? {} as Record<string, string>
-                : {'data-placeholder': options.content},
-        },
-    }), builder.Priority.VeryHigh);
+	builder.addPlugin(
+		() =>
+			new Plugin({
+				props: {
+					attributes: () =>
+						options?.content === undefined || options.content.length === 0
+							? ({} as Record<string, string>)
+							: { 'data-placeholder': options.content },
+				},
+			}),
+		builder.Priority.VeryHigh,
+	);
 };
