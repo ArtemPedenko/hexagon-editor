@@ -34,7 +34,7 @@ async function editSource() {
 | `insert(markup)` | Insert at the active surface/cursor |
 | `clear()`, `isEmpty()` | Clear or inspect the document |
 | `getMode()`, `setMode(mode)` | Read or asynchronously switch mode |
-| `focus()`, `hasFocus()` | Manage active-surface focus |
+| `focus()`, `hasFocus()` | Manage the markup surface in `markup` mode and the visual surface otherwise; in `split` they target the visual surface |
 | `moveCursor(position)` | Move to `'start'`, `'end'`, or `{line: number}` |
 
 ```ts

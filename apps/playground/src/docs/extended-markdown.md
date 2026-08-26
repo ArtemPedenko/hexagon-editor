@@ -1,13 +1,15 @@
 ## Extended Markdown and YFM
 
-Use the `full` toolbar preset when you want buttons for every feature in this page. Toolbar presets only choose buttons: the editor always parses and serializes its extended Markdown schema, so changing between `zero`, `commonmark`, `default`, and `full` does not change round-trip support. `MarkdownRenderer` understands the renderer syntax below; math and Mermaid need the noted adapters, while YFM HTML is rendered as escaped source.
+Use the `full` toolbar preset for the broadest built-in set of controls. Some supported syntax, such as subscript and definition lists, has no built-in toolbar button. Toolbar presets only choose buttons: the editor always parses and serializes its extended Markdown schema, so changing between `zero`, `commonmark`, `default`, and `full` does not change round-trip support. `MarkdownRenderer` understands the renderer syntax below; math and Mermaid need the noted adapters, while YFM HTML is rendered as escaped source.
 
 | Feature | Syntax | Visual | Markup | Renderer | Requirements / round-trip |
 | --- | --- | ---: | ---: | ---: | --- |
 | Strike | `~~text~~` | ✓ | ✓ | ✓ | `default`/`full` include a button |
 | Underline | `++text++` | ✓ | ✓ | ✓ | `full` includes a button; serializer emits `++`, never `__` |
-| Highlight / subscript | `==text==`, `H~2~O` | ✓ | ✓ | ✓ | `full` includes buttons |
+| Highlight | `==text==` | ✓ | ✓ | ✓ | `full` includes a button |
+| Subscript | `H~2~O` | ✓ | ✓ | ✓ | no built-in toolbar button |
 | Color | `{red}(text)` | ✓ | ✓ | ✓ | `full` opens a seven-color palette; names are `gray`, `yellow`, `orange`, `red`, `green`, `blue`, `violet` |
+| Background color | `{bg-yellow}(text)` | ✓ | ✓ | ✓ | `full` opens the same palette plus `default` to clear an applied background |
 | Tables | pipe table with `:---:` | ✓ | ✓ | ✓ | `full` includes a button; alignment is preserved |
 | Definition list | `Term` then `: definition` | ✓ | ✓ | ✓ | no built-in toolbar button |
 | Heading attributes | `## Name {#id .one .two}` | ✓ | ✓ | ✓ | syntax accepts id/classes, but current parser retains the last class only |

@@ -8,9 +8,9 @@
 | `commonmark` | history; text: `bold`, `italic`; blocks: `heading`, `bullet-list`, `ordered-list`, `link`, `quote`, `code`, `code-block`; hidden: `horizontal-rule` |
 | `default` | commonmark, with `strike` in text |
 | `minimal` | history; text: `heading`, `bold`, `italic`, `underline`, `strike`; blocks: `bullet-list`, `ordered-list`, `quote`, `fold-heading`; links: `link` |
-| `full` | history; text: `heading`, `bold`, `italic`, `underline`, `strike`, `mark`, `code`; blocks: `bullet-list`, `ordered-list`, `quote`, `fold-heading`, `code-block`; links: `color`, `link`, `image`; insert: `formula`, `mermaid`, `html`, `horizontal-rule`, `table` |
+| `full` | history; text: `heading`, `bold`, `italic`, `underline`, `strike`, `mark`, `code`; blocks: `bullet-list`, `ordered-list`, `quote`, `fold-heading`, `code-block`; links: `color`, `background-color`, `link`, `image`; insert: `formula`, `mermaid`, `html`, `horizontal-rule`, `table` |
 
-`bullet-list` and `ordered-list` open one list menu; `code` and `code-block` share one code menu. `color` opens a palette of `gray`, `yellow`, `orange`, `red`, `green`, `blue`, and `violet`; it applies the chosen color to the current selection or to subsequently typed text. `code-language` is local to a selected code block and intentionally cannot appear in the main toolbar.
+`bullet-list` and `ordered-list` open one list menu; `code` and `code-block` share one code menu. `color` and `background-color` open palettes of `gray`, `yellow`, `orange`, `red`, `green`, `blue`, and `violet`; the latter also offers `default` to clear the background. They apply the chosen style to the current selection or to subsequently typed text. `code-language` is local to a selected code block and intentionally cannot appear in the main toolbar.
 
 ```vue
 <script setup lang="ts">
