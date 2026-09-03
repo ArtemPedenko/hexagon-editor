@@ -33,6 +33,9 @@ function renderDirectiveComponents(): void {
 		const component = props.directiveComponents[name];
 		if (component === undefined) continue;
 		const content = target.textContent ?? '';
+		// `render()` appends its subtree to an unmanaged container. Remove the
+		// Markdown fallback text only after reading it for the component props.
+		target.replaceChildren();
 		const componentProps: MarkdownDirectiveComponentProps = {
 			content,
 			name,

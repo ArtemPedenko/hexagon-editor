@@ -33,7 +33,8 @@ describe('MarkdownRenderer', () => {
 		app.unmount();
 	});
 
-	it('renders registered directive components and preserves unknown directives', () => {
+	it('renders directive components without fallback text, preserves unknown directives, and updates content', async () => {
+		const content = ref('::: opros\nQuestion\n:::\n\n::: unknown\nSource\n:::');
 		const Opros = defineComponent({
 			props: {
 				content: { required: true, type: String },
@@ -45,14 +46,21 @@ describe('MarkdownRenderer', () => {
 		const target = document.createElement('div');
 		const app = createApp(() =>
 			h(MarkdownRenderer, {
-				content: '::: opros\nQuestion\n:::\n\n::: unknown\nSource\n:::',
+				content: content.value,
 				directiveComponents: { opros: Opros },
 			}),
 		);
 		app.mount(target);
 
 		expect(target.querySelector('[data-opros="opros"]')?.textContent).toBe('Question:true');
+		const registeredDirective = target.querySelector('[data-directive="opros"]');
+		expect([...registeredDirective?.childNodes ?? []].some((node) => node.nodeType === Node.TEXT_NODE)).toBe(false);
 		expect(target.querySelector('[data-directive="unknown"]')?.textContent).toBe('Source');
+
+		content.value = '::: opros\nUpdated question\n:::';
+		await nextTick();
+		await nextTick();
+		expect(target.querySelector('[data-opros="opros"]')?.textContent).toBe('Updated question:true');
 
 		app.unmount();
 	});
