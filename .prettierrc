@@ -6,7 +6,7 @@
 	"bracketSpacing": true,
 	"printWidth": 120,
 	"tabWidth": 2,
-	"useTabs": true,
+	"useTabs": false,
 	"arrowParens": "always",
 	"endOfLine": "lf",
 	"htmlWhitespaceSensitivity": "ignore",

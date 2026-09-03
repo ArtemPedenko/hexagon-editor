@@ -3,45 +3,46 @@ import tsParser from '@typescript-eslint/parser';
 import vue from 'eslint-plugin-vue';
 
 export default [
-    ...vue.configs['flat/recommended'],
-    {
-        files: ['**/*.{ts,tsx}'],
-        languageOptions: {
-            parser: tsParser,
-            parserOptions: {
-                ecmaVersion: 'latest',
-                sourceType: 'module',
-            },
-        },
-        plugins: {
-            '@typescript-eslint': tseslint,
-        },
-        rules: {
-            '@typescript-eslint/consistent-type-imports': 'error',
-            '@typescript-eslint/no-explicit-any': 'error',
-        },
+  ...vue.configs['flat/recommended'],
+  {
+    files: ['**/*.{ts,tsx}'],
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: {
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+      },
     },
-    {
-        files: ['**/*.vue'],
-        languageOptions: {
-            parserOptions: {
-                parser: tsParser,
-                ecmaVersion: 'latest',
-                sourceType: 'module',
-            },
-        },
-        plugins: {
-            '@typescript-eslint': tseslint,
-        },
-        rules: {
-            '@typescript-eslint/consistent-type-imports': 'error',
-            '@typescript-eslint/no-explicit-any': 'error',
-            'vue/html-self-closing': 'off',
-            'vue/max-attributes-per-line': 'off',
-            'vue/singleline-html-element-content-newline': 'off',
-        },
+    plugins: {
+      '@typescript-eslint': tseslint,
     },
-    {
-        ignores: ['**/dist/**', '**/node_modules/**', '**/coverage/**'],
+    rules: {
+      '@typescript-eslint/consistent-type-imports': 'error',
+      '@typescript-eslint/no-explicit-any': 'error',
     },
+  },
+  {
+    files: ['**/*.vue'],
+    languageOptions: {
+      parserOptions: {
+        parser: tsParser,
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+      },
+    },
+    plugins: {
+      '@typescript-eslint': tseslint,
+    },
+    rules: {
+      '@typescript-eslint/consistent-type-imports': 'error',
+      '@typescript-eslint/no-explicit-any': 'error',
+      'vue/html-self-closing': 'off',
+      'vue/max-attributes-per-line': 'off',
+      'vue/singleline-html-element-content-newline': 'off',
+      'vue/multi-word-component-names': 'off',
+    },
+  },
+  {
+    ignores: ['**/dist/**', '**/node_modules/**', '**/coverage/**'],
+  },
 ];
