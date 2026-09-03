@@ -16,7 +16,8 @@
     "test:e2e": "playwright test",
     "test:all": "pnpm test && pnpm test:e2e",
     "typecheck": "pnpm --recursive run typecheck",
-    "lint": "pnpm --recursive run lint"
+    "lint": "pnpm --recursive run lint",
+    "format": " pnpm exec prettier --write ."
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",

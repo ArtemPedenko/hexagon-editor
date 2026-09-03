@@ -1,7 +1,7 @@
 import type { Command, Plugin } from 'prosemirror-state';
 import type { AppContext } from 'vue';
 
-import type { MarkdownDirectiveComponents } from '../directives';
+import type { MarkdownDirectives } from '../directives';
 import type { SelectionContextOptions } from '../extensions/behavior/selection-context';
 import type { ImageObjectFit } from '../extensions/markdown/image';
 import type { TextColorName } from '../extensions/markdown/color';
@@ -90,7 +90,7 @@ export interface BasicWysiwygEditor {
 
 export interface MountBasicWysiwygEditorOptions {
   directiveAppContext?: AppContext;
-  directiveComponents?: MarkdownDirectiveComponents;
+  directives?: MarkdownDirectives;
   features?: MarkdownFeatures;
   editable?: boolean;
   initialValue?: string;

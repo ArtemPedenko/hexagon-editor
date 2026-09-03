@@ -4,6 +4,7 @@ export {
   basicMarkdownCodec,
   basicMarkdownSchema,
   createBasicEditorCommands,
+  insertDirective,
   getBasicWysiwygSelectionState,
   mountBasicWysiwygEditor,
 } from './basic-editor';

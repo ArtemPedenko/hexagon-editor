@@ -166,21 +166,21 @@ function save(markdown: string) {
 </template>
 ```
 
-| Prop                  | Тип / значение по умолчанию             | Назначение                                  |
-| --------------------- | --------------------------------------- | ------------------------------------------- |
-| `modelValue`          | `string`, `''`                          | Markdown-значение для `v-model`             |
-| `mode`                | `wysiwyg \| markup \| split`, `wysiwyg` | Режим, поддерживает `v-model:mode`          |
-| `locale`              | `ru \| en`, `ru`                        | Язык интерфейса                             |
-| `theme`               | `auto \| light \| dark`, `auto`         | Тема интерфейса                             |
-| `placeholder`         | `string`, `''`                          | Текст пустого визуального редактора         |
-| `readonly`            | `boolean`, `false`                      | Режим чтения: панель инструментов скрыта    |
-| `toolbarPreset`       | см. ниже, `default`                     | Встроенная конфигурация панели              |
-| `toolbarConfig`       | `MarkdownEditorToolbarConfig`           | Полностью заменяет выбранный preset         |
-| `features`            | `MarkdownFeatures`                      | Адаптеры математики, Mermaid и trusted HTML |
-| `directiveComponents` | `Record<string, Component>`             | Vue-компоненты для блоковых директив        |
-| `uploadImage`         | `(file: File) => Promise<string>`       | Обработчик загрузки в форме изображения     |
+| Prop            | Тип / значение по умолчанию             | Назначение                                  |
+| --------------- | --------------------------------------- | ------------------------------------------- |
+| `modelValue`    | `string`, `''`                          | Markdown-значение для `v-model`             |
+| `mode`          | `wysiwyg \| markup \| split`, `wysiwyg` | Режим, поддерживает `v-model:mode`          |
+| `locale`        | `ru \| en`, `ru`                        | Язык интерфейса                             |
+| `theme`         | `auto \| light \| dark`, `auto`         | Тема интерфейса                             |
+| `placeholder`   | `string`, `''`                          | Текст пустого визуального редактора         |
+| `readonly`      | `boolean`, `false`                      | Режим чтения: панель инструментов скрыта    |
+| `toolbarPreset` | см. ниже, `default`                     | Встроенная конфигурация панели              |
+| `toolbarConfig` | `MarkdownEditorToolbarConfig`           | Полностью заменяет выбранный preset         |
+| `features`      | `MarkdownFeatures`                      | Адаптеры математики, Mermaid и trusted HTML |
+| `directives`    | `MarkdownDirectives`                    | Плагины блоковых директив                   |
+| `uploadImage`   | `(file: File) => Promise<string>`       | Обработчик загрузки в форме изображения     |
 
-`modelValue`, `mode`, `locale`, `toolbarPreset`, `toolbarConfig`, `theme` и `uploadImage` обновляются без перемонтирования компонента. Изменение `mode`, `readonly` или `features` пересоздаёт editor hosts, поэтому текущие selection и история undo/redo сбрасываются. `placeholder` и `directiveComponents` применяются при следующем монтировании; чтобы обновить их у уже созданного редактора, измените его `:key`.
+`modelValue`, `mode`, `locale`, `toolbarPreset`, `toolbarConfig`, `theme` и `uploadImage` обновляются без перемонтирования компонента. Изменение `mode`, `readonly` или `features` пересоздаёт editor hosts, поэтому текущие selection и история undo/redo сбрасываются. `placeholder` и `directives` применяются при следующем монтировании; чтобы обновить их у уже созданного редактора, измените его `:key`.
 
 События: `update:modelValue`, `change` (новый Markdown), `update:mode` и `mode-change` (новый режим), а также `submit` и `cancel` без параметров. Последние возникают в визуальном редакторе по `Mod+Enter` и `Escape`; в режиме `markup` на них полагаться не следует. Компонент также принимает:
 
@@ -307,7 +307,7 @@ defineProps<{ content: string }>();
 
 Raw Markdown HTML отображается как исходный текст. HTML внутри директивы с пробелом после маркера — `::: html` — рендерится как HTML, а `:::html` является YFM-блоком. Передавайте в HTML только доверенный контент: пакет не санитизирует его.
 
-`MarkdownRenderer` также принимает `directiveComponents`; зарегистрированные компоненты монтируются в блоки `::: name`, получают `readonly: true`, а их `updateContent()` намеренно ничего не делает.
+`MarkdownRenderer` также принимает `directives`; зарегистрированные компоненты монтируются в блоки `::: name`, получают `readonly: true`, а их `updateContent()` и `updateAttrs()` намеренно ничего не делают.
 
 ## Опциональные движки: KaTeX, Mermaid и HTML
 
@@ -385,19 +385,28 @@ const props = defineProps<MarkdownDirectiveComponentProps>();
 import { MarkdownEditor } from 'hexagon-editor';
 import NoteDirective from './NoteDirective.vue';
 
-const directiveComponents = { note: NoteDirective };
+const directives = {
+  note: {
+    component: NoteDirective,
+    label: 'Note',
+    toolbar: true,
+    insert: { content: '', attrs: { variant: 'info' } },
+    parseAttributes: (raw: string) => JSON.parse(raw),
+    serializeAttributes: JSON.stringify,
+  },
+};
 </script>
 
 <template>
   <MarkdownEditor
     v-model="value"
-    :directive-components="directiveComponents"
+    :directives="directives"
   />
 </template>
 ```
 
 ```markdown
-::: note
+::: note {"variant":"info"}
 Текст заметки
 :::
 ```

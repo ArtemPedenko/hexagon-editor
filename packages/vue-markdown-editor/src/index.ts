@@ -14,7 +14,12 @@ export type {
 export type { ChangeEditorModeOptions, MarkdownEditorInitialOptions } from './public-types';
 export { Lang, configure, getConfig, subscribeConfigure } from './configure';
 export type { ConfigureSubscriber, MarkdownEditorConfig } from './configure';
-export type { MarkdownDirectiveComponentProps, MarkdownDirectiveComponents } from './directives';
+export type {
+  MarkdownDirectiveAttrs,
+  MarkdownDirectiveComponentProps,
+  MarkdownDirectivePlugin,
+  MarkdownDirectives,
+} from './directives';
 export { cn } from './classname';
 export { getMarkdownEditorMessages, markdownEditorMessages } from './i18n';
 export type { MarkdownEditorMessageKey, MarkdownEditorMessages } from './i18n';

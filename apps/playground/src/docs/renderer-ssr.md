@@ -2,11 +2,11 @@
 
 For document presentation import `MarkdownRenderer` and `hexagon-editor/renderer.css`. It is renderer-only: no editor UI, ProseMirror/CodeMirror hosts, v-model or editing events. `MarkdownEditor readonly` retains editor chrome and hosts but disables editing/hides toolbar.
 
-| Prop                  | Meaning                                                                                                                                          |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `content`             | Required Markdown source to render.                                                                                                              |
-| `directiveComponents` | Optional mapping from directive names to Vue components. Components mount with the current Vue app context and receive readonly directive props. |
-| `features`            | Optional math and Mermaid adapters. The renderer ignores `features.html`: `:::html` remains escaped source.                                      |
+| Prop         | Meaning                                                                                                             |
+| ------------ | ------------------------------------------------------------------------------------------------------------------- |
+| `content`    | Required Markdown source to render.                                                                                 |
+| `directives` | Optional directive plugins. Components mount with the current Vue app context and receive readonly directive props. |
+| `features`   | Optional math and Mermaid adapters. The renderer ignores `features.html`: `:::html` remains escaped source.         |
 
 | Need                                  | `MarkdownEditor readonly` | `MarkdownRenderer` |
 | ------------------------------------- | ------------------------: | -----------------: |

@@ -1,6 +1,6 @@
 ## Custom directives
 
-A directive is `::: name`, content, and a mandatory closing `:::`. In the current parser `name` is `\w+` (letters, digits, underscore); nesting is not supported. An unknown name remains a readable source-like block. In visual editor a registered component is mounted as a node view; in renderer it mounts into its render target. `directiveComponents` is read on host creation, so replace it with a component remount (`:key`) to apply it after mount.
+A directive is `::: name {attrs}`, content, and a mandatory closing `:::`. Attributes are passed to each plugin's parser; unknown names remain readable source-like blocks. In visual editor a registered component is mounted as a node view; in renderer it mounts into its render target. `directives` is read on host creation, so replace it with a component remount (`:key`) to apply it after mount.
 
 ```vue
 <script setup lang="ts">
@@ -27,12 +27,15 @@ import { MarkdownEditor } from 'hexagon-editor';
 import NoteDirective from './NoteDirective.vue';
 import WarningDirective from './WarningDirective.vue';
 const value = ref('::: note\nEditable note\n:::\n\n::: warning\nWarning\n:::');
-const directiveComponents = { note: NoteDirective, warning: WarningDirective };
+const directives = {
+  note: { component: NoteDirective, insert: { content: '', attrs: {} } },
+  warning: { component: WarningDirective, insert: { content: '', attrs: {} } },
+};
 </script>
 <template>
   <MarkdownEditor
     v-model="value"
-    :directive-components="directiveComponents"
+    :directives="directives"
   />
 </template>
 ```

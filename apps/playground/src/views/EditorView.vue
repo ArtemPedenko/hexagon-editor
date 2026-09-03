@@ -53,6 +53,10 @@ const advancedMarkdownDemo = [
   '',
   '<div data-demo-html>Raw HTML block</div>',
   '',
+  ':::html',
+  '<section>YFM HTML block</section>',
+  ':::',
+  '',
   '::: html',
   '<div>HTML directive</div>',
   ':::',
@@ -73,13 +77,22 @@ const advancedMarkdownDemo = [
   'console.log(editor);',
   '```',
   '',
-  '::: square',
+  '::: square {"size":120}',
   'qwe',
   ':::',
 ].join('\n');
 const markdown = ref(advancedMarkdownDemo);
 
-const directiveComponents = { square: Square };
+const directives = {
+  square: {
+    component: Square,
+    label: 'Square',
+    insert: { content: '', attrs: { size: 120 } },
+    parseAttributes: (raw: string) => JSON.parse(raw) as { size: number },
+    serializeAttributes: (attrs: { size: number }) => JSON.stringify(attrs),
+    toolbar: true,
+  },
+};
 
 async function uploadImage(file: File): Promise<string> {
   const formData = new FormData();
@@ -151,7 +164,7 @@ async function uploadImage(file: File): Promise<string> {
         :features="features"
         :toolbar-config="toolbarConfig"
         :upload-image="example === 'image-upload' ? uploadImage : undefined"
-        :directive-components="directiveComponents"
+        :directives="directives"
       />
       <aside class="playground__source-pane">
         <div class="playground__pane-title">Preview</div>
@@ -159,7 +172,7 @@ async function uploadImage(file: File): Promise<string> {
           class="playground__preview"
           :content="markdown"
           :features="features"
-          :directive-components="directiveComponents"
+          :directives="directives"
         />
       </aside>
     </section>

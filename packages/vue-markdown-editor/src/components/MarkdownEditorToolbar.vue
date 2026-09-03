@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import type { BasicEditorCommands, BasicWysiwygEditor, BasicWysiwygSelectionState } from '../core';
 import type { MarkdownEditorToolbarPreset } from '../public-types';
 import type { MarkdownEditorMode } from '../public-types';
@@ -13,6 +14,7 @@ import {
 import type { MarkdownEditorToolbarConfig, MarkdownEditorToolbarItem, MarkdownEditorToolbarItemId } from '../toolbar';
 import ToolbarIcon from './MarkdownEditorToolbarIcon.vue';
 import type { MarkdownEditorMessageKey } from '../i18n';
+import type { MarkdownDirectives } from '../directives';
 
 type ToolbarCommand = Parameters<BasicWysiwygEditor['run']>[0];
 
@@ -33,6 +35,7 @@ const props = defineProps<{
   toolbarPreset: MarkdownEditorToolbarPreset;
   toolbarConfig?: MarkdownEditorToolbarConfig;
   features?: MarkdownFeatures;
+  directives?: MarkdownDirectives;
   translate: (key: MarkdownEditorMessageKey) => string;
 }>();
 
@@ -56,6 +59,7 @@ function runItem(toolbarItem: MarkdownEditorToolbarItem, command: ToolbarCommand
 const emit = defineEmits<{
   execute: [id: MarkdownEditorToolbarItemId | undefined, command: ToolbarCommand];
   'insert-html': [];
+  'insert-directive': [name: string];
   'toggle-formula-menu': [reference: HTMLElement];
   'toggle-code-menu': [reference: HTMLElement];
   'toggle-background-color-menu': [reference: HTMLElement];
@@ -70,6 +74,10 @@ const emit = defineEmits<{
 function getButton(event: MouseEvent): HTMLElement {
   return event.currentTarget as HTMLElement;
 }
+
+const hasToolbarDirectives = computed(() =>
+  Object.values(props.directives ?? {}).some((directive) => directive.toolbar),
+);
 </script>
 
 <!-- eslint-disable vue/html-indent -->
@@ -363,6 +371,30 @@ function getButton(event: MouseEvent): HTMLElement {
             <ToolbarIcon name="table" />
           </button>
         </template>
+      </div>
+      <div
+        v-if="hasToolbarDirectives"
+        class="markdown-editor__toolbar-group"
+        data-toolbar-group="directives"
+        role="group"
+      >
+        <button
+          v-for="(directive, name) in directives"
+          v-show="directive.toolbar"
+          :key="name"
+          type="button"
+          :data-toolbar-item="`directive-${name}`"
+          :aria-label="directive.label ?? name"
+          :title="directive.label ?? name"
+          @mousedown.prevent
+          @click="emit('insert-directive', name)"
+        >
+          <component
+            :is="directive.icon"
+            v-if="directive.icon !== undefined"
+          />
+          <span v-else>{{ directive.label ?? name }}</span>
+        </button>
       </div>
       <slot
         :commands="commands"

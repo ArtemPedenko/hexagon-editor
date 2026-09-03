@@ -3,19 +3,21 @@ import { computed, getCurrentInstance, h, nextTick, onBeforeUnmount, onMounted, 
 
 import { renderMarkdownContent } from './markdown';
 import type { MarkdownFeatures } from '../public-types';
-import type { MarkdownDirectiveComponentProps, MarkdownDirectiveComponents } from '../directives';
+import { normalizeMarkdownDirectives } from '../directives';
+import type { MarkdownDirectiveComponentProps, MarkdownDirectives } from '../directives';
 
 defineOptions({ name: 'MarkdownRenderer' });
 
 const props = defineProps<{
   content: string;
-  directiveComponents?: MarkdownDirectiveComponents;
+  directives?: MarkdownDirectives;
   features?: MarkdownFeatures;
 }>();
 
 const root = ref<HTMLElement>();
 const appContext = getCurrentInstance()?.appContext;
-const renderedContent = computed(() => renderMarkdownContent(props.content, props.features));
+const directives = computed(() => normalizeMarkdownDirectives(props.directives));
+const renderedContent = computed(() => renderMarkdownContent(props.content, props.features, directives.value));
 let renderVersion = 0;
 let destroyed = false;
 let directiveTargets: HTMLElement[] = [];
@@ -27,22 +29,23 @@ function unmountDirectiveComponents(): void {
 
 function renderDirectiveComponents(): void {
   unmountDirectiveComponents();
-  if (props.directiveComponents === undefined) return;
   for (const target of root.value?.querySelectorAll<HTMLElement>('[data-directive]') ?? []) {
     const name = target.dataset.directive ?? '';
-    const component = props.directiveComponents[name];
-    if (component === undefined) continue;
+    const plugin = directives.value[name];
+    if (plugin === undefined) continue;
     const content = target.textContent ?? '';
     // `render()` appends its subtree to an unmanaged container. Remove the
     // Markdown fallback text only after reading it for the component props.
     target.replaceChildren();
     const componentProps: MarkdownDirectiveComponentProps = {
+      attrs: JSON.parse(decodeURIComponent(target.dataset.directiveAttrs ?? '%7B%7D')) as Record<string, unknown>,
       content,
       name,
       readonly: true,
       updateContent: () => undefined,
+      updateAttrs: () => undefined,
     };
-    const vnode = h(component, componentProps);
+    const vnode = h(plugin.component, componentProps);
     vnode.appContext = appContext ?? null;
     render(vnode, target);
     directiveTargets.push(target);
@@ -81,7 +84,7 @@ async function renderMermaidDiagrams(): Promise<void> {
 }
 
 watch(
-  () => [props.content, props.directiveComponents] as const,
+  () => [props.content, props.directives] as const,
   async () => {
     renderVersion += 1;
     await nextTick();

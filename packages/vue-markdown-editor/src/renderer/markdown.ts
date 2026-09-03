@@ -7,8 +7,10 @@ import subPlugin from 'markdown-it-sub';
 import { configureColorMarkdown } from '../extensions/markdown/color';
 import { configureBackgroundColorMarkdown } from '../extensions/markdown/background-color';
 import type { MarkdownFeatures } from '../public-types';
+import type { MarkdownDirectives } from '../directives';
 
 interface RendererEnvironment {
+  directiveAttributes?: Array<{ name: string; raw: string }>;
   foldingHeadings?: number[];
   features?: MarkdownFeatures;
 }
@@ -55,7 +57,7 @@ function configureMath(markdown: MarkdownIt): void {
       const token = state.push('math_block', '', 0);
       token.content = state.getLines(startLine + 1, line, 0, false).trim();
     }
-    state.line = line + 1;
+    if (!silent) state.line = line + 1;
     return true;
   });
 }
@@ -70,19 +72,21 @@ function configureBlocks(markdown: MarkdownIt): void {
       const token = state.push('yfm_html_block', '', 0);
       token.content = state.getLines(startLine + 1, line, 0, false).trim();
     }
-    state.line = line + 1;
+    if (!silent) state.line = line + 1;
     return true;
   });
   markdown.block.ruler.before('fence', 'directive', (state, startLine, endLine, silent) => {
     const opening = state.getLines(startLine, startLine + 1, 0, false).trim();
-    const match = opening.match(/^:::\s*(\w+)\s*$/);
+    const match = opening.match(/^:::\s*(\w+)(?:\s+(\{.*\}))?\s*$/);
     if (match === null) return false;
     let line = startLine + 1;
     while (line < endLine && state.getLines(line, line + 1, 0, false).trim() !== ':::') line += 1;
     if (line === endLine) return false;
     if (!silent) {
       const token = state.push('directive', '', 0);
-      token.info = match[1] ?? 'note';
+      token.info = `${match[1] ?? 'note'}\u0000${match[2] ?? ''}`;
+      token.meta = { rawAttrs: match[2] ?? '' };
+      token.attrSet('data-raw-attrs', match[2] ?? '');
       token.content = state.getLines(startLine + 1, line, 0, false).trim();
     }
     state.line = line + 1;
@@ -204,7 +208,7 @@ function configureQuoteLinks(markdown: MarkdownIt): void {
   });
 }
 
-function configureRenderer(markdown: MarkdownIt): void {
+function configureRenderer(markdown: MarkdownIt, directives: MarkdownDirectives): void {
   markdown.renderer.rules.inline_math = (tokens, index, _options, environment) =>
     renderMath(tokens[index]?.content ?? '', false, (environment as RendererEnvironment).features);
   markdown.renderer.rules.math_block = (tokens, index, _options, environment) =>
@@ -213,10 +217,24 @@ function configureRenderer(markdown: MarkdownIt): void {
     `<div data-mermaid aria-busy="true"><pre>${htmlEscape(tokens[index]?.content ?? '')}</pre></div>\n`;
   markdown.renderer.rules.yfm_html_block = (tokens, index) =>
     `<p data-yfm-html>:::html<br>${htmlEscape(tokens[index]?.content ?? '')}<br>:::</p>\n`;
-  markdown.renderer.rules.directive = (tokens, index) => {
+  markdown.renderer.rules.directive = (tokens, index, _options, environment) => {
     const token = tokens[index];
-    if (token?.info === 'html') return `${token.content}\n`;
-    return `<div data-directive="${htmlEscape(token?.info || 'note')}">${htmlEscape(token?.content ?? '')}</div>\n`;
+    const [name = 'note', encodedAttrs = ''] = (token?.info ?? 'note').split('\u0000', 2);
+    if (name === 'html') return `${token?.content ?? ''}\n`;
+    const headers = (environment as RendererEnvironment).directiveAttributes;
+    const headerIndex = headers?.findIndex((header) => header.name === name) ?? -1;
+    const header = headerIndex >= 0 ? headers?.splice(headerIndex, 1)[0] : undefined;
+    const rawAttrs = header?.raw || encodedAttrs || String(token?.attrGet('data-raw-attrs') ?? '');
+    let attrs: Record<string, unknown> = {};
+    const plugin = directives[name];
+    if (rawAttrs && plugin?.parseAttributes !== undefined) {
+      try {
+        attrs = plugin.parseAttributes(rawAttrs.slice(1, -1)) as Record<string, unknown>;
+      } catch {
+        /* safe empty attrs */
+      }
+    }
+    return `<div data-directive="${htmlEscape(name)}" data-directive-attrs="${htmlEscape(encodeURIComponent(JSON.stringify(attrs)))}">${htmlEscape(token?.content ?? '')}</div>\n`;
   };
   markdown.renderer.rules.html_block = (tokens, index) =>
     `<div data-raw-html>${htmlEscape(tokens[index]?.content ?? '')}</div>\n`;
@@ -294,7 +312,7 @@ function isEscaped(source: string, position: number): boolean {
   return slashes % 2 === 1;
 }
 
-function createMarkdownRenderer(): MarkdownIt {
+function createMarkdownRenderer(directives: MarkdownDirectives = {}): MarkdownIt {
   const markdown = new MarkdownIt('commonmark', { html: true })
     .enable('table')
     .enable('strikethrough')
@@ -308,15 +326,23 @@ function createMarkdownRenderer(): MarkdownIt {
   configureQuoteLinks(markdown);
   configureBackgroundColorMarkdown(markdown);
   configureColorMarkdown(markdown);
-  configureRenderer(markdown);
+  configureRenderer(markdown, directives);
   return markdown;
 }
 
-const renderer = createMarkdownRenderer();
-
-export function renderMarkdownContent(content: string, features: MarkdownFeatures = {}): string {
-  const environment: RendererEnvironment = { features };
-  const result = renderer.render(content, environment);
+export function renderMarkdownContent(
+  content: string,
+  features: MarkdownFeatures = {},
+  directives: MarkdownDirectives = {},
+): string {
+  const environment: RendererEnvironment = {
+    directiveAttributes: [...content.matchAll(/^:::\s*(\w+)(?:\s+(\{.*\}))?\s*$/gm)].map((match) => ({
+      name: match[1] ?? 'note',
+      raw: match[2] ?? '',
+    })),
+    features,
+  };
+  const result = createMarkdownRenderer(directives).render(content, environment);
   const unclosedSections = environment.foldingHeadings?.length ?? 0;
   return result + '</details>'.repeat(unclosedSections);
 }

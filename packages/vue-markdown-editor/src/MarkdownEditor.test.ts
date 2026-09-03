@@ -616,7 +616,7 @@ describe('MarkdownEditor', () => {
     const target = document.createElement('div');
     const app = createApp(() =>
       h(MarkdownEditor, {
-        directiveComponents: { opros: Opros },
+        directives: { opros: { component: Opros, insert: { attrs: {}, content: '' } } },
         modelValue: modelValue.value,
         'onUpdate:modelValue': (value: string) => {
           modelValue.value = value;

@@ -8,7 +8,7 @@
 | `locale`                                                                         | without remount       | Re-localizes rendered math                                 |
 | `readonly`, `features`, `mode`                                                   | recreate editor hosts | Local selection/history reset                              |
 | `modelValue`, `locale`, `toolbarPreset`, `toolbarConfig`, `theme`, `uploadImage` | without remount       | Values/toolbar/form presentation update reactively         |
-| `placeholder`, `directiveComponents`                                             | next mount            | Not watched after host creation; change `:key` to force it |
+| `placeholder`, `directives`                                                      | next mount            | Not watched after host creation; change `:key` to force it |
 
 `toolbarConfig` replaces preset groups, but never the mode switch. The `toolbar` slot **adds to** built-in groups; it does not replace them. Its props are:
 

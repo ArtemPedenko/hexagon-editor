@@ -1,2 +1,7 @@
 export { default as MarkdownRenderer } from './MarkdownRenderer.vue';
-export type { MarkdownDirectiveComponentProps, MarkdownDirectiveComponents } from '../directives';
+export type {
+  MarkdownDirectiveAttrs,
+  MarkdownDirectiveComponentProps,
+  MarkdownDirectivePlugin,
+  MarkdownDirectives,
+} from '../directives';

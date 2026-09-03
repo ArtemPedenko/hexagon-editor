@@ -47,13 +47,13 @@ describe('MarkdownRenderer', () => {
     const app = createApp(() =>
       h(MarkdownRenderer, {
         content: content.value,
-        directiveComponents: { opros: Opros },
+        directives: { opros: { component: Opros, insert: { attrs: {}, content: '' } } },
       }),
     );
     app.mount(target);
 
-    expect(target.querySelector('[data-opros="opros"]')?.textContent).toBe('Question:true');
     const registeredDirective = target.querySelector('[data-directive="opros"]');
+    expect(target.querySelector('[data-opros="opros"]')?.textContent).toBe('Question:true');
     expect([...(registeredDirective?.childNodes ?? [])].some((node) => node.nodeType === Node.TEXT_NODE)).toBe(false);
     expect(target.querySelector('[data-directive="unknown"]')?.textContent).toBe('Source');
 

@@ -10,8 +10,8 @@ import type { AppContext } from 'vue';
 
 import 'prosemirror-view/style/prosemirror.css';
 
-import { basicMarkdownCodec, basicMarkdownSchema } from './basic-editor-markdown';
-export { basicMarkdownCodec, basicMarkdownSchema } from './basic-editor-markdown';
+import { basicMarkdownCodec, basicMarkdownSchema, createBasicMarkdownCodec } from './basic-editor-markdown';
+export { basicMarkdownCodec, basicMarkdownSchema, createBasicMarkdownCodec } from './basic-editor-markdown';
 import {
   atomicSourcePluginKey,
   createAtomicSourceEditorPlugin,
@@ -68,7 +68,7 @@ import {
 import { toggleFoldingHeading } from '../extensions/additional/folding-heading';
 import { defaultMathLatex } from '../extensions/additional/math';
 import { insertMermaid } from '../extensions/additional/mermaid';
-import type { MarkdownDirectiveComponentProps, MarkdownDirectiveComponents } from '../directives';
+import type { MarkdownDirectiveComponentProps, MarkdownDirectives } from '../directives';
 import { createFeatureNodeViews } from './basic-editor-renderers';
 
 export function createMarkdownTablePastePlugin(): Plugin {
@@ -126,6 +126,27 @@ function insertHtmlAndEdit(state: EditorState, dispatch?: (transaction: Transact
     dispatch(transaction);
   }
   return true;
+}
+
+export function insertDirective(
+  name: string,
+  content: string,
+  attrs: Record<string, unknown> = {},
+): import('prosemirror-state').Command {
+  return (state, dispatch) => {
+    const { $from, empty } = state.selection;
+    if (!empty || !$from.parent.isTextblock) return false;
+    const node = getBasicNodeType(state.schema, 'directive').create({ attrs, content, name, rawAttrs: '' });
+    const replaceCurrentBlock = $from.parent.content.size === 0;
+    const position = replaceCurrentBlock ? $from.before() : $from.after();
+    if (dispatch !== undefined) {
+      const transaction = replaceCurrentBlock
+        ? state.tr.replaceWith(position, $from.after(), node)
+        : state.tr.insert(position, node);
+      dispatch(transaction.setMeta(atomicSourcePluginKey, transaction.mapping.map(position, -1)).scrollIntoView());
+    }
+    return true;
+  };
 }
 
 /** Framework-agnostic commands consumed later by the Vue toolbar and shortcuts. */
@@ -192,7 +213,7 @@ export function getBasicWysiwygSelectionState(state: EditorState): BasicWysiwygS
  */
 export function mountBasicWysiwygEditor({
   directiveAppContext,
-  directiveComponents,
+  directives,
   features = {},
   editable = true,
   initialValue = '',
@@ -205,6 +226,7 @@ export function mountBasicWysiwygEditor({
   selectionContext,
   target,
 }: MountBasicWysiwygEditorOptions): BasicWysiwygEditor {
+  const codec = createBasicMarkdownCodec(directives);
   const commands = createBasicEditorCommands();
   const listItem = basicMarkdownSchema.nodes.list_item;
   if (listItem === undefined) {
@@ -212,7 +234,7 @@ export function mountBasicWysiwygEditor({
   }
   let view: EditorView;
   const editorState = EditorState.create({
-    doc: basicMarkdownCodec.parse(initialValue),
+    doc: codec.parse(initialValue),
     plugins: [
       createAtomicSourceEditorPlugin(),
       createUpstreamTableControlsPlugin(),
@@ -240,33 +262,34 @@ export function mountBasicWysiwygEditor({
       };
     }
   }
+  const featureNodeViews = createFeatureNodeViews(features);
   view = new EditorView(target, {
     dispatchTransaction(transaction) {
       const state = view.state.apply(transaction);
       view.updateState(state);
       if (transaction.docChanged) {
-        onChange?.(basicMarkdownCodec.serialize(state.doc));
+        onChange?.(codec.serialize(state.doc));
       }
       onSelectionChange?.(getBasicWysiwygSelectionState(state));
     },
     editable: () => editable,
     nodeViews: {
-      ...createFeatureNodeViews(features),
-      ...(directiveComponents === undefined
+      ...featureNodeViews,
+      ...(directives === undefined
         ? {}
         : {
-            directive: createDirectiveNodeView(directiveComponents, editable, directiveAppContext),
+            directive: createDirectiveNodeView(directives, editable, directiveAppContext, featureNodeViews.directive),
           }),
     },
     state: editorState,
   });
-  const contentHandler = new WysiwygContentHandler(view, basicMarkdownCodec);
+  const contentHandler = new WysiwygContentHandler(view, codec);
   onSelectionChange?.(getBasicWysiwygSelectionState(view.state));
 
   return {
     destroy: () => view.destroy(),
     focus: () => view.focus(),
-    getValue: () => basicMarkdownCodec.serialize(view.state.doc),
+    getValue: () => codec.serialize(view.state.doc),
     hasFocus: () => view.hasFocus(),
     insert: (markup) => contentHandler.insert(markup),
     moveCursor: (position) => contentHandler.moveCursor(position),
@@ -286,7 +309,7 @@ export function mountBasicWysiwygEditor({
       view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, from, to)));
     },
     setValue: (value) => {
-      if (value === basicMarkdownCodec.serialize(view.state.doc)) {
+      if (value === codec.serialize(view.state.doc)) {
         return;
       }
       contentHandler.replace(value);
@@ -295,11 +318,14 @@ export function mountBasicWysiwygEditor({
 }
 
 function createDirectiveNodeView(
-  components: MarkdownDirectiveComponents,
+  directives: MarkdownDirectives,
   editable: boolean,
   appContext?: AppContext,
+  fallback?: NodeViewConstructor,
 ): NodeViewConstructor {
-  return (node, view, getPos) => {
+  return (node, view, getPos, decorations, innerDecorations) => {
+    if (String(node.attrs.name) === 'html' && fallback !== undefined)
+      return fallback(node, view, getPos, decorations, innerDecorations);
     const dom = document.createElement('div');
     dom.setAttribute('data-directive', String(node.attrs.name));
     const mountTarget = document.createElement('div');
@@ -317,22 +343,37 @@ function createDirectiveNodeView(
         }),
       );
     };
+    const updateAttrs = (attrs: Record<string, unknown>): void => {
+      if (!editable) return;
+      const position = getPos();
+      if (position === undefined) return;
+      view.dispatch(
+        view.state.tr.setNodeMarkup(position, undefined, {
+          ...state.node.attrs,
+          attrs,
+          attrsParseFailed: false,
+          rawAttrs: '',
+        }),
+      );
+    };
     const renderComponent = (): void => {
       const name = String(state.node.attrs.name);
-      const component = components[name];
+      const plugin = directives[name];
       dom.setAttribute('data-directive', name);
-      if (component === undefined) {
+      if (plugin === undefined) {
         render(null, mountTarget);
         mountTarget.textContent = String(state.node.attrs.content);
         return;
       }
       const props: MarkdownDirectiveComponentProps = {
+        attrs: state.node.attrs.attrs as Record<string, unknown>,
         content: String(state.node.attrs.content),
         name,
         readonly: !editable,
         updateContent,
+        updateAttrs,
       };
-      const vnode = h(component, props);
+      const vnode = h(plugin.component, props);
       vnode.appContext = appContext ?? null;
       render(vnode, mountTarget);
     };

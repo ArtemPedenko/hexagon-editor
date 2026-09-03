@@ -28,7 +28,9 @@ import type {
   MarkdownFeatures,
 } from './public-types';
 import type { MarkdownEditorToolbarConfig, MarkdownEditorToolbarItemId } from './toolbar';
-import type { MarkdownDirectiveComponents } from './directives';
+import { normalizeMarkdownDirectives } from './directives';
+import type { MarkdownDirectives } from './directives';
+import { insertDirective } from './core';
 import type { TextBackgroundColorName } from './extensions/markdown/background-color';
 import type { TextColorName } from './extensions/markdown/color';
 
@@ -53,7 +55,7 @@ defineOptions({ name: 'MarkdownEditor' });
 const props = withDefaults(
   defineProps<{
     modelValue?: string;
-    directiveComponents?: MarkdownDirectiveComponents;
+    directives?: MarkdownDirectives;
     mode?: MarkdownEditorMode;
     locale?: MarkdownEditorLocale;
     placeholder?: string;
@@ -67,7 +69,7 @@ const props = withDefaults(
   }>(),
   {
     modelValue: '',
-    directiveComponents: undefined,
+    directives: undefined,
     mode: 'wysiwyg',
     locale: 'ru',
     placeholder: '',
@@ -90,6 +92,7 @@ const emit = defineEmits<{
 }>();
 
 const commands = createBasicEditorCommands();
+const directives = computed(() => normalizeMarkdownDirectives(props.directives));
 const markupCommands = createBasicMarkupCommands();
 const appContext = getCurrentInstance()?.appContext;
 const markupTarget = ref<HTMLElement>();
@@ -400,6 +403,15 @@ function insertHtmlDirective(): void {
   else visualEditor?.run(commands.insertHtml);
 }
 
+function insertPluginDirective(name: string): void {
+  const plugin = directives.value[name];
+  if (plugin?.insert === undefined) return;
+  const { attrs, content } = plugin.insert;
+  const markup = `::: ${name}${plugin.serializeAttributes?.(attrs) ? ` {${plugin.serializeAttributes(attrs)}}` : ''}\n${content}\n:::`;
+  if (shouldRunMarkupCommand()) markupEditor?.insert(markup);
+  else visualEditor?.run(insertDirective(name, content, attrs as Record<string, unknown>));
+}
+
 async function insertMathBlock(): Promise<void> {
   formulaPanel.close();
   if (toolbarState.value.formula) {
@@ -462,7 +474,7 @@ function mountHosts(): void {
   if (mode.value !== 'markup' && visualTarget.value !== undefined) {
     visualEditor = mountBasicWysiwygEditor({
       directiveAppContext: appContext,
-      directiveComponents: props.directiveComponents,
+      directives: props.directives === undefined ? undefined : directives.value,
       features: props.features,
       editable: !props.readonly,
       initialValue: value.value,
@@ -663,9 +675,11 @@ defineExpose<MarkdownEditorExposed>({
       :toolbar-preset="toolbarPreset"
       :toolbar-config="toolbarConfig"
       :features="features"
+      :directives="props.directives === undefined ? undefined : directives"
       :translate="t"
       @execute="execute"
       @insert-html="insertHtmlDirective"
+      @insert-directive="insertPluginDirective"
       @toggle-formula-menu="toggleFormulaMenu"
       @toggle-code-menu="toggleCodeMenu"
       @toggle-background-color-menu="toggleBackgroundColorMenu"

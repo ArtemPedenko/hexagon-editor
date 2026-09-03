@@ -64,6 +64,7 @@ import { TableNode, tableNodeSpecs, tableSerializerNodes } from '../extensions/m
 import { ExtensionsManager } from './extensions-manager';
 import type { ExtensionBuilder } from './extension-builder';
 import { defaultMarkdownSchema, MarkdownCodec } from './markdown';
+import type { MarkdownDirectives } from '../directives';
 
 const basicMarks: Record<string, MarkSpec> = {
   ins: underlineMarkSpec,
@@ -102,7 +103,13 @@ const extendedMarkdownNodes: Record<string, NodeSpec> = {
   quote_link: quoteLinkNodeSpec,
   directive: {
     atom: true,
-    attrs: { content: { default: '' }, name: { default: 'note' } },
+    attrs: {
+      attrs: { default: {} },
+      content: { default: '' },
+      name: { default: 'note' },
+      rawAttrs: { default: '' },
+      attrsParseFailed: { default: false },
+    },
     group: 'block',
     toDOM: (node) => ['pre', { 'data-directive': node.attrs.name }, node.attrs.content],
   },
@@ -178,7 +185,7 @@ const tableTokenSpecs: Record<string, ParseSpec> = {
   ...htmlTokenSpecs,
   directive: {
     node: 'directive',
-    getAttrs: (token) => ({ content: token.content, name: token.info }),
+    getAttrs: (token) => token.meta,
   },
   heading: {
     block: 'heading',
@@ -200,7 +207,10 @@ const tableTokenSpecs: Record<string, ParseSpec> = {
   yfm_html_block: { block: 'yfm_html_block', noCloseToken: true },
 };
 
-export function createExtendedMarkdownIt(markdown = new MarkdownIt('commonmark', { html: false })): MarkdownIt {
+export function createExtendedMarkdownIt(
+  markdown = new MarkdownIt('commonmark', { html: false }),
+  directives: MarkdownDirectives = {},
+): MarkdownIt {
   markdown.enable('table').use(deflist).use(markPlugin).enable('strikethrough').use(subPlugin).use(insPlugin);
   configureMathMarkdown(markdown);
   configureMermaidMarkdown(markdown);
@@ -250,7 +260,7 @@ export function createExtendedMarkdownIt(markdown = new MarkdownIt('commonmark',
   });
   markdown.block.ruler.before('fence', 'directive', (state, startLine, endLine, silent) => {
     const start = state.getLines(startLine, startLine + 1, 0, false).trim();
-    const match = start.match(/^:::\s*(\w+)\s*$/);
+    const match = start.match(/^:::\s*(\w+)(?:\s+(\{.*\}))?\s*$/);
     if (match === null || start === ':::html') return false;
     let line = startLine + 1;
     while (line < endLine && state.getLines(line, line + 1, 0, false).trim() !== ':::') line += 1;
@@ -259,23 +269,32 @@ export function createExtendedMarkdownIt(markdown = new MarkdownIt('commonmark',
       const token = state.push('directive', '', 0);
       token.content = state.getLines(startLine + 1, line, 0, false).trim();
       token.info = match[1] ?? 'note';
+      const rawAttrs = match[2] ?? '';
+      const plugin = directives[token.info];
+      let attrs: Record<string, unknown> = {};
+      let attrsParseFailed = false;
+      if (rawAttrs && plugin?.parseAttributes !== undefined) {
+        try {
+          attrs = plugin.parseAttributes(rawAttrs.slice(1, -1)) as Record<string, unknown>;
+        } catch {
+          attrsParseFailed = true;
+        }
+      }
+      token.meta = { attrs, attrsParseFailed, content: token.content, name: token.info, rawAttrs };
     }
-    state.line = line + 1;
+    if (!silent) state.line = line + 1;
     return true;
   });
   return markdown;
 }
 
-const basicMarkdownParserExtension = (builder: ExtensionBuilder) => {
-  builder.configureMd(createExtendedMarkdownIt);
-  for (const [name, token] of Object.entries(tableTokenSpecs)) builder.addParserToken(name, token);
-  builder.addParserToken('mermaid', mermaidTokenSpec);
-};
-
-const basicMarkdownParser = ExtensionsManager.process(basicMarkdownParserExtension, {
-  baseSchema: basicMarkdownSchema,
-  markdown: { html: false },
-}).textParser;
+const basicMarkdownParserExtension =
+  (directives: MarkdownDirectives = {}) =>
+  (builder: ExtensionBuilder) => {
+    builder.configureMd((markdown) => createExtendedMarkdownIt(markdown, directives));
+    for (const [name, token] of Object.entries(tableTokenSpecs)) builder.addParserToken(name, token);
+    builder.addParserToken('mermaid', mermaidTokenSpec);
+  };
 
 const basicMarkdownSerializerNodes = {
   blockquote: serializeBlockquote,
@@ -295,10 +314,6 @@ const basicMarkdownSerializerNodes = {
   definition_term(state: MarkdownSerializerState, node: ProseMirrorNode) {
     state.renderInline(node);
     state.write('\n: ');
-  },
-  directive(state: MarkdownSerializerState, node: ProseMirrorNode) {
-    state.write(`::: ${node.attrs.name}\n${node.attrs.content}\n:::`);
-    state.closeBlock(node);
   },
   ...mathSerializerNodes,
   mermaid: serializeMermaid,
@@ -352,16 +367,31 @@ const basicMarkdownSerializerMarks = {
   underline: { close: '++', open: '++' },
 };
 
-const basicMarkdownSerializer = ExtensionsManager.process(
-  (builder) => {
-    basicMarkdownParserExtension(builder);
-    for (const [name, token] of Object.entries(basicMarkdownSerializerNodes)) builder.addNodeSerializer(name, token);
-    for (const [name, token] of Object.entries(basicMarkdownSerializerMarks)) builder.addMarkSerializer(name, token);
-  },
-  { baseSchema: basicMarkdownSchema, markdown: { html: false } },
-).serializer;
+export function createBasicMarkdownCodec(directives: MarkdownDirectives = {}): MarkdownCodec {
+  const parser = ExtensionsManager.process(basicMarkdownParserExtension(directives), {
+    baseSchema: basicMarkdownSchema,
+    markdown: { html: false },
+  }).textParser;
+  const serializer = ExtensionsManager.process(
+    (builder) => {
+      basicMarkdownParserExtension(directives)(builder);
+      for (const [name, token] of Object.entries(basicMarkdownSerializerNodes)) builder.addNodeSerializer(name, token);
+      builder.addNodeSerializer('directive', (state: MarkdownSerializerState, node: ProseMirrorNode) => {
+        const plugin = directives[String(node.attrs.name)];
+        let rawAttrs = String(node.attrs.rawAttrs ?? '');
+        if (!node.attrs.attrsParseFailed && plugin?.serializeAttributes !== undefined) {
+          const serialized = plugin.serializeAttributes(node.attrs.attrs);
+          rawAttrs = serialized ? `{${serialized}}` : '';
+        }
+        state.write(`::: ${node.attrs.name}${rawAttrs ? ` ${rawAttrs}` : ''}\n${node.attrs.content}\n:::`);
+        state.closeBlock(node);
+      });
+      for (const [name, token] of Object.entries(basicMarkdownSerializerMarks)) builder.addMarkSerializer(name, token);
+    },
+    { baseSchema: basicMarkdownSchema, markdown: { html: false } },
+  ).serializer;
 
-export const basicMarkdownCodec = new MarkdownCodec({
-  parser: basicMarkdownParser,
-  serializer: basicMarkdownSerializer,
-});
+  return new MarkdownCodec({ parser, serializer });
+}
+
+export const basicMarkdownCodec = createBasicMarkdownCodec();
