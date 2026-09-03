@@ -9,11 +9,11 @@ pnpm add hexagon-editor
 For Vue with Vite, import the complete stylesheet once in `main.ts`. Library JavaScript entry points do not import CSS as a side effect, so this explicit import is required.
 
 ```ts
-import {createApp} from 'vue'
-import App from './App.vue'
-import 'hexagon-editor/style.css'
+import { createApp } from 'vue';
+import App from './App.vue';
+import 'hexagon-editor/style.css';
 
-createApp(App).mount('#app')
+createApp(App).mount('#app');
 ```
 
 ## Your first editor and preview
@@ -22,15 +22,19 @@ createApp(App).mount('#app')
 
 ```vue
 <script setup lang="ts">
-import {ref} from 'vue'
-import {MarkdownEditor} from 'hexagon-editor'
-import {MarkdownRenderer} from 'hexagon-editor/renderer'
+import { ref } from 'vue';
+import { MarkdownEditor } from 'hexagon-editor';
+import { MarkdownRenderer } from 'hexagon-editor/renderer';
 
-const markdown = ref('# Hello\n\nStart writing.')
+const markdown = ref('# Hello\n\nStart writing.');
 </script>
 
 <template>
-  <MarkdownEditor v-model="markdown" locale="en" toolbar-preset="full" />
+  <MarkdownEditor
+    v-model="markdown"
+    locale="en"
+    toolbar-preset="full"
+  />
   <MarkdownRenderer :content="markdown" />
 </template>
 ```
@@ -43,7 +47,7 @@ Register styles through Nuxt configuration. Use `renderer.css` when the applicat
 // nuxt.config.ts
 export default defineNuxtConfig({
   css: ['hexagon-editor/style.css'],
-})
+});
 ```
 
 The visual and markup editors require a browser DOM. `MarkdownRenderer` is SSR-compatible. Keep persisted values as Markdown, provide your own image storage, and do not enable trusted HTML for untrusted input without sanitizing it.

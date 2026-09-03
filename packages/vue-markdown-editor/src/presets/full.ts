@@ -27,33 +27,33 @@ import { DefaultPreset } from './default';
 import type { DefaultPresetOptions } from './default';
 
 export interface FullPresetOptions extends DefaultPresetOptions {
-	cursor?: CursorOptions;
-	editorModeKeymap?: EditorModeKeymapOptions;
-	history?: HistoryOptions;
-	placeholder?: PlaceholderOptions;
-	selectionContext?: SelectionContextOptions;
+  cursor?: CursorOptions;
+  editorModeKeymap?: EditorModeKeymapOptions;
+  history?: HistoryOptions;
+  placeholder?: PlaceholderOptions;
+  selectionContext?: SelectionContextOptions;
 }
 
 /** Full preset restricted to the extensions included in the Vue port scope. */
 export const FullPreset: ExtensionAuto<FullPresetOptions> = (builder, options) => {
-	builder
-		.use(DefaultPreset, options)
-		.use(FoldingHeading)
-		.use(Math)
-		.use(Mermaid)
-		.use(QuoteLink)
-		.use(YfmHtmlBlock)
-		.use(Deflist)
-		.use(Mark)
-		.use(Subscript)
-		.use(Underline)
-		.use(History, options.history ?? {})
-		.use(Placeholder, options.placeholder ?? {})
-		.use(Clipboard)
-		.use(Cursor, options.cursor ?? {})
-		.use(Selection)
-		.use(ClicksOnEdges)
-		.use(EditorModeKeymap, options.editorModeKeymap ?? {})
-		.use(Resizable)
-		.use(SelectionContext, options.selectionContext ?? {});
+  builder
+    .use(DefaultPreset, options)
+    .use(FoldingHeading)
+    .use(Math)
+    .use(Mermaid)
+    .use(QuoteLink)
+    .use(YfmHtmlBlock)
+    .use(Deflist)
+    .use(Mark)
+    .use(Subscript)
+    .use(Underline)
+    .use(History, options.history ?? {})
+    .use(Placeholder, options.placeholder ?? {})
+    .use(Clipboard)
+    .use(Cursor, options.cursor ?? {})
+    .use(Selection)
+    .use(ClicksOnEdges)
+    .use(EditorModeKeymap, options.editorModeKeymap ?? {})
+    .use(Resizable)
+    .use(SelectionContext, options.selectionContext ?? {});
 };

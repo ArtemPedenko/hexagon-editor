@@ -8,89 +8,89 @@ import type { ImageObjectFit } from '../extensions/markdown/image';
 import { insertTable } from '../extensions/markdown/table';
 
 export function getBasicNodeType(schema: Schema, name: string) {
-	const nodeType = schema.nodes[name];
-	if (nodeType === undefined) throw new Error(`Missing basic editor node type: ${name}`);
-	return nodeType;
+  const nodeType = schema.nodes[name];
+  if (nodeType === undefined) throw new Error(`Missing basic editor node type: ${name}`);
+  return nodeType;
 }
 
 export function getBasicMarkType(schema: Schema, name: string) {
-	const markType = schema.marks[name];
-	if (markType === undefined) throw new Error(`Missing basic editor mark type: ${name}`);
-	return markType;
+  const markType = schema.marks[name];
+  if (markType === undefined) throw new Error(`Missing basic editor mark type: ${name}`);
+  return markType;
 }
 
 export function createTableCommand(rows = 3, columns = 3): Command {
-	return insertTable(rows, columns);
+  return insertTable(rows, columns);
 }
 
 export function insertFileCommand(schema: Schema, href: string, name: string): Command {
-	return (state, dispatch) => {
-		if (dispatch !== undefined) {
-			const link = getBasicMarkType(schema, 'link').create({ href });
-			dispatch(state.tr.replaceSelectionWith(state.schema.text(name, [link]), false).scrollIntoView());
-		}
-		return true;
-	};
+  return (state, dispatch) => {
+    if (dispatch !== undefined) {
+      const link = getBasicMarkType(schema, 'link').create({ href });
+      dispatch(state.tr.replaceSelectionWith(state.schema.text(name, [link]), false).scrollIntoView());
+    }
+    return true;
+  };
 }
 
 export function insertImageCommand(schema: Schema, src: string, alt: string, title?: string): Command {
-	return (state, dispatch) => {
-		if (dispatch !== undefined) {
-			const image = getBasicNodeType(schema, 'image').create({
-				alt,
-				src,
-				title: title ?? null,
-				width: '100%',
-				'object-fit': 'contain',
-			});
-			dispatch(state.tr.replaceSelectionWith(image).scrollIntoView());
-		}
-		return true;
-	};
+  return (state, dispatch) => {
+    if (dispatch !== undefined) {
+      const image = getBasicNodeType(schema, 'image').create({
+        alt,
+        src,
+        title: title ?? null,
+        width: '100%',
+        'object-fit': 'contain',
+      });
+      dispatch(state.tr.replaceSelectionWith(image).scrollIntoView());
+    }
+    return true;
+  };
 }
 
 export function setColorCommand(schema: Schema, color: TextColorName): Command {
-	return (state, dispatch) => {
-		const mark = getBasicMarkType(schema, 'color');
-		if (dispatch !== undefined) {
-			const { empty, from, to } = state.selection;
-			const transaction = state.tr.removeStoredMark(mark);
-			if (!empty) transaction.removeMark(from, to, mark);
-			if (color !== 'default') {
-				if (empty) transaction.addStoredMark(mark.create({ color }));
-				else transaction.addMark(from, to, mark.create({ color }));
-			}
-			dispatch(transaction.scrollIntoView());
-		}
-		return true;
-	};
+  return (state, dispatch) => {
+    const mark = getBasicMarkType(schema, 'color');
+    if (dispatch !== undefined) {
+      const { empty, from, to } = state.selection;
+      const transaction = state.tr.removeStoredMark(mark);
+      if (!empty) transaction.removeMark(from, to, mark);
+      if (color !== 'default') {
+        if (empty) transaction.addStoredMark(mark.create({ color }));
+        else transaction.addMark(from, to, mark.create({ color }));
+      }
+      dispatch(transaction.scrollIntoView());
+    }
+    return true;
+  };
 }
 
 export function setBackgroundColorCommand(schema: Schema, color: TextBackgroundColorName): Command {
-	return (state, dispatch) => {
-		const mark = getBasicMarkType(schema, 'background_color');
-		if (dispatch !== undefined) {
-			const { empty, from, to } = state.selection;
-			const transaction = state.tr.removeStoredMark(mark);
-			if (!empty) transaction.removeMark(from, to, mark);
-			if (color !== 'default') {
-				if (empty) transaction.addStoredMark(mark.create({ color }));
-				else transaction.addMark(from, to, mark.create({ color }));
-			}
-			dispatch(transaction.scrollIntoView());
-		}
-		return true;
-	};
+  return (state, dispatch) => {
+    const mark = getBasicMarkType(schema, 'background_color');
+    if (dispatch !== undefined) {
+      const { empty, from, to } = state.selection;
+      const transaction = state.tr.removeStoredMark(mark);
+      if (!empty) transaction.removeMark(from, to, mark);
+      if (color !== 'default') {
+        if (empty) transaction.addStoredMark(mark.create({ color }));
+        else transaction.addMark(from, to, mark.create({ color }));
+      }
+      dispatch(transaction.scrollIntoView());
+    }
+    return true;
+  };
 }
 
 export function setImageDisplayCommand(
-	width?: number | string,
-	objectFit?: ImageObjectFit,
-	height?: number | null,
+  width?: number | string,
+  objectFit?: ImageObjectFit,
+  height?: number | null,
 ): Command {
-	return setImageDisplay({
-		...(height === undefined ? {} : { height }),
-		...(width === undefined ? {} : { width }),
-		...(objectFit === undefined ? {} : { objectFit }),
-	});
+  return setImageDisplay({
+    ...(height === undefined ? {} : { height }),
+    ...(width === undefined ? {} : { width }),
+    ...(objectFit === undefined ? {} : { objectFit }),
+  });
 }

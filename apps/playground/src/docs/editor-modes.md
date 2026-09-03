@@ -4,46 +4,55 @@
 
 ```vue
 <script setup lang="ts">
-import {ref} from 'vue'
-import {MarkdownEditor} from 'hexagon-editor'
-import type {MarkdownEditorExposed, MarkdownEditorMode} from 'hexagon-editor'
+import { ref } from 'vue';
+import { MarkdownEditor } from 'hexagon-editor';
+import type { MarkdownEditorExposed, MarkdownEditorMode } from 'hexagon-editor';
 
-const editor = ref<MarkdownEditorExposed>()
-const value = ref('## Draft\n\nEdit either side.')
-const mode = ref<MarkdownEditorMode>('wysiwyg')
+const editor = ref<MarkdownEditorExposed>();
+const value = ref('## Draft\n\nEdit either side.');
+const mode = ref<MarkdownEditorMode>('wysiwyg');
 
 async function editSource() {
-  await editor.value?.setMode('markup')
-  editor.value?.moveCursor('end')
-  editor.value?.focus()
+  await editor.value?.setMode('markup');
+  editor.value?.moveCursor('end');
+  editor.value?.focus();
 }
 </script>
 
 <template>
-  <button type="button" @click="editSource">Edit source</button>
-  <MarkdownEditor ref="editor" v-model="value" v-model:mode="mode" />
+  <button
+    type="button"
+    @click="editSource"
+  >
+    Edit source
+  </button>
+  <MarkdownEditor
+    ref="editor"
+    v-model="value"
+    v-model:mode="mode"
+  />
 </template>
 ```
 
 ## Component-ref methods
 
-| Method | Behavior |
-| --- | --- |
-| `getValue()`, `setValue(value)`, `replace(value)` | Read or replace the Markdown |
-| `prepend(markup)`, `append(markup)` | Join content with a blank line |
-| `insert(markup)` | Insert at the active surface/cursor |
-| `clear()`, `isEmpty()` | Clear or inspect the document |
-| `getMode()`, `setMode(mode)` | Read or asynchronously switch mode |
-| `focus()`, `hasFocus()` | Manage the markup surface in `markup` mode and the visual surface otherwise; in `split` they target the visual surface |
-| `moveCursor(position)` | Move to `'start'`, `'end'`, or `{line: number}` |
+| Method                                            | Behavior                                                                                                               |
+| ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `getValue()`, `setValue(value)`, `replace(value)` | Read or replace the Markdown                                                                                           |
+| `prepend(markup)`, `append(markup)`               | Join content with a blank line                                                                                         |
+| `insert(markup)`                                  | Insert at the active surface/cursor                                                                                    |
+| `clear()`, `isEmpty()`                            | Clear or inspect the document                                                                                          |
+| `getMode()`, `setMode(mode)`                      | Read or asynchronously switch mode                                                                                     |
+| `focus()`, `hasFocus()`                           | Manage the markup surface in `markup` mode and the visual surface otherwise; in `split` they target the visual surface |
+| `moveCursor(position)`                            | Move to `'start'`, `'end'`, or `{line: number}`                                                                        |
 
 ```ts
-import type {MarkdownEditorExposed} from 'hexagon-editor'
+import type { MarkdownEditorExposed } from 'hexagon-editor';
 
 function addTemplate(editor: MarkdownEditorExposed) {
-  editor.prepend('# Project')
-  editor.append('## Next steps')
-  editor.moveCursor({line: 3})
+  editor.prepend('# Project');
+  editor.append('## Next steps');
+  editor.moveCursor({ line: 3 });
 }
 ```
 

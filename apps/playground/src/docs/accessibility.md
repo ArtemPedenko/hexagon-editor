@@ -6,11 +6,19 @@ In visual mode `Mod+Enter` emits `submit` and Escape emits `cancel`. Those callb
 
 ```vue
 <script setup lang="ts">
-import {ref} from 'vue'
-import {MarkdownEditor} from 'hexagon-editor'
-const value = ref('')
+import { ref } from 'vue';
+import { MarkdownEditor } from 'hexagon-editor';
+const value = ref('');
 </script>
-<template><section aria-labelledby="notes"><h2 id="notes">Notes</h2><MarkdownEditor v-model="value" locale="en" /></section></template>
+<template>
+  <section aria-labelledby="notes">
+    <h2 id="notes">Notes</h2>
+    <MarkdownEditor
+      v-model="value"
+      locale="en"
+    />
+  </section>
+</template>
 ```
 
 ## Responsive limits

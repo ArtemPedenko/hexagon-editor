@@ -7,10 +7,11 @@ Inline code is wrapped in backticks; use a longer delimiter when its content con
 ````markdown
 # Release notes
 
-Escaped \*stars\*, **bold**, *italic*, `const x = 1`, <https://example.com>, and [guide](https://example.com "Guide").
-![Diagram](https://example.com/image.png "Release diagram")
+Escaped \*stars\*, **bold**, _italic_, `const x = 1`, <https://example.com>, and [guide](https://example.com 'Guide').
+![Diagram](https://example.com/image.png 'Release diagram')
 
 > Outer quote
+>
 > > Nested quote
 
 - Parent
@@ -18,18 +19,20 @@ Escaped \*stars\*, **bold**, *italic*, `const x = 1`, <https://example.com>, and
      - mixed child
   2. Continue the parent after a blank line
 
-    Continued paragraph in the list item.
+  Continued paragraph in the list item.
 
 Hard break  
 or backslash\\
 soft break is an ordinary newline.
 
 ---
-***
-___
+
+---
+
+---
 
 ```ts
-const portable = true
+const portable = true;
 ```
 ````
 
@@ -37,9 +40,14 @@ Use Tab/Shift+Tab in visual nested lists to indent/outdent; in markup mode keep 
 
 ```vue
 <script setup lang="ts">
-import {ref} from 'vue'
-import {MarkdownEditor} from 'hexagon-editor'
-const value = ref('# Notes\n\nA [link](https://example.com "Title").')
+import { ref } from 'vue';
+import { MarkdownEditor } from 'hexagon-editor';
+const value = ref('# Notes\n\nA [link](https://example.com "Title").');
 </script>
-<template><MarkdownEditor v-model="value" toolbar-preset="commonmark" /></template>
+<template>
+  <MarkdownEditor
+    v-model="value"
+    toolbar-preset="commonmark"
+  />
+</template>
 ```

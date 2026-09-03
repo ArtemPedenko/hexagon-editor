@@ -12,20 +12,20 @@ import MarkdownEditorLinkForm from './forms/MarkdownEditorLinkForm.vue';
 import { getMarkdownEditorMessages } from './i18n';
 import type { MarkdownEditorMessageKey } from './i18n';
 import {
-	createBasicEditorCommands,
-	createBasicMarkupCommands,
-	mountBasicMarkupEditor,
-	mountBasicWysiwygEditor,
+  createBasicEditorCommands,
+  createBasicMarkupCommands,
+  mountBasicMarkupEditor,
+  mountBasicWysiwygEditor,
 } from './core';
 import { localizeRenderedMath } from './core/basic-editor-renderers';
 import type { BasicMarkupEditor, BasicWysiwygEditor, BasicWysiwygSelectionState, MarkupCommand } from './core';
 import type {
-	MarkdownEditorMode,
-	MarkdownEditorCursorPosition,
-	MarkdownEditorLocale,
-	MarkdownEditorToolbarPreset,
-	MarkdownEditorTheme,
-	MarkdownFeatures,
+  MarkdownEditorMode,
+  MarkdownEditorCursorPosition,
+  MarkdownEditorLocale,
+  MarkdownEditorToolbarPreset,
+  MarkdownEditorTheme,
+  MarkdownFeatures,
 } from './public-types';
 import type { MarkdownEditorToolbarConfig, MarkdownEditorToolbarItemId } from './toolbar';
 import type { MarkdownDirectiveComponents } from './directives';
@@ -33,60 +33,60 @@ import type { TextBackgroundColorName } from './extensions/markdown/background-c
 import type { TextColorName } from './extensions/markdown/color';
 
 export interface MarkdownEditorExposed {
-	append(markup: string): void;
-	clear(): void;
-	focus(): void;
-	getMode(): MarkdownEditorMode;
-	getValue(): string;
-	hasFocus(): boolean;
-	insert(markup: string): void;
-	isEmpty(): boolean;
-	moveCursor(position: MarkdownEditorCursorPosition): void;
-	prepend(markup: string): void;
-	replace(markup: string): void;
-	setMode(mode: MarkdownEditorMode): Promise<void>;
-	setValue(value: string): void;
+  append(markup: string): void;
+  clear(): void;
+  focus(): void;
+  getMode(): MarkdownEditorMode;
+  getValue(): string;
+  hasFocus(): boolean;
+  insert(markup: string): void;
+  isEmpty(): boolean;
+  moveCursor(position: MarkdownEditorCursorPosition): void;
+  prepend(markup: string): void;
+  replace(markup: string): void;
+  setMode(mode: MarkdownEditorMode): Promise<void>;
+  setValue(value: string): void;
 }
 
 defineOptions({ name: 'MarkdownEditor' });
 
 const props = withDefaults(
-	defineProps<{
-		modelValue?: string;
-		directiveComponents?: MarkdownDirectiveComponents;
-		mode?: MarkdownEditorMode;
-		locale?: MarkdownEditorLocale;
-		placeholder?: string;
-		readonly?: boolean;
-		toolbarPreset?: MarkdownEditorToolbarPreset;
-		uploadImage?: MarkdownEditorImageUpload;
-		/** Overrides the preset with an ordered set of toolbar groups and items. */
-		toolbarConfig?: MarkdownEditorToolbarConfig;
-		theme?: MarkdownEditorTheme;
-		features?: MarkdownFeatures;
-	}>(),
-	{
-		modelValue: '',
-		directiveComponents: undefined,
-		mode: 'wysiwyg',
-		locale: 'ru',
-		placeholder: '',
-		readonly: false,
-		toolbarConfig: undefined,
-		toolbarPreset: 'default',
-		uploadImage: undefined,
-		theme: 'auto',
-		features: undefined,
-	},
+  defineProps<{
+    modelValue?: string;
+    directiveComponents?: MarkdownDirectiveComponents;
+    mode?: MarkdownEditorMode;
+    locale?: MarkdownEditorLocale;
+    placeholder?: string;
+    readonly?: boolean;
+    toolbarPreset?: MarkdownEditorToolbarPreset;
+    uploadImage?: MarkdownEditorImageUpload;
+    /** Overrides the preset with an ordered set of toolbar groups and items. */
+    toolbarConfig?: MarkdownEditorToolbarConfig;
+    theme?: MarkdownEditorTheme;
+    features?: MarkdownFeatures;
+  }>(),
+  {
+    modelValue: '',
+    directiveComponents: undefined,
+    mode: 'wysiwyg',
+    locale: 'ru',
+    placeholder: '',
+    readonly: false,
+    toolbarConfig: undefined,
+    toolbarPreset: 'default',
+    uploadImage: undefined,
+    theme: 'auto',
+    features: undefined,
+  },
 );
 
 const emit = defineEmits<{
-	cancel: [];
-	change: [value: string];
-	'mode-change': [mode: MarkdownEditorMode];
-	'update:modelValue': [value: string];
-	'update:mode': [mode: MarkdownEditorMode];
-	submit: [];
+  cancel: [];
+  change: [value: string];
+  'mode-change': [mode: MarkdownEditorMode];
+  'update:modelValue': [value: string];
+  'update:mode': [mode: MarkdownEditorMode];
+  submit: [];
 }>();
 
 const commands = createBasicEditorCommands();
@@ -103,28 +103,28 @@ const linkUrl = ref('');
 const linkText = ref('');
 const linkOpenInNewWindow = ref(false);
 const toolbarState = ref<BasicWysiwygSelectionState>({
-	bold: false,
-	bulletList: false,
-	code: false,
-	codeBlock: false,
-	codeBlockLanguage: undefined,
-	formula: false,
-	headingFolded: false,
-	headingLevel: undefined,
-	image: false,
-	imageObjectFit: undefined,
-	linkHref: undefined,
-	linkOpenInNewWindow: false,
-	linkText: undefined,
-	listIndentEnabled: false,
-	listOutdentEnabled: false,
-	italic: false,
-	mark: false,
-	mermaid: false,
-	orderedList: false,
-	quote: false,
-	strikethrough: false,
-	underline: false,
+  bold: false,
+  bulletList: false,
+  code: false,
+  codeBlock: false,
+  codeBlockLanguage: undefined,
+  formula: false,
+  headingFolded: false,
+  headingLevel: undefined,
+  image: false,
+  imageObjectFit: undefined,
+  linkHref: undefined,
+  linkOpenInNewWindow: false,
+  linkText: undefined,
+  listIndentEnabled: false,
+  listOutdentEnabled: false,
+  italic: false,
+  mark: false,
+  mermaid: false,
+  orderedList: false,
+  quote: false,
+  strikethrough: false,
+  underline: false,
 });
 const textStyle = computed(() => toolbarState.value.headingLevel?.toString() ?? 'paragraph');
 const textStyleLabel = computed(() => (textStyle.value === 'paragraph' ? 'H' : `H${textStyle.value}`));
@@ -138,7 +138,7 @@ const formulaPanel = useFloatingPanel(() => floatingMenus.value?.getElement('for
 const headingPanel = useFloatingPanel(() => floatingMenus.value?.getElement('heading'));
 const imagePanel = useFloatingPanel(() => imageForm.value?.element);
 const imageActionsPanel = useFloatingPanel(() => imageActions.value?.element, {
-	placement: 'top',
+  placement: 'top',
 });
 const linkPanel = useFloatingPanel(() => linkForm.value?.element);
 const listPanel = useFloatingPanel(() => floatingMenus.value?.getElement('list'));
@@ -149,627 +149,627 @@ let modeChangeId = 0;
 let suppressNextLinkAutoOpen = false;
 let visualEditor: BasicWysiwygEditor | undefined;
 const {
-	setExternalValue,
-	setValue,
-	updateFromHost: updateValue,
-	value,
+  setExternalValue,
+  setValue,
+  updateFromHost: updateValue,
+  value,
 } = useMarkdownEditorValue({
-	getMarkupHost: () => markupEditor,
-	getVisualHost: () => visualEditor,
-	initialValue: props.modelValue,
-	onChange: (nextValue) => {
-		emit('update:modelValue', nextValue);
-		emit('change', nextValue);
-	},
+  getMarkupHost: () => markupEditor,
+  getVisualHost: () => visualEditor,
+  initialValue: props.modelValue,
+  onChange: (nextValue) => {
+    emit('update:modelValue', nextValue);
+    emit('change', nextValue);
+  },
 });
 
 function t(key: MarkdownEditorMessageKey): string {
-	return getMarkdownEditorMessages(props.locale)[key];
+  return getMarkdownEditorMessages(props.locale)[key];
 }
 
 function destroyHosts(): void {
-	markupEditor?.destroy();
-	visualEditor?.destroy();
-	markupEditor = undefined;
-	visualEditor = undefined;
-	toolbarState.value = {
-		bold: false,
-		bulletList: false,
-		code: false,
-		codeBlock: false,
-		codeBlockLanguage: undefined,
-		formula: false,
-		headingFolded: false,
-		headingLevel: undefined,
-		image: false,
-		imageObjectFit: undefined,
-		linkHref: undefined,
-		linkOpenInNewWindow: false,
-		linkText: undefined,
-		listIndentEnabled: false,
-		listOutdentEnabled: false,
-		italic: false,
-		mark: false,
-		mermaid: false,
-		orderedList: false,
-		quote: false,
-		strikethrough: false,
-		underline: false,
-	};
+  markupEditor?.destroy();
+  visualEditor?.destroy();
+  markupEditor = undefined;
+  visualEditor = undefined;
+  toolbarState.value = {
+    bold: false,
+    bulletList: false,
+    code: false,
+    codeBlock: false,
+    codeBlockLanguage: undefined,
+    formula: false,
+    headingFolded: false,
+    headingLevel: undefined,
+    image: false,
+    imageObjectFit: undefined,
+    linkHref: undefined,
+    linkOpenInNewWindow: false,
+    linkText: undefined,
+    listIndentEnabled: false,
+    listOutdentEnabled: false,
+    italic: false,
+    mark: false,
+    mermaid: false,
+    orderedList: false,
+    quote: false,
+    strikethrough: false,
+    underline: false,
+  };
 }
 
 function moveCursor(position: MarkdownEditorCursorPosition): void {
-	if (mode.value === 'markup') {
-		markupEditor?.moveCursor(position);
-	} else if (mode.value === 'split' && typeof position === 'object') {
-		markupEditor?.moveCursor(position);
-	} else {
-		visualEditor?.moveCursor(typeof position === 'object' ? 'start' : position);
-	}
+  if (mode.value === 'markup') {
+    markupEditor?.moveCursor(position);
+  } else if (mode.value === 'split' && typeof position === 'object') {
+    markupEditor?.moveCursor(position);
+  } else {
+    visualEditor?.moveCursor(typeof position === 'object' ? 'start' : position);
+  }
 }
 
 function insert(markup: string): void {
-	if (mode.value === 'markup' || (mode.value === 'split' && markupEditor?.hasFocus())) {
-		markupEditor?.insert(markup);
-	} else {
-		visualEditor?.insert(markup);
-	}
+  if (mode.value === 'markup' || (mode.value === 'split' && markupEditor?.hasFocus())) {
+    markupEditor?.insert(markup);
+  } else {
+    visualEditor?.insert(markup);
+  }
 }
 
 function applyLink(): void {
-	if (linkUrl.value.trim().length === 0) {
-		return;
-	}
+  if (linkUrl.value.trim().length === 0) {
+    return;
+  }
 
-	suppressNextLinkAutoOpen = true;
-	const text = linkText.value.trim() || linkUrl.value.trim();
-	if (shouldRunMarkupCommand()) {
-		markupEditor?.run(markupCommands.setLink(linkUrl.value.trim(), undefined, text, linkOpenInNewWindow.value));
-	} else {
-		execute(undefined, commands.setLink(linkUrl.value.trim(), text, text, linkOpenInNewWindow.value));
-	}
-	linkPanel.close();
+  suppressNextLinkAutoOpen = true;
+  const text = linkText.value.trim() || linkUrl.value.trim();
+  if (shouldRunMarkupCommand()) {
+    markupEditor?.run(markupCommands.setLink(linkUrl.value.trim(), undefined, text, linkOpenInNewWindow.value));
+  } else {
+    execute(undefined, commands.setLink(linkUrl.value.trim(), text, text, linkOpenInNewWindow.value));
+  }
+  linkPanel.close();
 }
 
 function closeLinkEditor(): void {
-	linkPanel.close();
+  linkPanel.close();
 }
 
 function applyImage(): void {
-	const src = imageUrl.value.trim();
-	if (src.length === 0) return;
-	if (shouldRunMarkupCommand()) {
-		markupEditor?.run(
-			markupCommands.insertImage(src, imageAlt.value.trim() || 'Image', imageTitle.value.trim() || undefined),
-		);
-	} else {
-		execute(
-			undefined,
-			commands.insertImage(src, imageAlt.value.trim() || 'Image', imageTitle.value.trim() || undefined),
-		);
-	}
-	imagePanel.close();
+  const src = imageUrl.value.trim();
+  if (src.length === 0) return;
+  if (shouldRunMarkupCommand()) {
+    markupEditor?.run(
+      markupCommands.insertImage(src, imageAlt.value.trim() || 'Image', imageTitle.value.trim() || undefined),
+    );
+  } else {
+    execute(
+      undefined,
+      commands.insertImage(src, imageAlt.value.trim() || 'Image', imageTitle.value.trim() || undefined),
+    );
+  }
+  imagePanel.close();
 }
 
 function closeImageEditor(): void {
-	imagePanel.close();
+  imagePanel.close();
 }
 
 function applyTextStyle(style: string): void {
-	if (shouldRunMarkupCommand()) {
-		markupEditor?.run(style === 'paragraph' ? markupCommands.paragraph : markupCommands.heading(Number(style)));
-	} else if (style === 'paragraph') {
-		execute(undefined, commands.paragraph);
-	} else {
-		execute(undefined, commands.heading(Number(style)));
-	}
+  if (shouldRunMarkupCommand()) {
+    markupEditor?.run(style === 'paragraph' ? markupCommands.paragraph : markupCommands.heading(Number(style)));
+  } else if (style === 'paragraph') {
+    execute(undefined, commands.paragraph);
+  } else {
+    execute(undefined, commands.heading(Number(style)));
+  }
 
-	headingPanel.close();
+  headingPanel.close();
 }
 
 async function showHeadingMenu(reference: HTMLElement): Promise<void> {
-	shouldRunMarkupCommand();
-	await headingPanel.toggle(reference);
+  shouldRunMarkupCommand();
+  await headingPanel.toggle(reference);
 }
 
 async function toggleCodeMenu(reference: HTMLElement): Promise<void> {
-	shouldRunMarkupCommand();
-	await codePanel.toggle(reference);
+  shouldRunMarkupCommand();
+  await codePanel.toggle(reference);
 }
 
 async function toggleColorMenu(reference: HTMLElement): Promise<void> {
-	if (shouldRunMarkupCommand()) return;
-	await colorPanel.toggle(reference);
+  if (shouldRunMarkupCommand()) return;
+  await colorPanel.toggle(reference);
 }
 
 async function toggleBackgroundColorMenu(reference: HTMLElement): Promise<void> {
-	if (shouldRunMarkupCommand()) return;
-	await backgroundColorPanel.toggle(reference);
+  if (shouldRunMarkupCommand()) return;
+  await backgroundColorPanel.toggle(reference);
 }
 
 function selectBackgroundColor(color: TextBackgroundColorName): void {
-	backgroundColorPanel.close();
-	if (shouldRunMarkupCommand()) return;
-	visualEditor?.run(commands.setBackgroundColor(color));
+  backgroundColorPanel.close();
+  if (shouldRunMarkupCommand()) return;
+  visualEditor?.run(commands.setBackgroundColor(color));
 }
 
 function selectColor(color: TextColorName): void {
-	colorPanel.close();
-	if (shouldRunMarkupCommand()) return;
-	visualEditor?.run(commands.setColor(color));
+  colorPanel.close();
+  if (shouldRunMarkupCommand()) return;
+  visualEditor?.run(commands.setColor(color));
 }
 
 function executeCodeCommand(
-	command: Parameters<BasicWysiwygEditor['run']>[0],
-	markupCommand: 'code' | 'codeBlock',
+  command: Parameters<BasicWysiwygEditor['run']>[0],
+  markupCommand: 'code' | 'codeBlock',
 ): void {
-	if (shouldRunMarkupCommand()) {
-		markupEditor?.run(markupCommands[markupCommand]);
-	} else {
-		execute(undefined, command);
-	}
-	codePanel.close();
+  if (shouldRunMarkupCommand()) {
+    markupEditor?.run(markupCommands[markupCommand]);
+  } else {
+    execute(undefined, command);
+  }
+  codePanel.close();
 }
 
 async function toggleLinkEditor(reference: HTMLElement): Promise<void> {
-	shouldRunMarkupCommand();
-	if (linkPanel.visible.value) {
-		linkPanel.close();
-		return;
-	}
-	linkUrl.value = toolbarState.value.linkHref ?? '';
-	linkText.value = toolbarState.value.linkText ?? window.getSelection()?.toString().trim() ?? '';
-	linkOpenInNewWindow.value = toolbarState.value.linkOpenInNewWindow;
-	await linkPanel.open(reference);
+  shouldRunMarkupCommand();
+  if (linkPanel.visible.value) {
+    linkPanel.close();
+    return;
+  }
+  linkUrl.value = toolbarState.value.linkHref ?? '';
+  linkText.value = toolbarState.value.linkText ?? window.getSelection()?.toString().trim() ?? '';
+  linkOpenInNewWindow.value = toolbarState.value.linkOpenInNewWindow;
+  await linkPanel.open(reference);
 }
 
 async function showLinkEditorAtCursor(reference?: HTMLElement): Promise<void> {
-	const href = toolbarState.value.linkHref;
-	if (href === undefined && reference === undefined) {
-		closeLinkEditor();
-		return;
-	}
+  const href = toolbarState.value.linkHref;
+  if (href === undefined && reference === undefined) {
+    closeLinkEditor();
+    return;
+  }
 
-	linkUrl.value = reference?.getAttribute('href') ?? href ?? '';
-	linkText.value = reference?.textContent ?? toolbarState.value.linkText ?? '';
-	linkOpenInNewWindow.value = reference?.getAttribute('target') === '_blank' || toolbarState.value.linkOpenInNewWindow;
-	const anchorNode = window.getSelection()?.anchorNode;
-	const anchorElement = anchorNode instanceof Element ? anchorNode : anchorNode?.parentElement;
-	const link = reference ?? anchorElement?.closest<HTMLElement>('a');
-	if (link === undefined || link === null) return;
-	await linkPanel.open(link);
+  linkUrl.value = reference?.getAttribute('href') ?? href ?? '';
+  linkText.value = reference?.textContent ?? toolbarState.value.linkText ?? '';
+  linkOpenInNewWindow.value = reference?.getAttribute('target') === '_blank' || toolbarState.value.linkOpenInNewWindow;
+  const anchorNode = window.getSelection()?.anchorNode;
+  const anchorElement = anchorNode instanceof Element ? anchorNode : anchorNode?.parentElement;
+  const link = reference ?? anchorElement?.closest<HTMLElement>('a');
+  if (link === undefined || link === null) return;
+  await linkPanel.open(link);
 }
 
 function handleEditorClick(event: MouseEvent): void {
-	const target = event.target;
-	if (!(target instanceof Element)) return;
-	const image = target.closest<HTMLImageElement>('.ProseMirror img');
-	if (image !== null) {
-		event.preventDefault();
-		visualEditor?.selectElement(image);
-		void imageActionsPanel.open(image);
-		return;
-	}
-	const link = target.closest<HTMLElement>('.ProseMirror a');
-	if (link === null) return;
-	event.preventDefault();
-	visualEditor?.selectElement(link);
-	void showLinkEditorAtCursor(link);
+  const target = event.target;
+  if (!(target instanceof Element)) return;
+  const image = target.closest<HTMLImageElement>('.ProseMirror img');
+  if (image !== null) {
+    event.preventDefault();
+    visualEditor?.selectElement(image);
+    void imageActionsPanel.open(image);
+    return;
+  }
+  const link = target.closest<HTMLElement>('.ProseMirror a');
+  if (link === null) return;
+  event.preventDefault();
+  visualEditor?.selectElement(link);
+  void showLinkEditorAtCursor(link);
 }
 
 async function toggleListMenu(reference: HTMLElement): Promise<void> {
-	shouldRunMarkupCommand();
-	await listPanel.toggle(reference);
+  shouldRunMarkupCommand();
+  await listPanel.toggle(reference);
 }
 
 function executeListCommand(
-	command: Parameters<BasicWysiwygEditor['run']>[0],
-	markupCommand: 'bulletList' | 'indentList' | 'orderedList' | 'outdentList',
+  command: Parameters<BasicWysiwygEditor['run']>[0],
+  markupCommand: 'bulletList' | 'indentList' | 'orderedList' | 'outdentList',
 ): void {
-	if (shouldRunMarkupCommand()) {
-		markupEditor?.run(markupCommands[markupCommand]);
-	} else {
-		execute(undefined, command);
-	}
-	listPanel.close();
+  if (shouldRunMarkupCommand()) {
+    markupEditor?.run(markupCommands[markupCommand]);
+  } else {
+    execute(undefined, command);
+  }
+  listPanel.close();
 }
 
 async function toggleImageEditor(reference: HTMLElement): Promise<void> {
-	shouldRunMarkupCommand();
-	await imagePanel.toggle(reference);
+  shouldRunMarkupCommand();
+  await imagePanel.toggle(reference);
 }
 
 async function executeImageDisplay(command: Parameters<BasicWysiwygEditor['run']>[0]): Promise<void> {
-	execute(undefined, command);
-	await nextTick();
-	const image = visualTarget.value?.querySelector<HTMLImageElement>('.ProseMirror img.ProseMirror-selectednode');
-	if (image !== undefined && image !== null) await imageActionsPanel.open(image);
+  execute(undefined, command);
+  await nextTick();
+  const image = visualTarget.value?.querySelector<HTMLImageElement>('.ProseMirror img.ProseMirror-selectednode');
+  if (image !== undefined && image !== null) await imageActionsPanel.open(image);
 }
 
 async function toggleModeMenu(reference: HTMLElement): Promise<void> {
-	await modePanel.toggle(reference);
+  await modePanel.toggle(reference);
 }
 
 async function selectEditorMode(nextMode: MarkdownEditorMode): Promise<void> {
-	modePanel.close();
-	await setMode(nextMode);
+  modePanel.close();
+  await setMode(nextMode);
 }
 
 function insertHtmlDirective(): void {
-	if (shouldRunMarkupCommand()) markupEditor?.run(markupCommands.insertHtml);
-	else visualEditor?.run(commands.insertHtml);
+  if (shouldRunMarkupCommand()) markupEditor?.run(markupCommands.insertHtml);
+  else visualEditor?.run(commands.insertHtml);
 }
 
 async function insertMathBlock(): Promise<void> {
-	formulaPanel.close();
-	if (toolbarState.value.formula) {
-		return;
-	}
-	if (shouldRunMarkupCommand()) markupEditor?.run(markupCommands.insertMathBlock);
-	else visualEditor?.run(commands.insertMathBlock);
+  formulaPanel.close();
+  if (toolbarState.value.formula) {
+    return;
+  }
+  if (shouldRunMarkupCommand()) markupEditor?.run(markupCommands.insertMathBlock);
+  else visualEditor?.run(commands.insertMathBlock);
 }
 
 function insertInlineMath(): void {
-	formulaPanel.close();
-	if (shouldRunMarkupCommand()) markupEditor?.run(markupCommands.insertInlineMath);
-	else visualEditor?.run(commands.insertInlineMath);
+  formulaPanel.close();
+  if (shouldRunMarkupCommand()) markupEditor?.run(markupCommands.insertInlineMath);
+  else visualEditor?.run(commands.insertInlineMath);
 }
 
 async function toggleFormulaMenu(reference: HTMLElement): Promise<void> {
-	shouldRunMarkupCommand();
-	if (!toolbarState.value.formula) {
-		await formulaPanel.toggle(reference);
-	}
+  shouldRunMarkupCommand();
+  if (!toolbarState.value.formula) {
+    await formulaPanel.toggle(reference);
+  }
 }
 
 function closeFloatingPanels(event: PointerEvent): void {
-	const target = event.target;
-	if (!(target instanceof Node)) return;
-	for (const panel of [
-		headingPanel,
-		codePanel,
-		backgroundColorPanel,
-		colorPanel,
-		formulaPanel,
-		linkPanel,
-		listPanel,
-		imagePanel,
-		imageActionsPanel,
-		modePanel,
-	]) {
-		if (!panel.contains(target)) panel.close();
-	}
+  const target = event.target;
+  if (!(target instanceof Node)) return;
+  for (const panel of [
+    headingPanel,
+    codePanel,
+    backgroundColorPanel,
+    colorPanel,
+    formulaPanel,
+    linkPanel,
+    listPanel,
+    imagePanel,
+    imageActionsPanel,
+    modePanel,
+  ]) {
+    if (!panel.contains(target)) panel.close();
+  }
 }
 
 function closePanelsOnEscape(event: KeyboardEvent): void {
-	if (event.key !== 'Escape') return;
-	for (const panel of [
-		headingPanel,
-		codePanel,
-		backgroundColorPanel,
-		colorPanel,
-		formulaPanel,
-		linkPanel,
-		listPanel,
-		imagePanel,
-		imageActionsPanel,
-		modePanel,
-	])
-		panel.close();
+  if (event.key !== 'Escape') return;
+  for (const panel of [
+    headingPanel,
+    codePanel,
+    backgroundColorPanel,
+    colorPanel,
+    formulaPanel,
+    linkPanel,
+    listPanel,
+    imagePanel,
+    imageActionsPanel,
+    modePanel,
+  ])
+    panel.close();
 }
 
 function mountHosts(): void {
-	if (mode.value !== 'markup' && visualTarget.value !== undefined) {
-		visualEditor = mountBasicWysiwygEditor({
-			directiveAppContext: appContext,
-			directiveComponents: props.directiveComponents,
-			features: props.features,
-			editable: !props.readonly,
-			initialValue: value.value,
-			onCancel: () => {
-				emit('cancel');
-				return true;
-			},
-			onChange: (nextValue) => {
-				updateValue(nextValue, 'visual');
-				if (visualTarget.value !== undefined) localizeRenderedMath(visualTarget.value, props.locale);
-			},
-			onSelectionChange: (nextSelection) => {
-				toolbarState.value = nextSelection;
-				if (suppressNextLinkAutoOpen) {
-					suppressNextLinkAutoOpen = false;
-				} else {
-					void showLinkEditorAtCursor();
-				}
-			},
-			onSubmit: () => {
-				emit('submit');
-				return true;
-			},
-			placeholder: props.placeholder,
-			target: visualTarget.value,
-		});
-		localizeRenderedMath(visualTarget.value, props.locale);
-	}
+  if (mode.value !== 'markup' && visualTarget.value !== undefined) {
+    visualEditor = mountBasicWysiwygEditor({
+      directiveAppContext: appContext,
+      directiveComponents: props.directiveComponents,
+      features: props.features,
+      editable: !props.readonly,
+      initialValue: value.value,
+      onCancel: () => {
+        emit('cancel');
+        return true;
+      },
+      onChange: (nextValue) => {
+        updateValue(nextValue, 'visual');
+        if (visualTarget.value !== undefined) localizeRenderedMath(visualTarget.value, props.locale);
+      },
+      onSelectionChange: (nextSelection) => {
+        toolbarState.value = nextSelection;
+        if (suppressNextLinkAutoOpen) {
+          suppressNextLinkAutoOpen = false;
+        } else {
+          void showLinkEditorAtCursor();
+        }
+      },
+      onSubmit: () => {
+        emit('submit');
+        return true;
+      },
+      placeholder: props.placeholder,
+      target: visualTarget.value,
+    });
+    localizeRenderedMath(visualTarget.value, props.locale);
+  }
 
-	if (mode.value !== 'wysiwyg' && markupTarget.value !== undefined) {
-		markupEditor = mountBasicMarkupEditor({
-			editable: !props.readonly,
-			initialValue: value.value,
-			onChange: (nextValue) => updateValue(nextValue, 'markup'),
-			target: markupTarget.value,
-		});
-	}
+  if (mode.value !== 'wysiwyg' && markupTarget.value !== undefined) {
+    markupEditor = mountBasicMarkupEditor({
+      editable: !props.readonly,
+      initialValue: value.value,
+      onChange: (nextValue) => updateValue(nextValue, 'markup'),
+      target: markupTarget.value,
+    });
+  }
 }
 
 async function setMode(nextMode: MarkdownEditorMode): Promise<void> {
-	if (nextMode === mode.value) {
-		return;
-	}
+  if (nextMode === mode.value) {
+    return;
+  }
 
-	const changeId = ++modeChangeId;
-	mode.value = nextMode;
-	emit('update:mode', nextMode);
-	emit('mode-change', nextMode);
-	destroyHosts();
-	await nextTick();
-	if (changeId === modeChangeId) {
-		mountHosts();
-	}
+  const changeId = ++modeChangeId;
+  mode.value = nextMode;
+  emit('update:mode', nextMode);
+  emit('mode-change', nextMode);
+  destroyHosts();
+  await nextTick();
+  if (changeId === modeChangeId) {
+    mountHosts();
+  }
 }
 
 function shouldRunMarkupCommand(): boolean {
-	if (mode.value === 'markup') return true;
-	if (mode.value === 'wysiwyg') return false;
+  if (mode.value === 'markup') return true;
+  if (mode.value === 'wysiwyg') return false;
 
-	if (markupEditor?.hasFocus()) lastCommandTarget = 'markup';
-	else if (visualEditor?.hasFocus()) lastCommandTarget = 'visual';
+  if (markupEditor?.hasFocus()) lastCommandTarget = 'markup';
+  else if (visualEditor?.hasFocus()) lastCommandTarget = 'visual';
 
-	return lastCommandTarget === 'markup';
+  return lastCommandTarget === 'markup';
 }
 
 function execute(id: MarkdownEditorToolbarItemId | undefined, command: Parameters<BasicWysiwygEditor['run']>[0]): void {
-	if (props.readonly) return;
+  if (props.readonly) return;
 
-	if (shouldRunMarkupCommand() && id !== undefined) {
-		const commandById: Partial<Record<MarkdownEditorToolbarItemId, MarkupCommand>> = {
-			bold: markupCommands.bold,
-			'fold-heading': markupCommands.toggleHeadingFolding,
-			'horizontal-rule': markupCommands.horizontalRule,
-			italic: markupCommands.italic,
-			mark: markupCommands.mark,
-			mermaid: markupCommands.insertMermaid,
-			quote: markupCommands.quote,
-			redo: markupCommands.redo,
-			strike: markupCommands.strikethrough,
-			table: markupCommands.insertTable(),
-			underline: markupCommands.underline,
-			undo: markupCommands.undo,
-		};
-		const markupCommand = commandById[id];
+  if (shouldRunMarkupCommand() && id !== undefined) {
+    const commandById: Partial<Record<MarkdownEditorToolbarItemId, MarkupCommand>> = {
+      bold: markupCommands.bold,
+      'fold-heading': markupCommands.toggleHeadingFolding,
+      'horizontal-rule': markupCommands.horizontalRule,
+      italic: markupCommands.italic,
+      mark: markupCommands.mark,
+      mermaid: markupCommands.insertMermaid,
+      quote: markupCommands.quote,
+      redo: markupCommands.redo,
+      strike: markupCommands.strikethrough,
+      table: markupCommands.insertTable(),
+      underline: markupCommands.underline,
+      undo: markupCommands.undo,
+    };
+    const markupCommand = commandById[id];
 
-		if (markupCommand !== undefined) markupEditor?.run(markupCommand);
-		return;
-	}
+    if (markupCommand !== undefined) markupEditor?.run(markupCommand);
+    return;
+  }
 
-	visualEditor?.run(command);
+  visualEditor?.run(command);
 }
 
 watch(
-	() => props.modelValue,
-	(nextValue) => {
-		if (nextValue === value.value) {
-			return;
-		}
+  () => props.modelValue,
+  (nextValue) => {
+    if (nextValue === value.value) {
+      return;
+    }
 
-		setExternalValue(nextValue);
-	},
+    setExternalValue(nextValue);
+  },
 );
 
 watch(
-	() => props.mode,
-	(nextMode) => {
-		void setMode(nextMode);
-	},
+  () => props.mode,
+  (nextMode) => {
+    void setMode(nextMode);
+  },
 );
 
 watch(
-	() => props.locale,
-	(locale) => {
-		if (visualTarget.value !== undefined) localizeRenderedMath(visualTarget.value, locale);
-	},
+  () => props.locale,
+  (locale) => {
+    if (visualTarget.value !== undefined) localizeRenderedMath(visualTarget.value, locale);
+  },
 );
 
 watch(
-	() => props.features,
-	async () => {
-		const changeId = ++modeChangeId;
-		destroyHosts();
-		await nextTick();
-		if (changeId === modeChangeId) mountHosts();
-	},
+  () => props.features,
+  async () => {
+    const changeId = ++modeChangeId;
+    destroyHosts();
+    await nextTick();
+    if (changeId === modeChangeId) mountHosts();
+  },
 );
 
 watch(
-	() => props.readonly,
-	async () => {
-		const changeId = ++modeChangeId;
-		destroyHosts();
-		await nextTick();
-		if (changeId === modeChangeId) {
-			mountHosts();
-		}
-	},
+  () => props.readonly,
+  async () => {
+    const changeId = ++modeChangeId;
+    destroyHosts();
+    await nextTick();
+    if (changeId === modeChangeId) {
+      mountHosts();
+    }
+  },
 );
 
 onMounted(() => {
-	mountHosts();
-	document.addEventListener('pointerdown', closeFloatingPanels);
-	document.addEventListener('keydown', closePanelsOnEscape);
+  mountHosts();
+  document.addEventListener('pointerdown', closeFloatingPanels);
+  document.addEventListener('keydown', closePanelsOnEscape);
 });
 onBeforeUnmount(() => {
-	destroyHosts();
-	document.removeEventListener('pointerdown', closeFloatingPanels);
-	document.removeEventListener('keydown', closePanelsOnEscape);
+  destroyHosts();
+  document.removeEventListener('pointerdown', closeFloatingPanels);
+  document.removeEventListener('keydown', closePanelsOnEscape);
 });
 
 defineExpose<MarkdownEditorExposed>({
-	append: (markup) => setValue(joinMarkdown(value.value, markup)),
-	clear: () => setValue(''),
-	focus: () => (mode.value === 'markup' ? markupEditor?.focus() : visualEditor?.focus()),
-	getMode: () => mode.value,
-	getValue: () => value.value,
-	hasFocus: () => (mode.value === 'markup' ? (markupEditor?.hasFocus() ?? false) : (visualEditor?.hasFocus() ?? false)),
-	insert,
-	isEmpty: () => value.value.length === 0,
-	moveCursor,
-	prepend: (markup) => setValue(joinMarkdown(markup, value.value)),
-	replace: setValue,
-	setMode,
-	setValue,
+  append: (markup) => setValue(joinMarkdown(value.value, markup)),
+  clear: () => setValue(''),
+  focus: () => (mode.value === 'markup' ? markupEditor?.focus() : visualEditor?.focus()),
+  getMode: () => mode.value,
+  getValue: () => value.value,
+  hasFocus: () => (mode.value === 'markup' ? (markupEditor?.hasFocus() ?? false) : (visualEditor?.hasFocus() ?? false)),
+  insert,
+  isEmpty: () => value.value.length === 0,
+  moveCursor,
+  prepend: (markup) => setValue(joinMarkdown(markup, value.value)),
+  replace: setValue,
+  setMode,
+  setValue,
 });
 </script>
 
 <template>
-	<section
-		class="markdown-editor"
-		:data-locale="locale"
-		:data-mode="mode"
-		:data-theme="theme"
-		@click="handleEditorClick"
-	>
-		<header
-			v-if="$slots.header"
-			class="markdown-editor__header"
-		>
-			<slot name="header" />
-		</header>
+  <section
+    class="markdown-editor"
+    :data-locale="locale"
+    :data-mode="mode"
+    :data-theme="theme"
+    @click="handleEditorClick"
+  >
+    <header
+      v-if="$slots.header"
+      class="markdown-editor__header"
+    >
+      <slot name="header" />
+    </header>
 
-		<MarkdownEditorToolbar
-			v-if="!readonly"
-			:commands="commands"
-			:background-color-menu-visible="backgroundColorPanel.visible.value"
-			:color-menu-visible="colorPanel.visible.value"
-			:code-menu-visible="codePanel.visible.value"
-			:formula-menu-visible="formulaPanel.visible.value"
-			:heading-menu-visible="headingPanel.visible.value"
-			:image-editor-visible="imagePanel.visible.value"
-			:link-editor-visible="linkPanel.visible.value"
-			:list-menu-visible="listPanel.visible.value"
-			:mode="mode"
-			:mode-menu-visible="modePanel.visible.value"
-			:state="toolbarState"
-			:text-style-label="textStyleLabel"
-			:toolbar-preset="toolbarPreset"
-			:toolbar-config="toolbarConfig"
-			:features="features"
-			:translate="t"
-			@execute="execute"
-			@insert-html="insertHtmlDirective"
-			@toggle-formula-menu="toggleFormulaMenu"
-			@toggle-code-menu="toggleCodeMenu"
-			@toggle-background-color-menu="toggleBackgroundColorMenu"
-			@toggle-color-menu="toggleColorMenu"
-			@toggle-heading-menu="showHeadingMenu"
-			@toggle-image-editor="toggleImageEditor"
-			@toggle-link-editor="toggleLinkEditor"
-			@toggle-list-menu="toggleListMenu"
-			@toggle-mode-menu="toggleModeMenu"
-		>
-			<template #default="slotProps">
-				<slot
-					name="toolbar"
-					v-bind="slotProps"
-				/>
-			</template>
-		</MarkdownEditorToolbar>
+    <MarkdownEditorToolbar
+      v-if="!readonly"
+      :commands="commands"
+      :background-color-menu-visible="backgroundColorPanel.visible.value"
+      :color-menu-visible="colorPanel.visible.value"
+      :code-menu-visible="codePanel.visible.value"
+      :formula-menu-visible="formulaPanel.visible.value"
+      :heading-menu-visible="headingPanel.visible.value"
+      :image-editor-visible="imagePanel.visible.value"
+      :link-editor-visible="linkPanel.visible.value"
+      :list-menu-visible="listPanel.visible.value"
+      :mode="mode"
+      :mode-menu-visible="modePanel.visible.value"
+      :state="toolbarState"
+      :text-style-label="textStyleLabel"
+      :toolbar-preset="toolbarPreset"
+      :toolbar-config="toolbarConfig"
+      :features="features"
+      :translate="t"
+      @execute="execute"
+      @insert-html="insertHtmlDirective"
+      @toggle-formula-menu="toggleFormulaMenu"
+      @toggle-code-menu="toggleCodeMenu"
+      @toggle-background-color-menu="toggleBackgroundColorMenu"
+      @toggle-color-menu="toggleColorMenu"
+      @toggle-heading-menu="showHeadingMenu"
+      @toggle-image-editor="toggleImageEditor"
+      @toggle-link-editor="toggleLinkEditor"
+      @toggle-list-menu="toggleListMenu"
+      @toggle-mode-menu="toggleModeMenu"
+    >
+      <template #default="slotProps">
+        <slot
+          name="toolbar"
+          v-bind="slotProps"
+        />
+      </template>
+    </MarkdownEditorToolbar>
 
-		<Teleport to="body">
-			<MarkdownEditorFloatingMenus
-				ref="floatingMenus"
-				:code-visible="codePanel.visible.value"
-				:background-color-visible="backgroundColorPanel.visible.value"
-				:color-visible="colorPanel.visible.value"
-				:formula-visible="formulaPanel.visible.value"
-				:heading-visible="headingPanel.visible.value"
-				:list-visible="listPanel.visible.value"
-				:mode="mode"
-				:mode-visible="modePanel.visible.value"
-				:state="toolbarState"
-				:text-style="textStyle"
-				:theme="theme"
-				:translate="t"
-				@bullet-list="executeListCommand(commands.bulletList, 'bulletList')"
-				@code-block="executeCodeCommand(commands.codeBlock, 'codeBlock')"
-				@select-background-color="selectBackgroundColor"
-				@select-color="selectColor"
-				@indent-list="executeListCommand(commands.sinkListItem, 'indentList')"
-				@inline-code="executeCodeCommand(commands.code, 'code')"
-				@inline-formula="insertInlineMath"
-				@math-block="insertMathBlock"
-				@ordered-list="executeListCommand(commands.orderedList, 'orderedList')"
-				@outdent-list="executeListCommand(commands.liftListItem, 'outdentList')"
-				@select-mode="selectEditorMode"
-				@select-text-style="applyTextStyle"
-			/>
-			<MarkdownEditorLinkForm
-				v-if="linkPanel.visible.value"
-				ref="linkForm"
-				:has-current-link="toolbarState.linkHref !== undefined"
-				:locale="locale"
-				:open-in-new-window="linkOpenInNewWindow"
-				:theme="theme"
-				:text="linkText"
-				:url="linkUrl"
-				@apply="applyLink"
-				@cancel="closeLinkEditor"
-				@remove="execute(undefined, commands.removeLink)"
-				@update:text="linkText = $event"
-				@update:url="linkUrl = $event"
-				@update:open-in-new-window="linkOpenInNewWindow = $event"
-			/>
-			<MarkdownEditorImageForm
-				v-if="imagePanel.visible.value"
-				ref="imageForm"
-				:alt="imageAlt"
-				:locale="locale"
-				:theme="theme"
-				:title="imageTitle"
-				:upload-image="uploadImage"
-				:url="imageUrl"
-				@apply="applyImage"
-				@cancel="closeImageEditor"
-				@update:alt="imageAlt = $event"
-				@update:title="imageTitle = $event"
-				@update:url="imageUrl = $event"
-			/>
-			<MarkdownEditorImageActions
-				v-if="imageActionsPanel.visible.value"
-				ref="imageActions"
-				:object-fit="toolbarState.imageObjectFit"
-				:theme="theme"
-				:translate="t"
-				@full-width="executeImageDisplay(commands.setImageDisplay('100%', 'contain', null))"
-				@object-fit="executeImageDisplay(commands.setImageDisplay(undefined, $event))"
-			/>
-		</Teleport>
+    <Teleport to="body">
+      <MarkdownEditorFloatingMenus
+        ref="floatingMenus"
+        :code-visible="codePanel.visible.value"
+        :background-color-visible="backgroundColorPanel.visible.value"
+        :color-visible="colorPanel.visible.value"
+        :formula-visible="formulaPanel.visible.value"
+        :heading-visible="headingPanel.visible.value"
+        :list-visible="listPanel.visible.value"
+        :mode="mode"
+        :mode-visible="modePanel.visible.value"
+        :state="toolbarState"
+        :text-style="textStyle"
+        :theme="theme"
+        :translate="t"
+        @bullet-list="executeListCommand(commands.bulletList, 'bulletList')"
+        @code-block="executeCodeCommand(commands.codeBlock, 'codeBlock')"
+        @select-background-color="selectBackgroundColor"
+        @select-color="selectColor"
+        @indent-list="executeListCommand(commands.sinkListItem, 'indentList')"
+        @inline-code="executeCodeCommand(commands.code, 'code')"
+        @inline-formula="insertInlineMath"
+        @math-block="insertMathBlock"
+        @ordered-list="executeListCommand(commands.orderedList, 'orderedList')"
+        @outdent-list="executeListCommand(commands.liftListItem, 'outdentList')"
+        @select-mode="selectEditorMode"
+        @select-text-style="applyTextStyle"
+      />
+      <MarkdownEditorLinkForm
+        v-if="linkPanel.visible.value"
+        ref="linkForm"
+        :has-current-link="toolbarState.linkHref !== undefined"
+        :locale="locale"
+        :open-in-new-window="linkOpenInNewWindow"
+        :theme="theme"
+        :text="linkText"
+        :url="linkUrl"
+        @apply="applyLink"
+        @cancel="closeLinkEditor"
+        @remove="execute(undefined, commands.removeLink)"
+        @update:text="linkText = $event"
+        @update:url="linkUrl = $event"
+        @update:open-in-new-window="linkOpenInNewWindow = $event"
+      />
+      <MarkdownEditorImageForm
+        v-if="imagePanel.visible.value"
+        ref="imageForm"
+        :alt="imageAlt"
+        :locale="locale"
+        :theme="theme"
+        :title="imageTitle"
+        :upload-image="uploadImage"
+        :url="imageUrl"
+        @apply="applyImage"
+        @cancel="closeImageEditor"
+        @update:alt="imageAlt = $event"
+        @update:title="imageTitle = $event"
+        @update:url="imageUrl = $event"
+      />
+      <MarkdownEditorImageActions
+        v-if="imageActionsPanel.visible.value"
+        ref="imageActions"
+        :object-fit="toolbarState.imageObjectFit"
+        :theme="theme"
+        :translate="t"
+        @full-width="executeImageDisplay(commands.setImageDisplay('100%', 'contain', null))"
+        @object-fit="executeImageDisplay(commands.setImageDisplay(undefined, $event))"
+      />
+    </Teleport>
 
-		<div
-			class="markdown-editor__hosts"
-			:class="{ 'markdown-editor__hosts--split': mode === 'split' }"
-		>
-			<div
-				v-if="mode !== 'markup'"
-				ref="visualTarget"
-				class="markdown-editor__visual"
-			/>
-			<div
-				v-if="mode !== 'wysiwyg'"
-				ref="markupTarget"
-				class="markdown-editor__markup"
-			/>
-		</div>
-	</section>
+    <div
+      class="markdown-editor__hosts"
+      :class="{ 'markdown-editor__hosts--split': mode === 'split' }"
+    >
+      <div
+        v-if="mode !== 'markup'"
+        ref="visualTarget"
+        class="markdown-editor__visual"
+      />
+      <div
+        v-if="mode !== 'wysiwyg'"
+        ref="markupTarget"
+        class="markdown-editor__markup"
+      />
+    </div>
+  </section>
 </template>
 
 <style scoped src="./styles/markdown-editor.css"></style>

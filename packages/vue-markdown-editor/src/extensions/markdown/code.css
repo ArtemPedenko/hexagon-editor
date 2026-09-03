@@ -1,21 +1,21 @@
 @keyframes code_fake_blink {
-	49% {
-		border-color: unset;
-	}
-	50%,
-	99% {
-		border-color: transparent;
-	}
+  49% {
+    border-color: unset;
+  }
+  50%,
+  99% {
+    border-color: transparent;
+  }
 }
 
 .ProseMirror.no-cursor {
-	caret-color: transparent;
+  caret-color: transparent;
 }
 
 .ProseMirror-focused .fake-cursor {
-	position: relative;
-	z-index: 1;
-	margin-right: -1px;
-	border-left: 1px solid;
-	animation: code_fake_blink 1s infinite;
+  position: relative;
+  z-index: 1;
+  margin-right: -1px;
+  border-left: 1px solid;
+  animation: code_fake_blink 1s infinite;
 }

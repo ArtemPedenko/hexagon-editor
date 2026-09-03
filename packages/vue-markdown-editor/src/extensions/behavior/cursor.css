@@ -1,32 +1,32 @@
 .Prosemirror-hide-cursor {
-	caret-color: transparent;
+  caret-color: transparent;
 }
 
 @keyframes hx-md-gapcursor-blink {
-	1%,
-	49% {
-		border-color: currentColor;
-	}
-	50%,
-	99% {
-		border-color: transparent;
-	}
+  1%,
+  49% {
+    border-color: currentColor;
+  }
+  50%,
+  99% {
+    border-color: transparent;
+  }
 }
 
 .hx-md-gapcursor {
-	cursor: text;
+  cursor: text;
 }
 
 .hx-md-gapcursor::before {
-	position: relative;
-	z-index: 1;
-	display: inline-block;
-	margin-right: -1px;
-	content: '\200A';
-	caret-color: transparent;
-	border-right: 1px solid transparent;
+  position: relative;
+  z-index: 1;
+  display: inline-block;
+  margin-right: -1px;
+  content: '\200A';
+  caret-color: transparent;
+  border-right: 1px solid transparent;
 }
 
 .ProseMirror-focused .hx-md-gapcursor::before {
-	animation: hx-md-gapcursor-blink 1s infinite;
+  animation: hx-md-gapcursor-blink 1s infinite;
 }

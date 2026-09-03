@@ -10,5 +10,5 @@ export type CommonMarkSpecsPresetOptions = CommonMarkPresetOptions;
  * parser and serializer registrations live beside each runtime extension.
  */
 export const CommonMarkSpecsPreset: ExtensionAuto<CommonMarkSpecsPresetOptions> = (builder, options) => {
-	builder.use(CommonMarkPreset, options);
+  builder.use(CommonMarkPreset, options);
 };

@@ -9,5 +9,5 @@ export type DefaultPresetOptions = CommonMarkPresetOptions;
 
 /** Upstream default preset: CommonMark plus strikethrough and tables. */
 export const DefaultPreset: ExtensionAuto<DefaultPresetOptions> = (builder, options) => {
-	builder.use(CommonMarkPreset, options).use(Strike).use(Table);
+  builder.use(CommonMarkPreset, options).use(Strike).use(Table);
 };

@@ -7,5 +7,5 @@ export type FullSpecsPresetOptions = FullPresetOptions;
 
 /** Specs entry point for the Vue port's merged extension registrations. */
 export const FullSpecsPreset: ExtensionAuto<FullSpecsPresetOptions> = (builder, options) => {
-	builder.use(FullPreset, options);
+  builder.use(FullPreset, options);
 };

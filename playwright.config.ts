@@ -1,18 +1,18 @@
-import {defineConfig, devices} from '@playwright/test';
+import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
-    testDir: './e2e',
-    fullyParallel: true,
-    reporter: 'list',
-    use: {
-        baseURL: 'http://127.0.0.1:4176',
-        screenshot: 'only-on-failure',
-        trace: 'retain-on-failure',
-    },
-    projects: [{name: 'chromium', use: {...devices['Desktop Chrome']}}],
-    webServer: {
-        command: 'apps/playground/node_modules/.bin/vite apps/playground --host 127.0.0.1 --port 4176',
-        port: 4176,
-        reuseExistingServer: !process.env.CI,
-    },
+  testDir: './e2e',
+  fullyParallel: true,
+  reporter: 'list',
+  use: {
+    baseURL: 'http://127.0.0.1:4176',
+    screenshot: 'only-on-failure',
+    trace: 'retain-on-failure',
+  },
+  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  webServer: {
+    command: 'apps/playground/node_modules/.bin/vite apps/playground --host 127.0.0.1 --port 4176',
+    port: 4176,
+    reuseExistingServer: !process.env.CI,
+  },
 });

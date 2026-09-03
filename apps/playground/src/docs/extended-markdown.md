@@ -2,25 +2,25 @@
 
 Use the `full` toolbar preset for the broadest built-in set of controls. Some supported syntax, such as subscript and definition lists, has no built-in toolbar button. Toolbar presets only choose buttons: the editor always parses and serializes its extended Markdown schema, so changing between `zero`, `commonmark`, `default`, and `full` does not change round-trip support. `MarkdownRenderer` understands the renderer syntax below; math and Mermaid need the noted adapters, while YFM HTML is rendered as escaped source.
 
-| Feature | Syntax | Visual | Markup | Renderer | Requirements / round-trip |
-| --- | --- | ---: | ---: | ---: | --- |
-| Strike | `~~text~~` | ✓ | ✓ | ✓ | `default`/`full` include a button |
-| Underline | `++text++` | ✓ | ✓ | ✓ | `full` includes a button; serializer emits `++`, never `__` |
-| Highlight | `==text==` | ✓ | ✓ | ✓ | `full` includes a button |
-| Subscript | `H~2~O` | ✓ | ✓ | ✓ | no built-in toolbar button |
-| Color | `{red}(text)` | ✓ | ✓ | ✓ | `full` opens a seven-color palette; names are `gray`, `yellow`, `orange`, `red`, `green`, `blue`, `violet` |
-| Background color | `{bg-yellow}(text)` | ✓ | ✓ | ✓ | `full` opens the same palette plus `default` to clear an applied background |
-| Tables | pipe table with `:---:` | ✓ | ✓ | ✓ | `full` includes a button; alignment is preserved |
-| Definition list | `Term` then `: definition` | ✓ | ✓ | ✓ | no built-in toolbar button |
-| Heading attributes | `## Name {#id .one .two}` | ✓ | ✓ | ✓ | syntax accepts id/classes, but current parser retains the last class only |
-| Folding heading | `##+ Name` | ✓ | ✓ | ✓ | `full` includes a button; boundary ends at equal/higher heading |
-| Quote link | `> [Source](url){data-quotelink=true}` | ✓ | ✓ | ✓ | no built-in toolbar button; following quote text is associated |
-| Directive | `::: note` … `:::` | ✓ | ✓ | ✓ | registered component required for component view |
-| Inline / block math | `$x$`, `$$…$$` | ✓ | ✓ | ✓ | `full` includes a button; rendered output needs `features.math`; failed render remains source |
-| Mermaid | `````mermaid` fence | ✓ | ✓ | ✓ | `full` includes a button; rendered output needs `features.mermaid`; source remains fallback |
-| Image attributes | `![Alt](url "Title"){width=100% object-fit=contain}` | ✓ | ✓ | ✓ | `full` includes a button; width/height/object-fit only |
-| New-window link | `[Text](url){target="_blank"}` | ✓ | ✓ | ✓ | parser maps target and emits safe `rel` |
-| Breaks | two spaces / `\\` / newline | ✓ | ✓ | ✓ | hard break vs soft break follows `preferredBreak` |
+| Feature             | Syntax                                               | Visual | Markup | Renderer | Requirements / round-trip                                                                                  |
+| ------------------- | ---------------------------------------------------- | -----: | -----: | -------: | ---------------------------------------------------------------------------------------------------------- |
+| Strike              | `~~text~~`                                           |      ✓ |      ✓ |        ✓ | `default`/`full` include a button                                                                          |
+| Underline           | `++text++`                                           |      ✓ |      ✓ |        ✓ | `full` includes a button; serializer emits `++`, never `__`                                                |
+| Highlight           | `==text==`                                           |      ✓ |      ✓ |        ✓ | `full` includes a button                                                                                   |
+| Subscript           | `H~2~O`                                              |      ✓ |      ✓ |        ✓ | no built-in toolbar button                                                                                 |
+| Color               | `{red}(text)`                                        |      ✓ |      ✓ |        ✓ | `full` opens a seven-color palette; names are `gray`, `yellow`, `orange`, `red`, `green`, `blue`, `violet` |
+| Background color    | `{bg-yellow}(text)`                                  |      ✓ |      ✓ |        ✓ | `full` opens the same palette plus `default` to clear an applied background                                |
+| Tables              | pipe table with `:---:`                              |      ✓ |      ✓ |        ✓ | `full` includes a button; alignment is preserved                                                           |
+| Definition list     | `Term` then `: definition`                           |      ✓ |      ✓ |        ✓ | no built-in toolbar button                                                                                 |
+| Heading attributes  | `## Name {#id .one .two}`                            |      ✓ |      ✓ |        ✓ | syntax accepts id/classes, but current parser retains the last class only                                  |
+| Folding heading     | `##+ Name`                                           |      ✓ |      ✓ |        ✓ | `full` includes a button; boundary ends at equal/higher heading                                            |
+| Quote link          | `> [Source](url){data-quotelink=true}`               |      ✓ |      ✓ |        ✓ | no built-in toolbar button; following quote text is associated                                             |
+| Directive           | `::: note` … `:::`                                   |      ✓ |      ✓ |        ✓ | registered component required for component view                                                           |
+| Inline / block math | `$x$`, `$$…$$`                                       |      ✓ |      ✓ |        ✓ | `full` includes a button; rendered output needs `features.math`; failed render remains source              |
+| Mermaid             | `````mermaid` fence                                  |      ✓ |      ✓ |        ✓ | `full` includes a button; rendered output needs `features.mermaid`; source remains fallback                |
+| Image attributes    | `![Alt](url "Title"){width=100% object-fit=contain}` |      ✓ |      ✓ |        ✓ | `full` includes a button; width/height/object-fit only                                                     |
+| New-window link     | `[Text](url){target="_blank"}`                       |      ✓ |      ✓ |        ✓ | parser maps target and emits safe `rel`                                                                    |
+| Breaks              | two spaces / `\\` / newline                          |      ✓ |      ✓ |        ✓ | hard break vs soft break follows `preferredBreak`                                                          |
 
 ````markdown
 # Guide {#guide .page-title .wide}
@@ -28,7 +28,7 @@ Use the `full` toolbar preset for the broadest built-in set of controls. Some su
 ##+ Folded section
 It ends before the next `##` or `#` heading.
 
-~~removed~~, ++underlined++, ==marked==, H~2~O and {blue}(blue **bold** text).
+~~removed~~, ++underlined++, ==marked==, H~~2~~O and {blue}(blue **bold** text).
 Inline $E=mc^2$.
 
 $$
@@ -40,7 +40,7 @@ graph LR
   A --> B
 ```
 
-![Alt](https://example.com/image.png "Title"){width=100% object-fit=contain}
+![Alt](https://example.com/image.png 'Title'){width=100% object-fit=contain}
 [External](https://example.com){target="_blank"}
 
 Hard break  
@@ -50,7 +50,7 @@ Term
 : Definition
 
 > [Source](https://example.com){data-quotelink=true}
-Quote text.
+> Quote text.
 
 ::: note
 Component content
@@ -80,9 +80,14 @@ The color command applies the selected palette color to the selection, or to tex
 
 ```vue
 <script setup lang="ts">
-import {ref} from 'vue'
-import {MarkdownEditor} from 'hexagon-editor'
-const value = ref('##+ Details\n\n++Important++ and $E=mc^2$.')
+import { ref } from 'vue';
+import { MarkdownEditor } from 'hexagon-editor';
+const value = ref('##+ Details\n\n++Important++ and $E=mc^2$.');
 </script>
-<template><MarkdownEditor v-model="value" toolbar-preset="full" /></template>
+<template>
+  <MarkdownEditor
+    v-model="value"
+    toolbar-preset="full"
+  />
+</template>
 ```

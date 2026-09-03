@@ -7,18 +7,18 @@ import { ExtensionsManager } from '../../core/extensions-manager';
 import { createHistoryActions, History } from './history';
 
 describe('History extension', () => {
-	it('registers history state and optional shortcut keymap', () => {
-		const plugins = ExtensionsManager.plugins(
-			(builder) => builder.use(History, { undoKey: 'Mod-z' }),
-			basicMarkdownSchema,
-		);
-		const state = EditorState.create({ plugins, schema: basicMarkdownSchema });
+  it('registers history state and optional shortcut keymap', () => {
+    const plugins = ExtensionsManager.plugins(
+      (builder) => builder.use(History, { undoKey: 'Mod-z' }),
+      basicMarkdownSchema,
+    );
+    const state = EditorState.create({ plugins, schema: basicMarkdownSchema });
 
-		expect(plugins).toHaveLength(2);
-		expect(undoDepth(state)).toBe(0);
-	});
+    expect(plugins).toHaveLength(2);
+    expect(undoDepth(state)).toBe(0);
+  });
 
-	it('exposes toolbar commands with upstream action names', () => {
-		expect(Object.keys(createHistoryActions())).toEqual(['redo', 'undo']);
-	});
+  it('exposes toolbar commands with upstream action names', () => {
+    expect(Object.keys(createHistoryActions())).toEqual(['redo', 'undo']);
+  });
 });

@@ -13,7 +13,7 @@ pnpm add hexagon-editor
 ```ts
 // nuxt.config.ts
 export default defineNuxtConfig({
-    css: ['hexagon-editor/style.css'], // редактор и рендерер
+  css: ['hexagon-editor/style.css'], // редактор и рендерер
 });
 ```
 
@@ -21,7 +21,7 @@ export default defineNuxtConfig({
 
 ```ts
 export default defineNuxtConfig({
-    css: ['hexagon-editor/renderer.css'],
+  css: ['hexagon-editor/renderer.css'],
 });
 ```
 
@@ -31,7 +31,7 @@ export default defineNuxtConfig({
 
 ```ts
 // src/main.ts
-import {createApp} from 'vue';
+import { createApp } from 'vue';
 import App from './App.vue';
 import 'hexagon-editor/style.css';
 
@@ -42,7 +42,7 @@ createApp(App).mount('#app');
 
 ```ts
 // src/main.ts
-import {createApp} from 'vue';
+import { createApp } from 'vue';
 import App from './App.vue';
 import 'hexagon-editor/renderer.css';
 
@@ -55,8 +55,8 @@ createApp(App).mount('#app');
 
 ```vue
 <script setup lang="ts">
-import {ref} from 'vue';
-import {MarkdownEditor} from 'hexagon-editor';
+import { ref } from 'vue';
+import { MarkdownEditor } from 'hexagon-editor';
 
 const markdown = ref('# Документ\n\nНачните писать…');
 const mode = ref<'wysiwyg' | 'markup' | 'split'>('wysiwyg');
@@ -78,12 +78,12 @@ const mode = ref<'wysiwyg' | 'markup' | 'split'>('wysiwyg');
 
 Редактор поддерживает следующие конструкции; preset `full` добавляет расширенный набор кнопок панели.
 
-| Категория | Возможности |
-| --- | --- |
-| CommonMark | заголовки, абзацы, цитаты, горизонтальные правила, ссылки, изображения, inline/fenced code, вложенные маркированные и нумерованные списки, переносы |
-| Форматирование | **жирный**, *курсив*, `inline code`, зачёркивание, подчёркивание, выделение (`==text==`), нижний индекс, семь именованных цветов текста и фона |
-| Структура | таблицы с выравниванием, definition lists, атрибуты заголовков, сворачиваемые заголовки `##+` |
-| YFM и расширения | quote links, блоки raw HTML, YFM HTML `:::html`, пользовательские директивы `::: name`, LaTeX, Mermaid |
+| Категория        | Возможности                                                                                                                                         |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CommonMark       | заголовки, абзацы, цитаты, горизонтальные правила, ссылки, изображения, inline/fenced code, вложенные маркированные и нумерованные списки, переносы |
+| Форматирование   | **жирный**, _курсив_, `inline code`, зачёркивание, подчёркивание, выделение (`==text==`), нижний индекс, семь именованных цветов текста и фона      |
+| Структура        | таблицы с выравниванием, definition lists, атрибуты заголовков, сворачиваемые заголовки `##+`                                                       |
+| YFM и расширения | quote links, блоки raw HTML, YFM HTML `:::html`, пользовательские директивы `::: name`, LaTeX, Mermaid                                              |
 
 Пример документа, покрывающий расширенные возможности:
 
@@ -92,7 +92,7 @@ const mode = ref<'wysiwyg' | 'markup' | 'split'>('wysiwyg');
 
 ##+ Сворачиваемый раздел
 
-**Жирный**, *курсив*, ~~зачёркнутый~~, ++подчёркнутый++, ==выделенный==, H~2~O, {blue}(синий текст) и {bg-yellow}(текст на жёлтом фоне).
+**Жирный**, _курсив_, ~~зачёркнутый~~, ++подчёркнутый++, ==выделенный==, H~~2~~O, {blue}(синий текст) и {bg-yellow}(текст на жёлтом фоне).
 
 > Цитата
 
@@ -100,14 +100,14 @@ const mode = ref<'wysiwyg' | 'markup' | 'split'>('wysiwyg');
 
 Текст quote link.
 
-[Ссылка](https://example.com "Подсказка") и ![Логотип](https://example.com/logo.svg)
+[Ссылка](https://example.com 'Подсказка') и ![Логотип](https://example.com/logo.svg)
 
 Термин
 : Определение
 
 | Слева | По центру | Справа |
-| :--- | :---: | ---: |
-| 1 | 2 | 3 |
+| :---- | :-------: | -----: |
+| 1     |     2     |      3 |
 
 Формула: $E = mc^2$
 
@@ -141,14 +141,14 @@ graph LR
 
 ```vue
 <script setup lang="ts">
-import {ref} from 'vue';
-import {MarkdownEditor} from 'hexagon-editor';
+import { ref } from 'vue';
+import { MarkdownEditor } from 'hexagon-editor';
 
 const value = ref('');
 const mode = ref<'wysiwyg' | 'markup' | 'split'>('split');
 
 function save(markdown: string) {
-    console.log(markdown);
+  console.log(markdown);
 }
 </script>
 
@@ -166,19 +166,19 @@ function save(markdown: string) {
 </template>
 ```
 
-| Prop | Тип / значение по умолчанию | Назначение |
-| --- | --- | --- |
-| `modelValue` | `string`, `''` | Markdown-значение для `v-model` |
-| `mode` | `wysiwyg \| markup \| split`, `wysiwyg` | Режим, поддерживает `v-model:mode` |
-| `locale` | `ru \| en`, `ru` | Язык интерфейса |
-| `theme` | `auto \| light \| dark`, `auto` | Тема интерфейса |
-| `placeholder` | `string`, `''` | Текст пустого визуального редактора |
-| `readonly` | `boolean`, `false` | Режим чтения: панель инструментов скрыта |
-| `toolbarPreset` | см. ниже, `default` | Встроенная конфигурация панели |
-| `toolbarConfig` | `MarkdownEditorToolbarConfig` | Полностью заменяет выбранный preset |
-| `features` | `MarkdownFeatures` | Адаптеры математики, Mermaid и trusted HTML |
-| `directiveComponents` | `Record<string, Component>` | Vue-компоненты для блоковых директив |
-| `uploadImage` | `(file: File) => Promise<string>` | Обработчик загрузки в форме изображения |
+| Prop                  | Тип / значение по умолчанию             | Назначение                                  |
+| --------------------- | --------------------------------------- | ------------------------------------------- |
+| `modelValue`          | `string`, `''`                          | Markdown-значение для `v-model`             |
+| `mode`                | `wysiwyg \| markup \| split`, `wysiwyg` | Режим, поддерживает `v-model:mode`          |
+| `locale`              | `ru \| en`, `ru`                        | Язык интерфейса                             |
+| `theme`               | `auto \| light \| dark`, `auto`         | Тема интерфейса                             |
+| `placeholder`         | `string`, `''`                          | Текст пустого визуального редактора         |
+| `readonly`            | `boolean`, `false`                      | Режим чтения: панель инструментов скрыта    |
+| `toolbarPreset`       | см. ниже, `default`                     | Встроенная конфигурация панели              |
+| `toolbarConfig`       | `MarkdownEditorToolbarConfig`           | Полностью заменяет выбранный preset         |
+| `features`            | `MarkdownFeatures`                      | Адаптеры математики, Mermaid и trusted HTML |
+| `directiveComponents` | `Record<string, Component>`             | Vue-компоненты для блоковых директив        |
+| `uploadImage`         | `(file: File) => Promise<string>`       | Обработчик загрузки в форме изображения     |
 
 `modelValue`, `mode`, `locale`, `toolbarPreset`, `toolbarConfig`, `theme` и `uploadImage` обновляются без перемонтирования компонента. Изменение `mode`, `readonly` или `features` пересоздаёт editor hosts, поэтому текущие selection и история undo/redo сбрасываются. `placeholder` и `directiveComponents` применяются при следующем монтировании; чтобы обновить их у уже созданного редактора, измените его `:key`.
 
@@ -193,23 +193,26 @@ function save(markdown: string) {
 
 ```vue
 <script setup lang="ts">
-import {ref} from 'vue';
-import {MarkdownEditor} from 'hexagon-editor';
-import type {MarkdownEditorExposed} from 'hexagon-editor';
+import { ref } from 'vue';
+import { MarkdownEditor } from 'hexagon-editor';
+import type { MarkdownEditorExposed } from 'hexagon-editor';
 
 const editor = ref<MarkdownEditorExposed>();
 
 async function insertTemplate() {
-    editor.value?.append('## Новый раздел');
-    await editor.value?.setMode('markup');
-    editor.value?.moveCursor('end');
-    editor.value?.focus();
+  editor.value?.append('## Новый раздел');
+  await editor.value?.setMode('markup');
+  editor.value?.moveCursor('end');
+  editor.value?.focus();
 }
 </script>
 
 <template>
   <button @click="insertTemplate">Добавить раздел</button>
-  <MarkdownEditor ref="editor" v-model="value" />
+  <MarkdownEditor
+    ref="editor"
+    v-model="value"
+  />
 </template>
 ```
 
@@ -219,35 +222,31 @@ async function insertTemplate() {
 
 Presets: `zero`, `commonmark`, `default`, `full` и совместимый `minimal`.
 
-| Preset | Содержимое |
-| --- | --- |
-| `zero` | undo / redo |
-| `commonmark` | история, жирный, курсив, заголовки, списки, ссылка, цитата, code, code block, горизонтальное правило |
-| `default` | `commonmark` + зачёркивание |
-| `minimal` | история, базовое форматирование, списки, цитата, сворачиваемые заголовки, ссылка |
-| `full` | расширенный набор кнопок: underline, mark, цвет текста и фона, image, formula, Mermaid, YFM HTML и таблицы |
+| Preset       | Содержимое                                                                                                 |
+| ------------ | ---------------------------------------------------------------------------------------------------------- |
+| `zero`       | undo / redo                                                                                                |
+| `commonmark` | история, жирный, курсив, заголовки, списки, ссылка, цитата, code, code block, горизонтальное правило       |
+| `default`    | `commonmark` + зачёркивание                                                                                |
+| `minimal`    | история, базовое форматирование, списки, цитата, сворачиваемые заголовки, ссылка                           |
+| `full`       | расширенный набор кнопок: underline, mark, цвет текста и фона, image, formula, Mermaid, YFM HTML и таблицы |
 
 Все идентификаторы кнопок: `undo`, `redo`, `heading`, `bold`, `italic`, `underline`, `strike`, `mark`, `code`, `bullet-list`, `ordered-list`, `quote`, `fold-heading`, `code-block`, `code-language`, `link`, `color`, `background-color`, `image`, `formula`, `mermaid`, `html`, `horizontal-rule`, `table`. `code-language` доступен только в контекстном меню выбранного code block и не отображается в основной панели.
 
 Соберите панель с нужным порядком и контекстными условиями:
 
 ```ts
-import {
-    createToolbarConfig,
-    createToolbarGroup,
-    createToolbarItem,
-} from 'hexagon-editor';
-import type {MarkdownEditorToolbarConfig} from 'hexagon-editor';
+import { createToolbarConfig, createToolbarGroup, createToolbarItem } from 'hexagon-editor';
+import type { MarkdownEditorToolbarConfig } from 'hexagon-editor';
 
 export const toolbar: MarkdownEditorToolbarConfig = createToolbarConfig([
-    createToolbarGroup('history', ['undo', 'redo']),
-    createToolbarGroup('text', ['heading', 'bold', 'italic', 'code']),
-    createToolbarGroup('insert', [
-        'link',
-        createToolbarItem('table', {
-            isAvailable: (state) => !state.codeBlock,
-        }),
-    ]),
+  createToolbarGroup('history', ['undo', 'redo']),
+  createToolbarGroup('text', ['heading', 'bold', 'italic', 'code']),
+  createToolbarGroup('insert', [
+    'link',
+    createToolbarItem('table', {
+      isAvailable: (state) => !state.codeBlock,
+    }),
+  ]),
 ]);
 ```
 
@@ -263,24 +262,28 @@ export const toolbar: MarkdownEditorToolbarConfig = createToolbarConfig([
 
 ```vue
 <script setup lang="ts">
-import {MarkdownEditor} from 'hexagon-editor';
+import { MarkdownEditor } from 'hexagon-editor';
 
 async function uploadImage(file: File): Promise<string> {
-    const body = new FormData();
-    body.append('image', file);
-    const response = await fetch('/api/images', {method: 'POST', body});
-    if (!response.ok) throw new Error('Image upload failed');
+  const body = new FormData();
+  body.append('image', file);
+  const response = await fetch('/api/images', { method: 'POST', body });
+  if (!response.ok) throw new Error('Image upload failed');
 
-    const result: unknown = await response.json();
-    if (typeof result !== 'object' || result === null || !('url' in result) || typeof result.url !== 'string') {
-        throw new Error('The API must return {url: string}');
-    }
-    return result.url;
+  const result: unknown = await response.json();
+  if (typeof result !== 'object' || result === null || !('url' in result) || typeof result.url !== 'string') {
+    throw new Error('The API must return {url: string}');
+  }
+  return result.url;
 }
 </script>
 
 <template>
-  <MarkdownEditor v-model="value" :upload-image="uploadImage" toolbar-preset="full" />
+  <MarkdownEditor
+    v-model="value"
+    :upload-image="uploadImage"
+    toolbar-preset="full"
+  />
 </template>
 ```
 
@@ -290,9 +293,9 @@ async function uploadImage(file: File): Promise<string> {
 
 ```vue
 <script setup lang="ts">
-import {MarkdownRenderer} from 'hexagon-editor/renderer';
+import { MarkdownRenderer } from 'hexagon-editor/renderer';
 
-defineProps<{content: string}>();
+defineProps<{ content: string }>();
 </script>
 
 <template>
@@ -317,29 +320,30 @@ pnpm add katex mermaid
 ```ts
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
-import type {MarkdownFeatures} from 'hexagon-editor';
+import type { MarkdownFeatures } from 'hexagon-editor';
 
 export const editorFeatures: MarkdownFeatures = {
-    math: {
-        renderToString: (latex, display) => katex.renderToString(latex, {
-            displayMode: display,
-            throwOnError: true,
-        }),
-    },
-    mermaid: {
-        load: () => import('mermaid').then(({default: mermaid}) => mermaid),
-    },
-    // source приходит из :::html ... ::: — возвращайте только безопасный DOM.
-    html: (source) => {
-        const element = document.createElement('div');
-        element.textContent = source;
-        return element;
-    },
+  math: {
+    renderToString: (latex, display) =>
+      katex.renderToString(latex, {
+        displayMode: display,
+        throwOnError: true,
+      }),
+  },
+  mermaid: {
+    load: () => import('mermaid').then(({ default: mermaid }) => mermaid),
+  },
+  // source приходит из :::html ... ::: — возвращайте только безопасный DOM.
+  html: (source) => {
+    const element = document.createElement('div');
+    element.textContent = source;
+    return element;
+  },
 };
 
 export const rendererFeatures: MarkdownFeatures = {
-    math: editorFeatures.math,
-    mermaid: editorFeatures.mermaid,
+  math: editorFeatures.math,
+  mermaid: editorFeatures.mermaid,
 };
 ```
 
@@ -359,7 +363,7 @@ Mermaid загружается лениво, только когда в доку
 ```vue
 <!-- NoteDirective.vue -->
 <script setup lang="ts">
-import type {MarkdownDirectiveComponentProps} from 'hexagon-editor';
+import type { MarkdownDirectiveComponentProps } from 'hexagon-editor';
 
 const props = defineProps<MarkdownDirectiveComponentProps>();
 </script>
@@ -378,14 +382,17 @@ const props = defineProps<MarkdownDirectiveComponentProps>();
 
 ```vue
 <script setup lang="ts">
-import {MarkdownEditor} from 'hexagon-editor';
+import { MarkdownEditor } from 'hexagon-editor';
 import NoteDirective from './NoteDirective.vue';
 
-const directiveComponents = {note: NoteDirective};
+const directiveComponents = { note: NoteDirective };
 </script>
 
 <template>
-  <MarkdownEditor v-model="value" :directive-components="directiveComponents" />
+  <MarkdownEditor
+    v-model="value"
+    :directive-components="directiveComponents"
+  />
 </template>
 ```
 
@@ -400,19 +407,19 @@ const directiveComponents = {note: NoteDirective};
 `useMarkdownEditor()` создаёт framework-neutral экземпляр и автоматически уничтожает его при размонтировании Vue-компонента. Это API управляет состоянием и событиями; монтирование визуальных поверхностей выполняется компонентом `MarkdownEditor` или низкоуровневыми функциями из `/core`.
 
 ```ts
-import {useMarkdownEditor} from 'hexagon-editor';
+import { useMarkdownEditor } from 'hexagon-editor';
 
-const {editor, value, mode, readonly, toolbarVisible, destroy} = useMarkdownEditor({
-    initialValue: '# Черновик',
-    mode: 'markup',
-    preset: 'full',
-    onChange: (markdown) => saveDraft(markdown),
-    beforeEditorModeChange: ({mode}) => mode !== 'split' || canUseSplitMode(),
+const { editor, value, mode, readonly, toolbarVisible, destroy } = useMarkdownEditor({
+  initialValue: '# Черновик',
+  mode: 'markup',
+  preset: 'full',
+  onChange: (markdown) => saveDraft(markdown),
+  beforeEditorModeChange: ({ mode }) => mode !== 'split' || canUseSplitMode(),
 });
 
 editor.append('Новый абзац');
 editor.setReadonly(true);
-editor.changeToolbarVisibility({visible: false});
+editor.changeToolbarVisibility({ visible: false });
 editor.on('modeChange', (nextMode) => console.log(nextMode));
 // destroy() требуется только вне Vue lifecycle или для раннего освобождения.
 ```
@@ -424,12 +431,12 @@ editor.on('modeChange', (nextMode) => console.log(nextMode));
 Используйте public subpaths, когда строите свой ProseMirror-based редактор:
 
 ```ts
-import {ExtensionsManager} from 'hexagon-editor/core';
-import {DefaultPreset} from 'hexagon-editor/presets';
-import {Math, Mermaid} from 'hexagon-editor/extensions';
+import { ExtensionsManager } from 'hexagon-editor/core';
+import { DefaultPreset } from 'hexagon-editor/presets';
+import { Math, Mermaid } from 'hexagon-editor/extensions';
 
 const extensions = new ExtensionsManager((builder) => {
-    builder.use(DefaultPreset, {}).use(Math).use(Mermaid);
+  builder.use(DefaultPreset, {}).use(Math).use(Mermaid);
 }).build();
 ```
 
