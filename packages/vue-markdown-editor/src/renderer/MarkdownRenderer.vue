@@ -107,7 +107,6 @@ onBeforeUnmount(() => {
 
 <template>
   <!-- The rendered content may contain trusted HTML from ::: html blocks. -->
-  <!-- eslint-disable-next-line vue/no-v-html -->
   <div
     ref="root"
     class="markdown-renderer"

@@ -43,7 +43,6 @@ const props = defineProps<{ name: keyof typeof icons }>();
 </script>
 
 <template>
-  <!-- eslint-disable-next-line vue/no-v-html -- Static SVG sources are bundled with the editor. -->
   <span
     class="markdown-editor__toolbar-icon"
     aria-hidden="true"

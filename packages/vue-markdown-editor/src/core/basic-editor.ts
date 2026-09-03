@@ -1,7 +1,7 @@
 import { chainCommands, setBlockType, toggleMark } from 'prosemirror-commands';
 import { keymap } from 'prosemirror-keymap';
 import { EditorState, NodeSelection, TextSelection } from 'prosemirror-state';
-import type { Plugin, Transaction } from 'prosemirror-state';
+import type { Command, Plugin, Transaction } from 'prosemirror-state';
 import { liftListItem, splitListItem } from 'prosemirror-schema-list';
 import { DecorationSet, EditorView } from 'prosemirror-view';
 import type { NodeViewConstructor } from 'prosemirror-view';
@@ -132,7 +132,7 @@ export function insertDirective(
   name: string,
   content: string,
   attrs: Record<string, unknown> = {},
-): import('prosemirror-state').Command {
+): Command {
   return (state, dispatch) => {
     const { $from, empty } = state.selection;
     if (!empty || !$from.parent.isTextblock) return false;
