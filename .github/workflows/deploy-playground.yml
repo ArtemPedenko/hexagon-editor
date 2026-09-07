@@ -3,6 +3,7 @@ name: Deploy playground
 on:
   push:
     branches: [master]
+  pull_request:
   workflow_dispatch:
 
 permissions:
@@ -11,7 +12,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
+  group: checks-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -30,13 +31,22 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm --filter hexagon-editor build
       - run: pnpm --filter hexagon-editor-playground build
+      - run: pnpm test:package
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
 
       - uses: actions/upload-pages-artifact@v3
+        if: github.event_name != 'pull_request'
         with:
           path: apps/playground/dist
 
   deploy:
+    if: github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
     environment:

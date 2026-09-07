@@ -7,6 +7,21 @@ import { setColorCommand } from '../../core/basic-editor-command-helpers';
 import { textColorMenuNames } from './color';
 
 describe('Color extension', () => {
+  it.each([false, true])('sets and resets color with selection=%s', (selected) => {
+    const doc = basicMarkdownCodec.parse('text');
+    let state = EditorState.create({ doc, selection: TextSelection.create(doc, 1, selected ? 5 : 1) });
+    setColorCommand(basicMarkdownSchema, 'red')(state, (tr) => {
+      state = state.apply(tr);
+    });
+    expect(selected ? state.doc.firstChild?.firstChild?.marks[0]?.type.name : state.storedMarks?.[0]?.type.name).toBe(
+      'color',
+    );
+    setColorCommand(basicMarkdownSchema, 'default')(state, (tr) => {
+      state = state.apply(tr);
+    });
+    expect(basicMarkdownCodec.serialize(state.doc)).toBe('text');
+    expect(state.storedMarks ?? []).toEqual([]);
+  });
   it('parses and serializes named text colors with nested marks', () => {
     const source = 'Обычный {red}(красный **жирный**) текст';
     const document = basicMarkdownCodec.parse(source);

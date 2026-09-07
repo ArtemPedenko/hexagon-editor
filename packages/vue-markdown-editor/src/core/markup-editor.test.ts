@@ -50,6 +50,34 @@ describe('mountBasicMarkupEditor', () => {
     expect(editor.getValue()).toBe('# Updated!');
   });
 
+  it('blocks keyboard edits and history while allowing programmatic updates', () => {
+    const target = document.createElement('div');
+    const onChange = vi.fn();
+    const editor = mountBasicMarkupEditor({ target, editable: false, initialValue: 'text', onChange });
+    const view = EditorView.findFromDOM(target)!;
+    editor.insert('prefix');
+    onChange.mockClear();
+    const before = editor.getValue();
+    for (const event of [
+      { key: 'Tab' },
+      { key: 'Tab', shiftKey: true },
+      { key: 'Backspace' },
+      { key: 'Delete' },
+      { key: 'z', ctrlKey: true },
+      { key: 'z', metaKey: true },
+      { key: 'z', ctrlKey: true, shiftKey: true },
+      { key: 'y', ctrlKey: true },
+    ])
+      view.contentDOM.dispatchEvent(new KeyboardEvent('keydown', { ...event, bubbles: true, cancelable: true }));
+    editor.undo();
+    editor.redo();
+    expect(editor.getValue()).toBe(before);
+    expect(onChange).not.toHaveBeenCalled();
+    editor.setValue('external');
+    expect(editor.getValue()).toBe('external');
+    editor.destroy();
+  });
+
   it('focuses the editor and safely tears down the host', () => {
     const target = document.createElement('div');
     document.body.append(target);

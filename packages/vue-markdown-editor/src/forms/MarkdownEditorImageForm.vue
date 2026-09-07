@@ -20,6 +20,7 @@ export type MarkdownEditorImageUpload = (file: File) => Promise<string>;
 
 const props = withDefaults(
   defineProps<{
+    variant?: 'full' | 'basic';
     alt?: string;
     autofocus?: boolean;
     disabled?: boolean;
@@ -33,6 +34,7 @@ const props = withDefaults(
     width?: number | string;
   }>(),
   {
+    variant: 'full',
     alt: '',
     autofocus: false,
     disabled: false,
@@ -131,7 +133,7 @@ defineExpose({ element: computed(() => form.value?.element) });
     @submit="submit"
   >
     <label
-      v-if="uploadImage"
+      v-if="uploadImage !== undefined"
       class="markdown-editor-image-upload"
       :class="{
         'markdown-editor-image-upload--disabled': disabled || uploading,
@@ -168,6 +170,7 @@ defineExpose({ element: computed(() => form.value?.element) });
       "
     />
     <MarkdownEditorTextInput
+      v-if="variant === 'full'"
       :model-value="name"
       :disabled="disabled"
       :label="copy.imageName"
@@ -189,6 +192,7 @@ defineExpose({ element: computed(() => form.value?.element) });
       @update:model-value="emit('update:title', $event)"
     />
     <div
+      v-if="variant === 'full'"
       class="markdown-editor-form__sizes"
       :aria-label="copy.imageSizes"
     >

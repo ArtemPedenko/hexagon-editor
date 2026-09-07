@@ -47,3 +47,5 @@ const directives = {
 component.props.updateContent('changed');
 expect(editor.getValue()).toContain('changed');
 ```
+
+Attribute hooks operate inside the outer braces: `parseAttributes(raw)` receives their contents and `serializeAttributes(attrs)` returns contents without braces. For JSON objects use `JSON.parse('{' + raw + '}')` and `JSON.stringify(attrs).slice(1, -1)`; the document remains `::: note {"variant":"info"}`.

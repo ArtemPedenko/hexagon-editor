@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <body>
+    <div id="fixture"></div>
+    <script type="module">
+      import { createApp, h, ref } from 'vue';
+      import MarkdownEditor from '../../../packages/vue-markdown-editor/src/MarkdownEditor.vue';
+      const readonly = ref(false);
+      const value = ref('text');
+      const editor = ref();
+      createApp(() =>
+        h('div', [
+          h(
+            'button',
+            {
+              id: 'lock',
+              onClick: () => {
+                readonly.value = true;
+              },
+            },
+            'Readonly',
+          ),
+          h('button', { id: 'replace', onClick: () => editor.value.replace('external') }, 'Replace'),
+          h('output', { id: 'value' }, value.value),
+          h(MarkdownEditor, {
+            ref: editor,
+            toolbarPreset: 'full',
+            mode: new URLSearchParams(location.search).get('mode'),
+            readonly: readonly.value,
+            modelValue: value.value,
+            'onUpdate:modelValue': (next) => {
+              value.value = next;
+            },
+          }),
+        ]),
+      ).mount('#fixture');
+    </script>
+  </body>
+</html>

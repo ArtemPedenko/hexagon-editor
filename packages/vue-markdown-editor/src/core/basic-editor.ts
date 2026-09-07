@@ -128,11 +128,7 @@ function insertHtmlAndEdit(state: EditorState, dispatch?: (transaction: Transact
   return true;
 }
 
-export function insertDirective(
-  name: string,
-  content: string,
-  attrs: Record<string, unknown> = {},
-): Command {
+export function insertDirective(name: string, content: string, attrs: Record<string, unknown> = {}): Command {
   return (state, dispatch) => {
     const { $from, empty } = state.selection;
     if (!empty || !$from.parent.isTextblock) return false;

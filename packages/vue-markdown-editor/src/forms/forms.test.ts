@@ -5,6 +5,14 @@ import MarkdownEditorImageForm from './MarkdownEditorImageForm.vue';
 import MarkdownEditorLinkForm from './MarkdownEditorLinkForm.vue';
 
 describe('editor forms', () => {
+  it.each(['full', 'basic'] as const)('shows the intended fields for %s', (variant) => {
+    const target = document.createElement('div');
+    const app = createApp(() => h(MarkdownEditorImageForm, variant === 'full' ? {} : { variant }));
+    app.mount(target);
+    expect(target.querySelectorAll('input[type="number"]')).toHaveLength(variant === 'full' ? 2 : 0);
+    expect(target.querySelectorAll('input')).toHaveLength(variant === 'full' ? 6 : 3);
+    app.unmount();
+  });
   it('validates, trims and submits the link contract', async () => {
     const target = document.createElement('div');
     const url = ref('not a url');

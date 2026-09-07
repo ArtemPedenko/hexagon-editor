@@ -1,5 +1,9 @@
+<script lang="ts">
+let mermaidOperationId = 0;
+</script>
+
 <script setup lang="ts">
-import { computed, getCurrentInstance, h, nextTick, onBeforeUnmount, onMounted, ref, render, watch } from 'vue';
+import { computed, getCurrentInstance, h, onBeforeUnmount, onMounted, ref, render, watch } from 'vue';
 
 import { renderMarkdownContent } from './markdown';
 import type { MarkdownFeatures } from '../public-types';
@@ -18,6 +22,9 @@ const root = ref<HTMLElement>();
 const appContext = getCurrentInstance()?.appContext;
 const directives = computed(() => normalizeMarkdownDirectives(props.directives));
 const renderedContent = computed(() => renderMarkdownContent(props.content, props.features, directives.value));
+// Vue owns the initial SSR/hydration HTML only. refresh owns subsequent DOM
+// replacement so directive components always unmount before their containers.
+const initialContent = renderedContent.value;
 let renderVersion = 0;
 let destroyed = false;
 let directiveTargets: HTMLElement[] = [];
@@ -53,50 +60,51 @@ function renderDirectiveComponents(): void {
 }
 
 async function renderMermaidDiagrams(): Promise<void> {
-  const version = ++renderVersion;
+  const version = renderVersion;
+  const current = () => !destroyed && version === renderVersion;
   const diagrams = [...(root.value?.querySelectorAll<HTMLElement>('[data-mermaid]') ?? [])];
   if (diagrams.length === 0) return;
-  if (props.features?.mermaid === undefined) return;
+  if (props.features?.mermaid === undefined) {
+    for (const element of diagrams) element.removeAttribute('aria-busy');
+    return;
+  }
   let mermaid: Awaited<ReturnType<NonNullable<MarkdownFeatures['mermaid']>['load']>>;
   try {
     mermaid = await props.features.mermaid.load();
+    if (!current()) return;
     mermaid.initialize({ securityLevel: 'strict', startOnLoad: false });
   } catch {
+    if (current()) for (const element of diagrams) element.removeAttribute('aria-busy');
     return;
   }
   for (const element of diagrams) {
-    if (destroyed || version !== renderVersion || !element.isConnected) return;
+    if (!current()) return;
     const source = element.querySelector('pre')?.textContent ?? '';
     try {
-      const { bindFunctions, svg } = await mermaid.render(
-        `markdown-renderer-mermaid-${version}-${diagrams.indexOf(element)}`,
-        source,
-      );
-      if (destroyed || version !== renderVersion || !element.isConnected) return;
+      const { bindFunctions, svg } = await mermaid.render(`markdown-renderer-mermaid-${++mermaidOperationId}`, source);
+      if (!current()) return;
       element.innerHTML = svg;
       element.removeAttribute('aria-busy');
       bindFunctions?.(element);
     } catch {
+      if (!current()) return;
       element.removeAttribute('aria-busy');
       element.setAttribute('data-mermaid-error', '');
     }
   }
 }
 
-watch(
-  () => [props.content, props.directives] as const,
-  async () => {
-    renderVersion += 1;
-    await nextTick();
-    renderDirectiveComponents();
-    await renderMermaidDiagrams();
-  },
-);
-
-onMounted(() => {
+function refresh(): void {
+  renderVersion += 1;
+  unmountDirectiveComponents();
+  if (root.value === undefined) return;
+  root.value.innerHTML = renderedContent.value;
   renderDirectiveComponents();
   void renderMermaidDiagrams();
-});
+}
+
+watch(() => [props.content, props.directives, props.features], refresh, { deep: true });
+onMounted(refresh);
 
 onBeforeUnmount(() => {
   destroyed = true;
@@ -110,7 +118,7 @@ onBeforeUnmount(() => {
   <div
     ref="root"
     class="markdown-renderer"
-    v-html="renderedContent"
+    v-html="initialContent"
   />
 </template>
 

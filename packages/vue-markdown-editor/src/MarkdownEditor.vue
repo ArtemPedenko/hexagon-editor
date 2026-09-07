@@ -220,6 +220,7 @@ function insert(markup: string): void {
 }
 
 function applyLink(): void {
+  if (props.readonly) return;
   if (linkUrl.value.trim().length === 0) {
     return;
   }
@@ -239,6 +240,7 @@ function closeLinkEditor(): void {
 }
 
 function applyImage(): void {
+  if (props.readonly) return;
   const src = imageUrl.value.trim();
   if (src.length === 0) return;
   if (shouldRunMarkupCommand()) {
@@ -259,6 +261,7 @@ function closeImageEditor(): void {
 }
 
 function applyTextStyle(style: string): void {
+  if (props.readonly) return;
   if (shouldRunMarkupCommand()) {
     markupEditor?.run(style === 'paragraph' ? markupCommands.paragraph : markupCommands.heading(Number(style)));
   } else if (style === 'paragraph') {
@@ -271,32 +274,38 @@ function applyTextStyle(style: string): void {
 }
 
 async function showHeadingMenu(reference: HTMLElement): Promise<void> {
+  if (props.readonly) return;
   shouldRunMarkupCommand();
   await headingPanel.toggle(reference);
 }
 
 async function toggleCodeMenu(reference: HTMLElement): Promise<void> {
+  if (props.readonly) return;
   shouldRunMarkupCommand();
   await codePanel.toggle(reference);
 }
 
 async function toggleColorMenu(reference: HTMLElement): Promise<void> {
+  if (props.readonly) return;
   if (shouldRunMarkupCommand()) return;
   await colorPanel.toggle(reference);
 }
 
 async function toggleBackgroundColorMenu(reference: HTMLElement): Promise<void> {
+  if (props.readonly) return;
   if (shouldRunMarkupCommand()) return;
   await backgroundColorPanel.toggle(reference);
 }
 
 function selectBackgroundColor(color: TextBackgroundColorName): void {
+  if (props.readonly) return;
   backgroundColorPanel.close();
   if (shouldRunMarkupCommand()) return;
   visualEditor?.run(commands.setBackgroundColor(color));
 }
 
 function selectColor(color: TextColorName): void {
+  if (props.readonly) return;
   colorPanel.close();
   if (shouldRunMarkupCommand()) return;
   visualEditor?.run(commands.setColor(color));
@@ -306,6 +315,7 @@ function executeCodeCommand(
   command: Parameters<BasicWysiwygEditor['run']>[0],
   markupCommand: 'code' | 'codeBlock',
 ): void {
+  if (props.readonly) return;
   if (shouldRunMarkupCommand()) {
     markupEditor?.run(markupCommands[markupCommand]);
   } else {
@@ -315,6 +325,7 @@ function executeCodeCommand(
 }
 
 async function toggleLinkEditor(reference: HTMLElement): Promise<void> {
+  if (props.readonly) return;
   shouldRunMarkupCommand();
   if (linkPanel.visible.value) {
     linkPanel.close();
@@ -327,6 +338,7 @@ async function toggleLinkEditor(reference: HTMLElement): Promise<void> {
 }
 
 async function showLinkEditorAtCursor(reference?: HTMLElement): Promise<void> {
+  if (props.readonly) return;
   const href = toolbarState.value.linkHref;
   if (href === undefined && reference === undefined) {
     closeLinkEditor();
@@ -344,6 +356,7 @@ async function showLinkEditorAtCursor(reference?: HTMLElement): Promise<void> {
 }
 
 function handleEditorClick(event: MouseEvent): void {
+  if (props.readonly) return;
   const target = event.target;
   if (!(target instanceof Element)) return;
   const image = target.closest<HTMLImageElement>('.ProseMirror img');
@@ -361,6 +374,7 @@ function handleEditorClick(event: MouseEvent): void {
 }
 
 async function toggleListMenu(reference: HTMLElement): Promise<void> {
+  if (props.readonly) return;
   shouldRunMarkupCommand();
   await listPanel.toggle(reference);
 }
@@ -369,6 +383,7 @@ function executeListCommand(
   command: Parameters<BasicWysiwygEditor['run']>[0],
   markupCommand: 'bulletList' | 'indentList' | 'orderedList' | 'outdentList',
 ): void {
+  if (props.readonly) return;
   if (shouldRunMarkupCommand()) {
     markupEditor?.run(markupCommands[markupCommand]);
   } else {
@@ -378,11 +393,13 @@ function executeListCommand(
 }
 
 async function toggleImageEditor(reference: HTMLElement): Promise<void> {
+  if (props.readonly) return;
   shouldRunMarkupCommand();
   await imagePanel.toggle(reference);
 }
 
 async function executeImageDisplay(command: Parameters<BasicWysiwygEditor['run']>[0]): Promise<void> {
+  if (props.readonly) return;
   execute(undefined, command);
   await nextTick();
   const image = visualTarget.value?.querySelector<HTMLImageElement>('.ProseMirror img.ProseMirror-selectednode');
@@ -399,11 +416,13 @@ async function selectEditorMode(nextMode: MarkdownEditorMode): Promise<void> {
 }
 
 function insertHtmlDirective(): void {
+  if (props.readonly) return;
   if (shouldRunMarkupCommand()) markupEditor?.run(markupCommands.insertHtml);
   else visualEditor?.run(commands.insertHtml);
 }
 
 function insertPluginDirective(name: string): void {
+  if (props.readonly) return;
   const plugin = directives.value[name];
   if (plugin?.insert === undefined) return;
   const { attrs, content } = plugin.insert;
@@ -413,6 +432,7 @@ function insertPluginDirective(name: string): void {
 }
 
 async function insertMathBlock(): Promise<void> {
+  if (props.readonly) return;
   formulaPanel.close();
   if (toolbarState.value.formula) {
     return;
@@ -422,12 +442,14 @@ async function insertMathBlock(): Promise<void> {
 }
 
 function insertInlineMath(): void {
+  if (props.readonly) return;
   formulaPanel.close();
   if (shouldRunMarkupCommand()) markupEditor?.run(markupCommands.insertInlineMath);
   else visualEditor?.run(commands.insertInlineMath);
 }
 
 async function toggleFormulaMenu(reference: HTMLElement): Promise<void> {
+  if (props.readonly) return;
   shouldRunMarkupCommand();
   if (!toolbarState.value.formula) {
     await formulaPanel.toggle(reference);
@@ -605,6 +627,7 @@ watch(
 watch(
   () => props.readonly,
   async () => {
+    closePanelsOnEscape(new KeyboardEvent('keydown', { key: 'Escape' }));
     const changeId = ++modeChangeId;
     destroyHosts();
     await nextTick();
@@ -745,6 +768,7 @@ defineExpose<MarkdownEditorExposed>({
       <MarkdownEditorImageForm
         v-if="imagePanel.visible.value"
         ref="imageForm"
+        variant="basic"
         :alt="imageAlt"
         :locale="locale"
         :theme="theme"

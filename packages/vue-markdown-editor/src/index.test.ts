@@ -15,7 +15,7 @@ import {
 
 describe('public package entry point', () => {
   it('exposes the Vue port version', () => {
-    expect(VERSION).toBe('0.1.7');
+    expect(VERSION).toBe('0.1.9');
     expect(ClicksOnEdges).toBeTypeOf('function');
     expect(CommonMarkPreset).toBeTypeOf('function');
     expect(CommonMarkSpecsPreset).toBeTypeOf('function');

@@ -92,7 +92,7 @@ const mode = ref<'wysiwyg' | 'markup' | 'split'>('wysiwyg');
 
 ##+ Сворачиваемый раздел
 
-**Жирный**, _курсив_, ~~зачёркнутый~~, ++подчёркнутый++, ==выделенный==, H~~2~~O, {blue}(синий текст) и {bg-yellow}(текст на жёлтом фоне).
+**Жирный**, _курсив_, ~~зачёркнутый~~, ++подчёркнутый++, ==выделенный==, H~2~O, {blue}(синий текст) и {bg-yellow}(текст на жёлтом фоне).
 
 > Цитата
 
@@ -197,6 +197,7 @@ import { ref } from 'vue';
 import { MarkdownEditor } from 'hexagon-editor';
 import type { MarkdownEditorExposed } from 'hexagon-editor';
 
+const value = ref('');
 const editor = ref<MarkdownEditorExposed>();
 
 async function insertTemplate() {
@@ -262,8 +263,10 @@ export const toolbar: MarkdownEditorToolbarConfig = createToolbarConfig([
 
 ```vue
 <script setup lang="ts">
+import { ref } from 'vue';
 import { MarkdownEditor } from 'hexagon-editor';
 
+const value = ref('');
 async function uploadImage(file: File): Promise<string> {
   const body = new FormData();
   body.append('image', file);
@@ -287,7 +290,7 @@ async function uploadImage(file: File): Promise<string> {
 </template>
 ```
 
-Встроенная форма позволяет указать URL, alt-текст, title, имя и размеры. `MarkdownEditorImageForm`, `MarkdownEditorLinkForm`, `MarkdownEditorForm` и `MarkdownEditorTextInput` экспортируются также для самостоятельного использования. Типы payload: `MarkdownEditorImageSubmitParams` и `MarkdownEditorLinkSubmitParams`.
+Встроенная форма позволяет указать URL, alt-текст, title и загрузку файла. Имя и размеры доступны в самостоятельной форме (variant="full" по умолчанию); variant="basic" скрывает их. Размеры вставленного изображения изменяются существующими инструментами редактора. `MarkdownEditorImageForm`, `MarkdownEditorLinkForm`, `MarkdownEditorForm` и `MarkdownEditorTextInput` экспортируются также для самостоятельного использования. Типы payload: `MarkdownEditorImageSubmitParams` и `MarkdownEditorLinkSubmitParams`.
 
 ## Рендерер для read-only и SSR
 
@@ -391,8 +394,8 @@ const directives = {
     label: 'Note',
     toolbar: true,
     insert: { content: '', attrs: { variant: 'info' } },
-    parseAttributes: (raw: string) => JSON.parse(raw),
-    serializeAttributes: JSON.stringify,
+    parseAttributes: (raw: string) => JSON.parse('{' + raw + '}'),
+    serializeAttributes: (attrs) => JSON.stringify(attrs).slice(1, -1),
   },
 };
 </script>
@@ -466,3 +469,11 @@ pnpm dev
 ```
 
 Playground содержит демонстрацию полного toolbar, Markdown/YFM, live-переключатели языка и темы, KaTeX/Mermaid и пример загрузки изображений.
+
+### Уточнения API
+
+Readonly блокирует пользовательские команды и закрывает формы редактирования. Программные методы `setValue()`, `replace()` и `insert()` остаются доступными. В split метод `hasFocus()` проверяет только визуальную поверхность.
+
+`MarkdownRenderer` поддерживает замену `content`, `directives` и `features` после mount. При замене или удалении адаптеров исходный Markdown обрабатывается заново; устаревшие асинхронные результаты игнорируются. Без адаптера сохраняется текстовый fallback; SSR не запускает Mermaid.
+
+В контракте директив `parseAttributes` получает содержимое внешних фигурных скобок, а `serializeAttributes` возвращает содержимое без скобок. Для JSON-объекта parser восстанавливает скобки, serializer удаляет их, как в примере выше.

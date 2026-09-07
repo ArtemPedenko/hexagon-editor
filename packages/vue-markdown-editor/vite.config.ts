@@ -1,8 +1,11 @@
 import { resolve } from 'node:path';
+import { execFileSync } from 'node:child_process';
+import { createRequire } from 'node:module';
+import { writeFileSync } from 'node:fs';
 
 import vue from '@vitejs/plugin-vue';
 import { defineConfig } from 'vitest/config';
-import dts from 'vite-plugin-dts';
+const require = createRequire(import.meta.url);
 
 export default defineConfig(({ mode }) => {
   const rendererBuild = mode === 'renderer';
@@ -13,12 +16,22 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [
       vue(),
-      dts({
-        entryRoot: resolve(import.meta.dirname, 'src'),
-        exclude: ['vite.config.ts', 'src/**/*.test.ts'],
-        outDir: resolve(import.meta.dirname, 'dist'),
-        tsconfigPath: './tsconfig.json',
-      }),
+      {
+        name: 'checked-declarations',
+        apply: 'build',
+        closeBundle() {
+          // Use the same Vue type compiler as typecheck. Its nonzero exit
+          // fails either build stage, including direct Vite invocations.
+          execFileSync(process.execPath, [require.resolve('vue-tsc/bin/vue-tsc.js'), '-p', 'tsconfig.build.json'], {
+            cwd: import.meta.dirname,
+            stdio: 'inherit',
+          });
+          // Flat JS entry points take precedence over directory index types.
+          for (const name of ['core', 'extensions', 'forms', 'i18n', 'presets', 'renderer', 'toolbar']) {
+            writeFileSync(resolve(import.meta.dirname, 'dist', name + '.d.ts'), `export * from './${name}/index';\n`);
+          }
+        },
+      },
     ],
     build: {
       lib: {

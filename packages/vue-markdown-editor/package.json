@@ -61,7 +61,7 @@
     "THIRD_PARTY_NOTICES.md"
   ],
   "scripts": {
-    "build": "vite build && vite build --mode renderer",
+    "build": "pnpm typecheck && vite build && vite build --mode renderer",
     "test": "vitest run",
     "typecheck": "vue-tsc --noEmit -p tsconfig.json",
     "lint": "eslint src --max-warnings=0"
@@ -100,7 +100,6 @@
     "@vue/server-renderer": "^3.5.0",
     "jsdom": "^30.0.1",
     "vite": "^7.0.0",
-    "vite-plugin-dts": "^4.5.0",
     "vue": "^3.5.0",
     "vue-tsc": "^3.0.0"
   }

@@ -101,7 +101,7 @@ describe('renderMarkdownContent', () => {
   it('emits an SSR-stable Mermaid fallback', () => {
     const result = renderMarkdownContent('```mermaid\ngraph LR\n  A --> B\n```');
 
-    expect(result).toContain('<div data-mermaid aria-busy="true"><pre>graph LR');
+    expect(result).toContain('<div data-mermaid><pre>graph LR');
     expect(result).toContain('A --&gt; B');
   });
 });

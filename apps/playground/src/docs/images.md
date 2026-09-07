@@ -1,6 +1,6 @@
 ## Images, uploads, and forms
 
-The built-in editor image form applies only URL, alt and title to its insertion command. Its standalone form also collects name, width and height, but those fields do not make the built-in insertion richer. Select an image in visual mode for resize handles, full width and `object-fit` (`contain`, `cover`, `fill`, `none`, `scale-down`). The serialized attribute form is:
+The built-in image form shows URL, alt, title and file upload (when an upload adapter is provided). It uses `variant="basic"`, which hides name and dimensions. The standalone form defaults to `variant="full"` and retains name, width and height in its payload. Select an image in visual mode for resize handles, full width and `object-fit` (`contain`, `cover`, `fill`, `none`, `scale-down`). The serialized attribute form is:
 
 ```markdown
 ![Alt](https://example.com/image.png 'Title'){width=100% object-fit=contain}
@@ -15,7 +15,9 @@ import { MarkdownEditor } from 'hexagon-editor';
 const value = ref('');
 async function uploadImage(file: File): Promise<string> {
   if (!file.type.startsWith('image/') || file.size > 5_000_000) throw new Error('Invalid image');
-  const response = await fetch('/api/images', { method: 'POST', body: new FormData() });
+  const body = new FormData();
+  body.append('image', file);
+  const response = await fetch('/api/images', { method: 'POST', body });
   if (!response.ok) throw new Error('Upload failed');
   const data: unknown = await response.json();
   if (typeof data !== 'object' || data === null || !('url' in data) || typeof data.url !== 'string')

@@ -7,6 +7,21 @@ import { setBackgroundColorCommand } from '../../core/basic-editor-command-helpe
 import { textBackgroundColorMenuNames } from './background-color';
 
 describe('Background color extension', () => {
+  it.each([false, true])('sets and resets color with selection=%s', (selected) => {
+    const doc = basicMarkdownCodec.parse('text');
+    let state = EditorState.create({ doc, selection: TextSelection.create(doc, 1, selected ? 5 : 1) });
+    setBackgroundColorCommand(basicMarkdownSchema, 'red')(state, (tr) => {
+      state = state.apply(tr);
+    });
+    expect(selected ? state.doc.firstChild?.firstChild?.marks[0]?.type.name : state.storedMarks?.[0]?.type.name).toBe(
+      'background_color',
+    );
+    setBackgroundColorCommand(basicMarkdownSchema, 'default')(state, (tr) => {
+      state = state.apply(tr);
+    });
+    expect(basicMarkdownCodec.serialize(state.doc)).toBe('text');
+    expect(state.storedMarks ?? []).toEqual([]);
+  });
   it('parses and serializes named text backgrounds with nested marks', () => {
     const source = 'Обычный {bg-yellow}(подсвеченный {red}(жирный)) текст';
     const document = basicMarkdownCodec.parse(source);

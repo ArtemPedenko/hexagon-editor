@@ -17,6 +17,7 @@ describe('MarkdownRenderer', () => {
     expect(html).toContain('class="markdown-renderer"');
     expect(html).toContain('<h1>Server</h1>');
     expect(html).toContain('data-mermaid');
+    expect(html).not.toContain('aria-busy');
   });
 
   it('updates rendered content reactively', async () => {

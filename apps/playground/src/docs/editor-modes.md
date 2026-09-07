@@ -57,3 +57,5 @@ function addTemplate(editor: MarkdownEditorExposed) {
 ```
 
 An object line position targets the markup surface in `markup` or `split`; the visual surface only uses start/end. Unsupported constructs can appear as editable atomic source blocks in visual mode. Unmounting destroys both DOM hosts and their local selection/history state; remounting creates fresh hosts from `modelValue`, which is useful for route-level reset behavior.
+
+Readonly blocks user commands and closes editing panels. Programmatic `setValue()`, `replace()` and `insert()` remain available, including in markup and split modes.

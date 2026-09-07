@@ -5,6 +5,7 @@ import type { ParseSpec } from 'prosemirror-markdown';
 export const textBackgroundColorNames = ['gray', 'yellow', 'orange', 'red', 'green', 'blue', 'violet'] as const;
 export const textBackgroundColorMenuNames = ['default', ...textBackgroundColorNames] as const;
 
+export type SerializableTextBackgroundColorName = (typeof textBackgroundColorNames)[number];
 export type TextBackgroundColorName = (typeof textBackgroundColorMenuNames)[number];
 type TextBackgroundColorMessageKey =
   | 'backgroundColorDefault'
@@ -27,7 +28,7 @@ export const textBackgroundColorMessageKeys: Record<TextBackgroundColorName, Tex
   violet: 'backgroundColorViolet',
 };
 
-export const textBackgroundColorCssVariables: Record<TextBackgroundColorName, string> = {
+export const textBackgroundColorCssVariables: Record<SerializableTextBackgroundColorName, string> = {
   gray: '--markdown-editor-background-color-gray',
   yellow: '--markdown-editor-background-color-yellow',
   orange: '--markdown-editor-background-color-orange',
@@ -37,7 +38,7 @@ export const textBackgroundColorCssVariables: Record<TextBackgroundColorName, st
   violet: '--markdown-editor-background-color-violet',
 };
 
-export function isTextBackgroundColorName(value: string): value is TextBackgroundColorName {
+export function isTextBackgroundColorName(value: string): value is SerializableTextBackgroundColorName {
   return (textBackgroundColorNames as readonly string[]).includes(value);
 }
 

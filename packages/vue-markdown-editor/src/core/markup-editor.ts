@@ -40,6 +40,7 @@ export function mountBasicMarkupEditor({
       doc: initialValue,
       extensions: [
         EditorView.editable.of(editable),
+        EditorState.readOnly.of(!editable),
         history(),
         bracketMatching(),
         markdown({ base: markdownLanguage }),
@@ -115,7 +116,7 @@ export function mountBasicMarkupEditor({
       }
     },
     run: (command) => {
-      if (destroyed) {
+      if (destroyed || !editable) {
         return false;
       }
 

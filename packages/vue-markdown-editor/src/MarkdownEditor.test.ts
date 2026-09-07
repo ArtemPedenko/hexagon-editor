@@ -117,6 +117,61 @@ describe('MarkdownEditor', () => {
     app.unmount();
   });
 
+  it.each(['markup', 'split'] as const)(
+    'closes an open image form and blocks user edits in readonly %s',
+    async (mode) => {
+      const target = document.createElement('div');
+      document.body.append(target);
+      const readonly = ref(false);
+      const editor = ref<MarkdownEditorExposed>();
+      const changes = vi.fn();
+      const app = createApp(() =>
+        h(MarkdownEditor, {
+          ref: editor,
+          mode,
+          readonly: readonly.value,
+          modelValue: 'text',
+          onChange: changes,
+          toolbarPreset: 'full',
+        }),
+      );
+      app.mount(target);
+      await nextTick();
+      target.querySelector<HTMLButtonElement>('[data-toolbar-item="image"]')!.click();
+      await nextTick();
+      const form = document.querySelector<HTMLFormElement>('form')!;
+      expect(form).not.toBeNull();
+      expect(form.querySelector('input[type="number"]')).toBeNull();
+      const url = form.querySelector<HTMLInputElement>('input[type="url"]')!;
+      url.value = 'https://example.com/image.png';
+      url.dispatchEvent(new Event('input', { bubbles: true }));
+      await nextTick();
+      readonly.value = true;
+      await nextTick();
+      await nextTick();
+      form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+      expect(document.querySelector('form')).toBeNull();
+      const cm = target.querySelector<HTMLElement>('.cm-content')!;
+      for (const event of [
+        { key: 'Tab' },
+        { key: 'Tab', shiftKey: true },
+        { key: 'Delete' },
+        { key: 'Backspace' },
+        { key: 'z', ctrlKey: true },
+        { key: 'y', ctrlKey: true },
+      ]) {
+        cm.dispatchEvent(new KeyboardEvent('keydown', { ...event, bubbles: true, cancelable: true }));
+      }
+      expect(editor.value?.getValue()).toBe('text');
+      expect(changes).not.toHaveBeenCalled();
+      editor.value?.setValue('external');
+      editor.value?.replace('replacement');
+      editor.value?.insert('inserted');
+      expect(editor.value?.getValue()).toContain('inserted');
+      app.unmount();
+    },
+  );
+
   it('emits cancel and submit from visual editor shortcuts', async () => {
     const cancel = vi.fn();
     const submit = vi.fn();

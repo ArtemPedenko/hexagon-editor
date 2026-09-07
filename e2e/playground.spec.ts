@@ -343,6 +343,10 @@ test.describe('Markdown editor playground', () => {
     await page.goto('/');
 
     const editor = page.locator('.ProseMirror');
+    // Mermaid changes both text and geometry asynchronously. Wait before
+    // taking the baseline used to detect document changes from clicks.
+    await expect(editor.locator('[data-mermaid] svg')).toBeVisible();
+    await page.evaluate(() => window.scrollTo(0, 0));
     const initialChildren = await editor.locator(':scope > *').count();
     const initialText = await editor.textContent();
     await editor.click({ position: { x: 4, y: 4 } });

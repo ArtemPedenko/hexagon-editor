@@ -16,7 +16,9 @@ export interface MarkdownDirectivePlugin<Attrs = MarkdownDirectiveAttrs> {
   icon?: Component;
   insert: { attrs: Attrs; content: string };
   label?: string;
+  /** Receives the contents of the outer Markdown braces. */
   parseAttributes?(raw: string): Attrs;
+  /** Returns attribute contents without the outer Markdown braces. */
   serializeAttributes?(attrs: Attrs): string;
   toolbar?: boolean;
 }

@@ -10,7 +10,6 @@ import type { MarkdownFeatures } from '../public-types';
 import type { MarkdownDirectives } from '../directives';
 
 interface RendererEnvironment {
-  directiveAttributes?: Array<{ name: string; raw: string }>;
   foldingHeadings?: number[];
   features?: MarkdownFeatures;
 }
@@ -213,18 +212,15 @@ function configureRenderer(markdown: MarkdownIt, directives: MarkdownDirectives)
     renderMath(tokens[index]?.content ?? '', false, (environment as RendererEnvironment).features);
   markdown.renderer.rules.math_block = (tokens, index, _options, environment) =>
     renderMath(tokens[index]?.content ?? '', true, (environment as RendererEnvironment).features);
-  markdown.renderer.rules.mermaid = (tokens, index) =>
-    `<div data-mermaid aria-busy="true"><pre>${htmlEscape(tokens[index]?.content ?? '')}</pre></div>\n`;
+  markdown.renderer.rules.mermaid = (tokens, index, _options, environment: RendererEnvironment) =>
+    `<div data-mermaid${environment.features?.mermaid === undefined ? '' : ' aria-busy="true"'}><pre>${htmlEscape(tokens[index]?.content ?? '')}</pre></div>\n`;
   markdown.renderer.rules.yfm_html_block = (tokens, index) =>
     `<p data-yfm-html>:::html<br>${htmlEscape(tokens[index]?.content ?? '')}<br>:::</p>\n`;
-  markdown.renderer.rules.directive = (tokens, index, _options, environment) => {
+  markdown.renderer.rules.directive = (tokens, index) => {
     const token = tokens[index];
     const [name = 'note', encodedAttrs = ''] = (token?.info ?? 'note').split('\u0000', 2);
     if (name === 'html') return `${token?.content ?? ''}\n`;
-    const headers = (environment as RendererEnvironment).directiveAttributes;
-    const headerIndex = headers?.findIndex((header) => header.name === name) ?? -1;
-    const header = headerIndex >= 0 ? headers?.splice(headerIndex, 1)[0] : undefined;
-    const rawAttrs = header?.raw || encodedAttrs || String(token?.attrGet('data-raw-attrs') ?? '');
+    const rawAttrs = encodedAttrs;
     let attrs: Record<string, unknown> = {};
     const plugin = directives[name];
     if (rawAttrs && plugin?.parseAttributes !== undefined) {
@@ -336,10 +332,6 @@ export function renderMarkdownContent(
   directives: MarkdownDirectives = {},
 ): string {
   const environment: RendererEnvironment = {
-    directiveAttributes: [...content.matchAll(/^:::\s*(\w+)(?:\s+(\{.*\}))?\s*$/gm)].map((match) => ({
-      name: match[1] ?? 'note',
-      raw: match[2] ?? '',
-    })),
     features,
   };
   const result = createMarkdownRenderer(directives).render(content, environment);

@@ -28,7 +28,7 @@ Use the `full` toolbar preset for the broadest built-in set of controls. Some su
 ##+ Folded section
 It ends before the next `##` or `#` heading.
 
-~~removed~~, ++underlined++, ==marked==, H~~2~~O and {blue}(blue **bold** text).
+~~removed~~, ++underlined++, ==marked==, H~2~O and {blue}(blue **bold** text).
 Inline $E=mc^2$.
 
 $$
