@@ -82,7 +82,10 @@ export const imageTokenSpec: ParseSpec = {
 
 export const serializeImage: ConstructorParameters<typeof MarkdownSerializer>[0][string] = (state, node) => {
   const { attrs } = node;
-  let result = `![${attrs[ImageAttr.Alt] ? state.esc(attrs[ImageAttr.Alt] as string) : ''}](${attrs[ImageAttr.Src] ? state.esc(attrs[ImageAttr.Src] as string) : ''}`;
+  const src = (attrs[ImageAttr.Src] as string | null)?.replace(/[\s()]/g, (character) =>
+    character === '(' ? '%28' : character === ')' ? '%29' : encodeURIComponent(character),
+  );
+  let result = `![${attrs[ImageAttr.Alt] ? state.esc(attrs[ImageAttr.Alt] as string) : ''}](${src ? state.esc(src) : ''}`;
   if (attrs[ImageAttr.Title]) result += ` ${state.quote(attrs[ImageAttr.Title] as string)}`;
   result += ')';
   const dimensions = [ImageAttr.Width, ImageAttr.Height, ImageAttr.ObjectFit]

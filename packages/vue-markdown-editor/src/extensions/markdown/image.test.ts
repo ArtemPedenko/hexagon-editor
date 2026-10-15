@@ -7,6 +7,25 @@ import { ExtensionsManager } from '../../core/extensions-manager';
 import { Image, ImageAttr, imageNodeName } from './image';
 
 describe('Image extension', () => {
+  it.each([
+    'https://cdn.pr-lg.com/stocks/E_Lavr_Banners_Топ-позиции по спеццене_1024х1280.png',
+    'https://example.com/photo (large).png?size=100%25',
+  ])('preserves image URLs containing spaces when saving Markdown: %s', (src) => {
+    const result = ExtensionsManager.process((builder) => builder.use(Image), {
+      baseSchema: basicMarkdownSchema,
+    });
+    const image = result.schema.nodes[imageNodeName]!.create({ src });
+    const doc = result.schema.node('doc', null, [result.schema.node('paragraph', null, [image])]);
+    const markdown = result.serializer.serialize(doc);
+    const parsed = result.textParser.parse(markdown);
+
+    expect(markdown).toContain('%20');
+    expect(parsed.firstChild?.firstChild?.type.name).toBe(imageNodeName);
+    expect(parsed.firstChild?.firstChild?.attrs[ImageAttr.Src]).toBe(
+      new URL(src).href.replace(/\(/g, '%28').replace(/\)/g, '%29'),
+    );
+  });
+
   it('parses and serializes image alt text, title, and dimensions', () => {
     const result = ExtensionsManager.process((builder) => builder.use(Image), {
       baseSchema: basicMarkdownSchema,
