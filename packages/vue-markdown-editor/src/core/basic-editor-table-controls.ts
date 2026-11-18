@@ -35,12 +35,18 @@ export function createUpstreamTableControlsPlugin(): Plugin {
     props: {
       handleDOMEvents: {
         contextmenu: (view, event) => {
+          if (!view.editable || !(event.target instanceof Element)) return false;
+          const cell = event.target.closest('td, th');
+          if (cell === null || !view.dom.contains(cell)) return false;
+
           const openMenu = (clientX: number, clientY: number): boolean => {
-            const position = view.posAtCoords({
-              left: clientX,
-              top: clientY,
-            })?.pos;
-            if (position === undefined) return false;
+            const cellStart = view.posAtDOM(cell, 0);
+            const cellEnd = view.posAtDOM(cell, cell.childNodes.length);
+            const clickedPosition = view.posAtCoords({ left: clientX, top: clientY })?.pos;
+            const position =
+              clickedPosition !== undefined && clickedPosition >= cellStart && clickedPosition <= cellEnd
+                ? clickedPosition
+                : cellStart;
             const selection = TextSelection.create(view.state.doc, position);
             const transaction = view.state.tr.setSelection(selection);
             const selectedState = view.state.apply(transaction);

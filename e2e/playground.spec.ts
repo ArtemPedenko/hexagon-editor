@@ -696,7 +696,7 @@ test.describe('Markdown editor playground', () => {
     await page.getByTitle('Таблица 3×3').click();
 
     const table = page.locator('.ProseMirror table').last();
-    await table.locator('td').nth(1).click({ button: 'right' });
+    await table.locator('td').nth(1).click({ button: 'right', position: { x: 2, y: 2 } });
     const deleteRow = page.getByRole('menuitem', { name: 'Удалить строку' });
     const deleteColumn = page.getByRole('menuitem', { name: 'Удалить колонку' });
     await expect(deleteRow).toBeVisible();
